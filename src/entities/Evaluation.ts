@@ -1,12 +1,13 @@
+import "reflect-metadata";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne, JoinColumn } from "typeorm";
-import { Interview } from "./Interview";
+import type { Interview } from "./Interview";
 
 @Entity()
 export class Evaluation {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => Interview, (interview) => interview.evaluation, { nullable: false })
+  @OneToOne("Interview", "evaluation", { nullable: false })
   @JoinColumn({ name: "interview_id" })
   interview: Interview;
 

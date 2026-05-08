@@ -1,14 +1,15 @@
+import "reflect-metadata";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany, OneToOne, JoinColumn } from "typeorm";
-import { User } from "./User";
-import { Message } from "./Message";
-import { Evaluation } from "./Evaluation";
+import type { User } from "./User";
+import type { Message } from "./Message";
+import type { Evaluation } from "./Evaluation";
 
 @Entity()
 export class Interview {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.interviews, { nullable: false })
+  @ManyToOne("User", "interviews", { nullable: false })
   @JoinColumn({ name: "user_id" })
   user: User;
 
@@ -24,9 +25,9 @@ export class Interview {
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
-  @OneToMany(() => Message, (message) => message.interview)
+  @OneToMany("Message", "interview")
   messages: Message[];
 
-  @OneToOne(() => Evaluation, (evaluation) => evaluation.interview)
+  @OneToOne("Evaluation", "interview")
   evaluation: Evaluation;
 }

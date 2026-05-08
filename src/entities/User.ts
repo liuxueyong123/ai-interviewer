@@ -1,5 +1,6 @@
+import "reflect-metadata";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from "typeorm";
-import { Interview } from "./Interview";
+import type { Interview } from "./Interview";
 
 @Entity()
 export class User {
@@ -18,6 +19,6 @@ export class User {
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
-  @OneToMany(() => Interview, (interview) => interview.user)
+  @OneToMany("Interview", "user")
   interviews: Interview[];
 }

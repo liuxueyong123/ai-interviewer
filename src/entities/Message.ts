@@ -1,12 +1,13 @@
+import "reflect-metadata";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
-import { Interview } from "./Interview";
+import type { Interview } from "./Interview";
 
 @Entity()
 export class Message {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Interview, (interview) => interview.messages, { nullable: false })
+  @ManyToOne("Interview", "messages", { nullable: false })
   @JoinColumn({ name: "interview_id" })
   interview: Interview;
 
