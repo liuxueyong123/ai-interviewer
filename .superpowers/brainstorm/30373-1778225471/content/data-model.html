@@ -1,0 +1,92 @@
+<h2>Data Model — Entity Relationships</h2>
+<p class="subtitle">4 张核心表，覆盖用户、面试、对话和评分</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Entity Relationship Diagram</div>
+    <div class="mockup-body">
+      <div style="display:flex; flex-direction:column; gap:16px; padding:20px; font-size:13px;">
+
+        <div style="display:flex; align-items:center; gap:16px; justify-content:center;">
+          <div class="placeholder" style="width:160px; padding:14px; text-align:left;">
+            <strong>user</strong>
+            <hr style="margin:6px 0;border-color:var(--color-border)">
+            id: INT PK<br>
+            username: VARCHAR(50)<br>
+            email: VARCHAR(255)<br>
+            password_hash: VARCHAR(255)<br>
+            created_at: DATETIME
+          </div>
+          <span style="font-size:20px;">1 → N</span>
+          <div class="placeholder" style="width:200px; padding:14px; text-align:left;">
+            <strong>interview</strong>
+            <hr style="margin:6px 0;border-color:var(--color-border)">
+            id: INT PK<br>
+            user_id: INT FK<br>
+            position: VARCHAR(100)<br>
+            resume_text: TEXT<br>
+            status: ENUM('ongoing','done')<br>
+            overall_score: INT<br>
+            created_at: DATETIME
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:flex-start; gap:16px; justify-content:center;">
+          <div class="placeholder" style="width:200px; padding:14px; text-align:left;">
+            <span>interview 1 → N</span>
+            <hr style="margin:6px 0;border-color:var(--color-border)">
+            <strong>message</strong>
+            <hr style="margin:6px 0;border-color:var(--color-border)">
+            id: INT PK<br>
+            interview_id: INT FK<br>
+            role: ENUM('interviewer','user')<br>
+            content: TEXT<br>
+            question_number: INT<br>
+            created_at: DATETIME
+          </div>
+          <span style="font-size:20px;padding-top:50px;">1 → 1</span>
+          <div class="placeholder" style="width:200px; padding:14px; text-align:left;">
+            <span>interview 1 → 1</span>
+            <hr style="margin:6px 0;border-color:var(--color-border)">
+            <strong>evaluation</strong>
+            <hr style="margin:6px 0;border-color:var(--color-border)">
+            id: INT PK<br>
+            interview_id: INT FK<br>
+            overall_score: INT<br>
+            categories: JSON<br>
+            strengths: TEXT<br>
+            weaknesses: TEXT<br>
+            resume_suggestions: TEXT<br>
+            created_at: DATETIME
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Key Design Decisions</h3>
+
+<div class="section">
+  <div class="options">
+    <div class="option">
+      <div class="content">
+        <h3>Resume stored once</h3>
+        <p>解析后的纯文本存入 interview.resume_text，每次面试一份</p>
+      </div>
+    </div>
+    <div class="option">
+      <div class="content">
+        <h3>Messages as question-answer pairs</h3>
+        <p>interviewer 和 user 消息交替存储，question_number 追踪进度</p>
+      </div>
+    </div>
+    <div class="option">
+      <div class="content">
+        <h3>Evaluation separate</h3>
+        <p>评分独立于消息，categories 用 JSON 存各维度分数，方便扩展</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

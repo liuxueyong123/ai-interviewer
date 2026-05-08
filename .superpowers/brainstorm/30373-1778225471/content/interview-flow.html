@@ -1,0 +1,74 @@
+<h2>Interview Flow & AI Prompt Strategy</h2>
+<p class="subtitle">从入场到评分的完整流程，以及 DeepSeek 的 prompt 设计</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">User Flow</div>
+    <div class="mockup-body">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 24px; font-size: 13px; flex-wrap: wrap; justify-content: center;">
+        <div class="placeholder" style="padding: 12px 16px; text-align: center;">
+          <strong>1. 设置</strong><br>
+          <span style="font-size:11px;opacity:0.7">选择岗位<br>上传 PDF 简历</span>
+        </div>
+        <span>→</span>
+        <div class="placeholder" style="padding: 12px 16px; text-align: center;">
+          <strong>2. 开场</strong><br>
+          <span style="font-size:11px;opacity:0.7">AI 自我介绍<br>说明面试规则</span>
+        </div>
+        <span>→</span>
+        <div class="placeholder" style="padding: 12px 16px; text-align: center;border:2px solid var(--color-accent);">
+          <strong>3. 面试循环</strong><br>
+          <span style="font-size:11px;opacity:0.7">AI 提问 → 用户回答<br>重复 10-15 轮</span>
+        </div>
+        <span>→</span>
+        <div class="placeholder" style="padding: 12px 16px; text-align: center;">
+          <strong>4. 结束</strong><br>
+          <span style="font-size:11px;opacity:0.7">用户点"结束面试"<br>或问题用尽</span>
+        </div>
+        <span>→</span>
+        <div class="placeholder" style="padding: 12px 16px; text-align: center;border:2px solid var(--color-accent);">
+          <strong>5. 评分报告</strong><br>
+          <span style="font-size:11px;opacity:0.7">综合评分<br>维度分析<br>简历建议</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>System Prompt 设计</h3>
+<div class="mockup">
+  <div class="mockup-header">Core Prompt Structure</div>
+  <div class="mockup-body">
+    <pre style="font-size:12px;line-height:1.6;padding:16px;overflow-x:auto;text-align:left;">
+你是 {{position}} 的技术面试官。
+
+候选人简历：{{resume_text}}
+
+规则：
+1. 每次只提一个问题，等待回答后再提下一个
+2. 问题覆盖技术深度、项目经验、行为面试三个维度
+3. 根据回答质量动态调整难度
+4. 不评价回答，保持中立
+5. 共提问约 {{question_count}} 个问题
+
+开始面试：先简短自我介绍，然后提第一个问题。
+    </pre>
+  </div>
+</div>
+
+<h3>Questions Breakdown</h3>
+<div style="display:flex;gap:12px;font-size:13px;margin-top:12px;">
+  <div class="placeholder" style="flex:1;padding:14px;">
+    <strong>技术基础 (40%)</strong><br>
+    根据岗位涉及的技术栈提问<br>（框架原理、语言特性、系统设计）
+  </div>
+  <div class="placeholder" style="flex:1;padding:14px;">
+    <strong>项目经验 (35%)</strong><br>
+    深挖简历中的项目<br>（架构决策、技术难点、量化成果）
+  </div>
+  <div class="placeholder" style="flex:1;padding:14px;">
+    <strong>行为/软技能 (25%)</strong><br>
+    团队协作、冲突处理<br>学习能力、职业规划
+  </div>
+</div>
+</div>

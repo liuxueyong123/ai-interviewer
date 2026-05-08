@@ -1,0 +1,109 @@
+<h2>System Architecture</h2>
+<p class="subtitle">Next.js 全栈 + DeepSeek V4 Pro — 单用户面试流程</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Architecture Overview</div>
+    <div class="mockup-body">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 20px; font-size: 13px; flex-wrap: wrap; justify-content: center;">
+        <div class="placeholder" style="width: 130px; padding: 16px; text-align: center;">
+          <strong>Browser</strong><br>
+          <span style="font-size:11px;opacity:0.7">Next.js App<br>(React + Tailwind)</span>
+        </div>
+        <span style="font-size:20px;font-weight:bold;">→</span>
+        <div class="placeholder" style="width: 130px; padding: 16px; text-align: center;">
+          <strong>Next.js API</strong><br>
+          <span style="font-size:11px;opacity:0.7">/api/chat<br>/api/auth<br>/api/pdf</span>
+        </div>
+        <span style="font-size:20px;font-weight:bold;">→</span>
+        <div class="placeholder" style="width: 130px; padding: 16px; text-align: center;">
+          <strong>Services</strong><br>
+          <span style="font-size:11px;opacity:0.7">AI Chat<br>PDF Parser<br>Auth</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <span style="font-size:13px;">↕</span>
+          <div class="placeholder" style="width: 130px; padding: 12px; text-align: center;">
+            <strong>DeepSeek API</strong><br>
+            <span style="font-size:11px;opacity:0.7">deepseek-v4-pro</span>
+          </div>
+          <span style="font-size:13px;">↕</span>
+          <div class="placeholder" style="width: 130px; padding: 12px; text-align: center;">
+            <strong>PostgreSQL</strong><br>
+            <span style="font-size:11px;opacity:0.7">(via Prisma)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>File Structure</h3>
+<div class="mockup">
+  <div class="mockup-body">
+    <pre style="font-size:12px;line-height:1.8;padding:16px;overflow-x:auto;">
+src/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx              # Landing / 登录页
+│   ├── (auth)/
+│   │   ├── login/page.tsx
+│   │   └── register/page.tsx
+│   ├── (dashboard)/
+│   │   ├── dashboard/page.tsx     # 历史记录
+│   │   ├── interview/
+│   │   │   ├── setup/page.tsx     # 选择岗位 + 上传简历
+│   │   │   └── chat/page.tsx      # AI 对话面试
+│   │   └── results/[id]/page.tsx  # 评分结果 + 简历建议
+│   └── api/
+│       ├── auth/
+│       ├── chat/route.ts
+│       ├── pdf/route.ts
+│       └── interviews/route.ts
+├── components/
+│   ├── chat/
+│   │   ├── ChatContainer.tsx
+│   │   └── ChatMessage.tsx
+│   ├── interview/
+│   │   ├── SetupForm.tsx
+│   │   └── ScoreCard.tsx
+│   └── ui/
+├── lib/
+│   ├── deepseek.ts           # AI client
+│   ├── pdf.ts                # PDF 解析
+│   ├── auth.ts               # JWT + bcrypt
+│   └── db.ts                 # Prisma client
+└── prisma/
+    └── schema.prisma
+    </pre>
+  </div>
+</div>
+
+<h3>Core Tech Choices</h3>
+
+<div class="options">
+  <div class="option">
+    <div class="content">
+      <h3>Framework</h3>
+      <p>Next.js 15 App Router + Turbopack</p>
+    </div>
+  </div>
+  <div class="option">
+    <div class="content">
+      <h3>Styling</h3>
+      <p>Tailwind CSS v4</p>
+    </div>
+  </div>
+  <div class="option">
+    <div class="content">
+      <h3>Database</h3>
+      <p>PostgreSQL + Prisma ORM</p>
+    </div>
+  </div>
+  <div class="option">
+    <div class="content">
+      <h3>Auth</h3>
+      <p>JWT + bcrypt (Next.js middleware)</p>
+    </div>
+  </div>
+</div>
+</div>
