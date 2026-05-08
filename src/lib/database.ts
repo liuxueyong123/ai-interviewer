@@ -8,21 +8,18 @@ import { Evaluation } from "@/entities/Evaluation";
 export const AppDataSource = new DataSource({
   type: "mysql",
   host: process.env.DB_HOST || "localhost",
-  port: parseInt(process.env.DB_PORT || "3306"),
+  port: parseInt(process.env.DB_PORT || "3306", 10),
   username: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "interview_ai",
-  synchronize: true,
+  synchronize: process.env.NODE_ENV !== "production",
   logging: false,
   entities: [User, Interview, Message, Evaluation],
 });
 
-let initialized = false;
-
 export async function getDataSource(): Promise<DataSource> {
-  if (!initialized) {
+  if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
-    initialized = true;
   }
   return AppDataSource;
 }
