@@ -20,7 +20,15 @@ export async function POST(request: NextRequest) {
     }
 
     const token = signToken(user.id);
-    return NextResponse.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+    const response = NextResponse.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return response;
   } catch {
     return NextResponse.json({ error: "服务器错误，请稍后重试" }, { status: 500 });
   }
