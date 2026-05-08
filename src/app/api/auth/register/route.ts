@@ -10,21 +10,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "所有字段必填" }, { status: 400 });
   }
 
-  const ds = await getDataSource();
-  const repo = ds.getRepository(User);
+  try {
+    const ds = await getDataSource();
+    const repo = ds.getRepository(User);
 
-  const existing = await repo.findOne({ where: [{ username }, { email }] });
-  if (existing) {
-    return NextResponse.json({ error: "用户名或邮箱已被注册" }, { status: 409 });
+    const existing = await repo.findOne({ where: [{ username }, { email }] });
+    if (existing) {
+      return NextResponse.json({ error: "用户名或邮箱已被注册" }, { status: 409 });
+    }
+
+    const user = repo.create({
+      username,
+      email,
+      passwordHash: await hashPassword(password),
+    });
+    await repo.save(user);
+
+    const token = signToken(user.id);
+    return NextResponse.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+  } catch {
+    return NextResponse.json({ error: "服务器错误，请稍后重试" }, { status: 500 });
   }
-
-  const user = repo.create({
-    username,
-    email,
-    passwordHash: hashPassword(password),
-  });
-  await repo.save(user);
-
-  const token = signToken(user.id);
-  return NextResponse.json({ token, user: { id: user.id, username: user.username, email: user.email } });
 }
