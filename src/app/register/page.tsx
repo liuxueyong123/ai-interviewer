@@ -37,7 +37,9 @@ export default function RegisterPage() {
           <p className="text-text-muted text-sm mt-2">专业 AI 模拟面试练习平台</p>
         </div>
 
-        <div className="bg-surface-1 border border-border rounded-2xl p-8 shadow-sm">
+        <div className="bg-surface-1 border border-border rounded-2xl shadow-sm overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-accent via-accent to-emerald-400" />
+          <div className="p-8">
           <h2 className="font-display text-lg font-semibold text-text-primary mb-6">注册</h2>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -69,6 +71,7 @@ export default function RegisterPage() {
               {loading ? "注册中..." : "注册"}
             </button>
           </form>
+          </div>
         </div>
 
         <p className="text-center text-text-muted text-sm mt-6">

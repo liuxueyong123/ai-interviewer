@@ -79,7 +79,9 @@ export default function ResumesPage() {
       </div>
 
       {/* Upload area — auto-upload on select */}
-      <div className="bg-surface-1 border border-border rounded-2xl p-6 mb-6 shadow-sm">
+      <div className="bg-surface-1 border border-border rounded-2xl mb-6 shadow-sm overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-accent via-accent to-emerald-400" />
+        <div className="p-6">
         <div
           onClick={() => fileRef.current?.click()}
           className="w-full h-28 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent-muted transition-all duration-200"
@@ -102,13 +104,22 @@ export default function ResumesPage() {
           )}
         </div>
         {error && <div className="mt-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2.5 font-medium">{error}</div>}
+        </div>
       </div>
 
       {/* Resume list */}
       {loadingList ? (
         <Spinner className="py-16" />
       ) : resumes.length === 0 && !loading ? (
-        <div className="text-center py-16 text-text-muted text-sm">暂无简历，请上传</div>
+        <div className="text-center py-20">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-surface-2 border border-border flex items-center justify-center">
+            <svg className="w-8 h-8 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+          </div>
+          <p className="text-text-secondary font-medium mb-1">暂无简历</p>
+          <p className="text-text-muted text-sm">上传 PDF 简历开始使用</p>
+        </div>
       ) : (
         <div className="space-y-3">
           {resumes.map((r) => (

@@ -35,35 +35,42 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/interview/setup"
-          className="px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover hover:shadow-md hover:shadow-accent/20 active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm"
         >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
           开始新面试
         </Link>
       </div>
 
       {interviews.length === 0 ? (
         <div className="text-center py-24">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-surface-2 border border-border flex items-center justify-center">
-            <svg className="w-8 h-8 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent-muted to-transparent border border-accent/20 flex items-center justify-center">
+            <svg className="w-10 h-10 text-accent/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
             </svg>
           </div>
-          <p className="text-text-secondary text-lg font-medium mb-2">还没有面试记录</p>
-          <p className="text-text-muted text-sm mb-6">开始你的第一次 AI 模拟面试</p>
+          <h2 className="text-text-secondary text-lg font-semibold mb-2 font-display">准备好了吗？</h2>
+          <p className="text-text-muted text-sm mb-8">开始你的第一次 AI 模拟面试，获得专业评估反馈</p>
           <Link
             href="/interview/setup"
-            className="inline-block px-6 py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover hover:shadow-lg hover:shadow-accent/20 active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm"
           >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
             开始第一次面试
           </Link>
         </div>
       ) : (
         <div className="space-y-3">
-          {interviews.map((iv) => (
+          {interviews.map((iv, i) => (
             <Link
               key={iv.id}
               href={iv.status === "done" ? `/results/${iv.id}` : `/interview/chat?id=${iv.id}`}
-              className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 hover:border-accent/30 hover:shadow-sm transition-all duration-200 group"
+              className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 hover:border-accent/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group animate-fade-in-up"
+              style={{ animationDelay: `${i * 60}ms` }}
             >
               <div>
                 <h3 className="font-display font-semibold text-sm text-text-primary group-hover:text-accent transition-all duration-200">{iv.title}</h3>
@@ -73,9 +80,12 @@ export default async function DashboardPage() {
                 {iv.overallScore !== null ? (
                   <span className={`font-display text-xl font-bold ${iv.overallScore >= 80 ? "text-accent" : iv.overallScore >= 60 ? "text-amber-500" : "text-danger"}`}>{iv.overallScore}</span>
                 ) : (
-                  <span className="text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-medium">进行中</span>
+                  <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse-dot" />
+                    进行中
+                  </span>
                 )}
-                <svg className="w-5 h-5 text-text-muted group-hover:text-accent transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m9 18 6-6-6-6" />
                 </svg>
               </div>

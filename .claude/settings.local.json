@@ -28,7 +28,8 @@
       "Bash(python3 *)",
       "WebSearch",
       "Bash(npx next *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

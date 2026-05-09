@@ -34,8 +34,8 @@ export default function NavBar() {
           <div className="flex items-center gap-1">
             {links.map((l) => (
               <Link key={l.href} href={l.href}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-all duration-200 font-medium ${
-                  pathname.startsWith(l.href) ? "bg-accent-muted text-accent" : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+                className={`relative px-3 py-1.5 text-sm rounded-lg transition-all duration-200 font-medium ${
+                  pathname.startsWith(l.href) ? "text-accent bg-accent-muted" : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
                 }`}>
                 {l.label}
               </Link>
