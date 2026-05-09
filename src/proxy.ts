@@ -5,6 +5,7 @@ const publicPaths = ["/login", "/register", "/api/auth/login", "/api/auth/regist
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  console.log(`[proxy] ${request.method} ${pathname}`);
 
   if (publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return NextResponse.next();
