@@ -6,6 +6,8 @@ import { buildInterviewSystemPrompt } from "@/lib/deepseek";
 import { getUserId } from "@/lib/utils";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
+export const maxDuration = 60;
+
 const API_KEY = process.env.DEEPSEEK_API_KEY || "";
 const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 

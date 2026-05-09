@@ -6,6 +6,9 @@ import { Message } from "@/entities/Message";
 import { Evaluation } from "@/entities/Evaluation";
 import { Resume } from "@/entities/Resume";
 
+const isProduction = process.env.NODE_ENV === "production";
+const useSSL = process.env.DB_SSL === "true";
+
 export const AppDataSource = new DataSource({
   type: "mysql",
   host: process.env.DB_HOST || "localhost",
@@ -13,9 +16,13 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "interview_ai",
-  synchronize: process.env.NODE_ENV !== "production",
+  synchronize: !isProduction,
   logging: false,
   entities: [User, Interview, Message, Evaluation, Resume],
+  ...(useSSL && {
+    ssl: { rejectUnauthorized: false },
+    extra: { ssl: { rejectUnauthorized: false } },
+  }),
 });
 
 export async function getDataSource(): Promise<DataSource> {

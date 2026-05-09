@@ -1,10 +1,19 @@
 import { PDFParse } from "pdf-parse";
 import path from "path";
+import fs from "fs";
 
-// Configure PDF.js worker for Node.js server-side usage
-PDFParse.setWorker(
-  path.join(process.cwd(), "public", "pdf.worker.min.mjs")
-);
+function resolveWorkerPath(): string {
+  const candidates = [
+    path.join(process.cwd(), "public", "pdf.worker.min.mjs"),
+    path.join(__dirname, "..", "..", "public", "pdf.worker.min.mjs"),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return candidates[0];
+}
+
+PDFParse.setWorker(resolveWorkerPath());
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
