@@ -21,6 +21,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  console.log(`[proxy] OK ${request.method} ${pathname} userId=${payload.userId}`);
+
   const response = NextResponse.next();
   response.headers.set("x-user-id", String(payload.userId));
   return response;

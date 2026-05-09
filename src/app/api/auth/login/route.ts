@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
     });
     return response;
-  } catch {
+  } catch (e) {
+    console.error(e);
     return NextResponse.json({ error: "服务器错误，请稍后重试" }, { status: 500 });
   }
 }
