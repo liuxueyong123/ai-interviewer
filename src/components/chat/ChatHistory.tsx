@@ -13,9 +13,9 @@ export default function ChatHistory({ messages }: { messages: MessageItem[] }) {
   if (!messages?.length) return null;
 
   return (
-    <div className="max-w-2xl mx-auto mt-8">
-      <h2 className="font-display text-lg font-semibold text-text-primary mb-4">面试对话记录</h2>
-      <div className="bg-surface-1 border border-border rounded-2xl p-4">
+    <div className="bg-surface-1 border border-border rounded-2xl shadow-sm overflow-hidden">
+      <div className="h-1 bg-gradient-to-r from-accent via-accent to-emerald-400" />
+      <div className="p-4">
         <Bubble.List
           role={roleConfig}
           items={messages.map((m) => ({
@@ -23,7 +23,7 @@ export default function ChatHistory({ messages }: { messages: MessageItem[] }) {
             role: m.role as "interviewer" | "user",
             content: m.content,
           }))}
-          style={{ maxHeight: "70vh", overflow: "auto" }}
+          style={{ maxHeight: "60vh", overflow: "auto" }}
         />
       </div>
     </div>
