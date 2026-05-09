@@ -1,15 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
 export default function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  function handleLogout() {
-    document.cookie = "token=; path=/; max-age=0";
-    router.push("/login");
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+    } catch {
+      setLoggingOut(false);
+    }
   }
 
   const links = [
@@ -35,9 +42,9 @@ export default function NavBar() {
             ))}
           </div>
         </div>
-        <button onClick={handleLogout}
-          className="text-sm text-text-muted hover:text-danger transition-all duration-200 font-medium cursor-pointer">
-          退出登录
+        <button onClick={handleLogout} disabled={loggingOut}
+          className="text-sm text-text-muted hover:text-danger transition-all duration-200 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          {loggingOut ? "退出中..." : "退出登录"}
         </button>
       </div>
     </nav>
