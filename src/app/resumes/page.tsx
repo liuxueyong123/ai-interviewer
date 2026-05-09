@@ -134,7 +134,7 @@ export default function ResumesPage() {
                       {r.filename}
                     </p>
                   )}
-                  <p className="text-xs text-text-muted mt-0.5">{new Date(r.createdAt).toLocaleDateString("zh-CN")}</p>
+                  <p className="text-xs text-text-muted mt-0.5">{new Date(r.createdAt).toLocaleString("zh-CN", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">

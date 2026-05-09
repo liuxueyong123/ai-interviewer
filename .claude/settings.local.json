@@ -27,7 +27,8 @@
       "Bash(grep *)",
       "Bash(python3 *)",
       "WebSearch",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

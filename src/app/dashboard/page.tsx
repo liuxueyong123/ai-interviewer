@@ -66,7 +66,7 @@ export default async function DashboardPage() {
             >
               <div>
                 <h3 className="font-display font-semibold text-sm text-text-primary group-hover:text-accent transition-all duration-200">{iv.position}</h3>
-                <p className="text-text-muted text-xs mt-1">{new Date(iv.createdAt).toLocaleDateString("zh-CN")}</p>
+                <p className="text-text-muted text-xs mt-1">{new Date(iv.createdAt).toLocaleString("zh-CN", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
               </div>
               <div className="flex items-center gap-4">
                 {iv.overallScore !== null ? (

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import ScoreCard from "@/components/interview/ScoreCard";
+import ChatHistory from "@/components/chat/ChatHistory";
 
 async function getInterviewData(id: string) {
   const cookieStore = await cookies();
@@ -18,18 +19,19 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   const data = await getInterviewData(id);
   if (!data?.evaluation) redirect("/dashboard");
 
-  const { interview, evaluation } = data;
+  const { interview, evaluation, messages } = data;
   return (
     <div className="min-h-screen pt-12 pb-16 px-4">
       <ScoreCard
         position={interview.position}
-        date={new Date(interview.createdAt).toLocaleDateString("zh-CN")}
+        date={new Date(interview.createdAt).toLocaleString("zh-CN", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
         overallScore={evaluation.overallScore}
         categories={evaluation.categories}
         strengths={evaluation.strengths}
         weaknesses={evaluation.weaknesses}
         resumeSuggestions={evaluation.resumeSuggestions}
       />
+      <ChatHistory messages={messages} />
     </div>
   );
 }
