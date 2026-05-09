@@ -2,7 +2,11 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 interface InterviewSummary {
-  id: number; position: string; status: string; overallScore: number | null; createdAt: string;
+  id: number;
+  position: string;
+  status: string;
+  overallScore: number | null;
+  createdAt: string;
 }
 
 async function getInterviews(): Promise<InterviewSummary[]> {
@@ -20,7 +24,7 @@ export default async function DashboardPage() {
   const interviews = await getInterviews();
 
   return (
-    <div className="max-w-2xl mx-auto py-16 px-4">
+    <div className="max-w-2xl mx-auto pt-12 pb-12 px-4">
       <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight text-text-primary">
@@ -28,8 +32,10 @@ export default async function DashboardPage() {
           </h1>
           <p className="text-text-muted text-sm mt-1">面试记录</p>
         </div>
-        <Link href="/interview/setup"
-          className="px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm">
+        <Link
+          href="/interview/setup"
+          className="px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm"
+        >
           开始新面试
         </Link>
       </div>
@@ -43,26 +49,28 @@ export default async function DashboardPage() {
           </div>
           <p className="text-text-secondary text-lg font-medium mb-2">还没有面试记录</p>
           <p className="text-text-muted text-sm mb-6">开始你的第一次 AI 模拟面试</p>
-          <Link href="/interview/setup"
-            className="inline-block px-6 py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm">
+          <Link
+            href="/interview/setup"
+            className="inline-block px-6 py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm"
+          >
             开始第一次面试
           </Link>
         </div>
       ) : (
         <div className="space-y-3">
           {interviews.map((iv) => (
-            <Link key={iv.id}
+            <Link
+              key={iv.id}
               href={iv.status === "done" ? `/results/${iv.id}` : `/interview/chat?id=${iv.id}`}
-              className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 hover:border-accent/30 hover:shadow-sm transition-all duration-200 group">
+              className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 hover:border-accent/30 hover:shadow-sm transition-all duration-200 group"
+            >
               <div>
                 <h3 className="font-display font-semibold text-sm text-text-primary group-hover:text-accent transition-all duration-200">{iv.position}</h3>
                 <p className="text-text-muted text-xs mt-1">{new Date(iv.createdAt).toLocaleDateString("zh-CN")}</p>
               </div>
               <div className="flex items-center gap-4">
                 {iv.overallScore !== null ? (
-                  <span className={`font-display text-xl font-bold ${iv.overallScore >= 80 ? "text-accent" : iv.overallScore >= 60 ? "text-amber-500" : "text-danger"}`}>
-                    {iv.overallScore}
-                  </span>
+                  <span className={`font-display text-xl font-bold ${iv.overallScore >= 80 ? "text-accent" : iv.overallScore >= 60 ? "text-amber-500" : "text-danger"}`}>{iv.overallScore}</span>
                 ) : (
                   <span className="text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-medium">进行中</span>
                 )}

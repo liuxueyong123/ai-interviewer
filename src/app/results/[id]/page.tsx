@@ -21,7 +21,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
 
   const { interview, evaluation } = data;
   return (
-    <div className="min-h-screen py-16 px-4">
+    <div className="min-h-screen pt-12 pb-16 px-4">
       <ScoreCard
         position={interview.position}
         date={new Date(interview.createdAt).toLocaleDateString("zh-CN")}

@@ -4,6 +4,7 @@ import { User } from "@/entities/User";
 import { Interview } from "@/entities/Interview";
 import { Message } from "@/entities/Message";
 import { Evaluation } from "@/entities/Evaluation";
+import { Resume } from "@/entities/Resume";
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -14,7 +15,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME || "interview_ai",
   synchronize: process.env.NODE_ENV !== "production",
   logging: false,
-  entities: [User, Interview, Message, Evaluation],
+  entities: [User, Interview, Message, Evaluation, Resume],
 });
 
 export async function getDataSource(): Promise<DataSource> {
