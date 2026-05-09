@@ -26,8 +26,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userId = getUserId(request);
-  const { filename } = await request.json();
-  if (!filename) return NextResponse.json({ error: "文件名不能为空" }, { status: 400 });
+  const { filename, content } = await request.json();
 
   const ds = await getDataSource();
   const { id } = await params;
@@ -37,9 +36,16 @@ export async function PATCH(
   });
   if (!resume) return NextResponse.json({ error: "简历不存在" }, { status: 404 });
 
-  resume.filename = filename;
+  if (filename !== undefined) {
+    if (!filename.trim()) return NextResponse.json({ error: "文件名不能为空" }, { status: 400 });
+    resume.filename = filename.trim();
+  }
+  if (content !== undefined) {
+    resume.content = content;
+  }
+
   await repo.save(resume);
-  return NextResponse.json({ success: true, filename: resume.filename });
+  return NextResponse.json({ success: true, filename: resume.filename, content: resume.content });
 }
 
 export async function DELETE(

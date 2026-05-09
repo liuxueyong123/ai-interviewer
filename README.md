@@ -2,6 +2,8 @@
 
 AI 模拟面试练习平台。用户上传 PDF 简历，选择岗位，AI 面试官进行专业提问并生成评分报告。
 
+站点地址：[https://interview.lxycode.cn](https://interview.lxycode.cn)
+
 ## 技术栈
 
 - **Next.js 16** App Router + Turbopack

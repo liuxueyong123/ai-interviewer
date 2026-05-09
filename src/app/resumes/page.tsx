@@ -16,9 +16,18 @@ export default function ResumesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<number | null>(null);
-  const [editing, setEditing] = useState<number | null>(null);
-  const [editName, setEditName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Edit modal
+  const [editModal, setEditModal] = useState<ResumeItem | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [loadingContent, setLoadingContent] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  // Delete confirm modal
+  const [deleteTarget, setDeleteTarget] = useState<ResumeItem | null>(null);
 
   useEffect(() => {
     fetch("/api/resumes")
@@ -46,29 +55,56 @@ export default function ResumesPage() {
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  async function handleDelete(id: number) {
+  async function openEditModal(r: ResumeItem) {
+    setEditModal(r);
+    setEditName(r.filename);
+    setEditContent("");
+    setSaveError("");
+    setLoadingContent(true);
+    try {
+      const res = await fetch(`/api/resumes/${r.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setEditContent(data.content || "");
+      }
+    } catch {
+      /* ignore */
+    }
+    setLoadingContent(false);
+  }
+
+  function closeEditModal() {
+    setEditModal(null);
+    setEditContent("");
+  }
+
+  async function handleSave() {
+    if (!editModal || !editName.trim()) return;
+    setSaving(true);
+    setSaveError("");
+    const res = await fetch(`/api/resumes/${editModal.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: editName.trim(), content: editContent }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const data = await res.json();
+      setSaveError(data.error || "保存失败");
+      return;
+    }
+    setResumes((prev) => prev.map((r) => (r.id === editModal.id ? { ...r, filename: editName.trim() } : r)));
+    closeEditModal();
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    const id = deleteTarget.id;
+    setDeleteTarget(null);
     setDeleting(id);
     const res = await fetch(`/api/resumes/${id}`, { method: "DELETE" });
     setDeleting(null);
     if (res.ok) setResumes((prev) => prev.filter((r) => r.id !== id));
-  }
-
-  function startEdit(r: ResumeItem) {
-    setEditing(r.id);
-    setEditName(r.filename);
-  }
-
-  async function saveEdit() {
-    if (editing === null || !editName.trim()) return;
-    const res = await fetch(`/api/resumes/${editing}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: editName.trim() }),
-    });
-    if (res.ok) {
-      setResumes((prev) => prev.map((r) => (r.id === editing ? { ...r, filename: editName.trim() } : r)));
-    }
-    setEditing(null);
   }
 
   return (
@@ -78,7 +114,7 @@ export default function ResumesPage() {
         <p className="text-text-muted text-sm mt-1">上传和管理你的简历，面试时可直接选用</p>
       </div>
 
-      {/* Upload area — auto-upload on select */}
+      {/* Upload area */}
       <div className="bg-surface-1 border border-border rounded-2xl mb-6 shadow-sm overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-accent via-accent to-emerald-400" />
         <div className="p-6">
@@ -127,47 +163,144 @@ export default function ResumesPage() {
       ) : (
         <div className="space-y-3">
           {resumes.map((r) => (
-            <div key={r.id} className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 shadow-sm">
+            <div
+              key={r.id}
+              onClick={() => openEditModal(r)}
+              className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-accent/30 transition-all duration-200 cursor-pointer animate-fade-in-up"
+            >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <FileIcon />
                 <div className="min-w-0 flex-1">
-                  {editing === r.id ? (
-                    <input
-                      type="text"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      onBlur={saveEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") saveEdit();
-                        if (e.key === "Escape") setEditing(null);
-                      }}
-                      className="w-full text-sm font-medium bg-surface-0 border border-accent rounded-lg px-2 py-1 text-text-primary focus:outline-none"
-                      autoFocus
-                    />
-                  ) : (
-                    <p className="text-sm font-medium text-text-primary truncate cursor-pointer hover:text-accent transition-all duration-200" onClick={() => startEdit(r)} title="点击编辑名称">
-                      {r.filename}
-                    </p>
-                  )}
+                  <p className="text-sm font-medium text-text-primary truncate">{r.filename}</p>
                   <p className="text-xs text-text-muted mt-0.5">
                     {new Date(r.createdAt).toLocaleString("zh-CN", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => startEdit(r)} className="text-xs px-2 py-1.5 text-text-muted hover:text-text-primary transition-all duration-200 cursor-pointer">
-                  重命名
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEditModal(r);
+                  }}
+                  className="text-xs px-3 py-1.5 text-text-secondary hover:text-accent hover:bg-accent-muted rounded-lg transition-all duration-200 font-medium cursor-pointer"
+                >
+                  编辑
                 </button>
                 <button
-                  onClick={() => handleDelete(r.id)}
-                  disabled={deleting === r.id}
-                  className="text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-all duration-200 font-medium cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteTarget(r);
+                  }}
+                  className="text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all duration-200 font-medium cursor-pointer"
                 >
-                  {deleting === r.id ? "删除中..." : "删除"}
+                  删除
                 </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Edit modal */}
+      {editModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeEditModal}>
+          <div className="absolute inset-0 bg-black/30" />
+          <div
+            className="relative bg-surface-1 border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-1 bg-gradient-to-r from-accent via-accent to-emerald-400 shrink-0" />
+            <div className="p-6 overflow-y-auto flex flex-col gap-4">
+              <h2 className="font-display text-lg font-semibold text-text-primary">编辑简历</h2>
+
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1.5">文件名</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSave();
+                  }}
+                  className="w-full px-3 py-2.5 bg-surface-0 border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1.5">简历内容</label>
+                {loadingContent ? (
+                  <Spinner className="py-8" />
+                ) : (
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    rows={14}
+                    className="w-full px-3 py-2.5 bg-surface-0 border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 resize-none"
+                    placeholder="简历文本内容..."
+                  />
+                )}
+              </div>
+
+              {saveError && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2.5 font-medium">{saveError}</div>}
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={closeEditModal}
+                  className="flex-1 py-2.5 bg-surface-2 text-text-secondary rounded-xl hover:bg-surface-3 transition-all duration-200 text-sm font-medium cursor-pointer"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !editName.trim()}
+                  className="flex-1 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] disabled:opacity-40 transition-all duration-200 text-sm cursor-pointer"
+                >
+                  {saving ? "保存中..." : "保存"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setDeleteTarget(null)}>
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="relative bg-surface-1 border border-border rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                  />
+                </svg>
+              </div>
+              <h3 className="font-display font-semibold text-text-primary mb-2">确认删除</h3>
+              <p className="text-sm text-text-muted mb-6">
+                确定要删除 <span className="text-text-secondary font-medium">「{deleteTarget.filename}」</span> 吗？此操作不可撤销。
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  className="flex-1 py-2.5 bg-surface-2 text-text-secondary rounded-xl hover:bg-surface-3 transition-all duration-200 text-sm font-medium cursor-pointer"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting === deleteTarget.id}
+                  className="flex-1 py-2.5 bg-danger text-white font-semibold rounded-xl hover:bg-red-600 active:scale-[0.98] disabled:opacity-40 transition-all duration-200 text-sm cursor-pointer"
+                >
+                  {deleting === deleteTarget.id ? "删除中..." : "确认删除"}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

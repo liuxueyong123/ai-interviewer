@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const ds = await getDataSource();
     const resume = ds.getRepository(Resume).create({
       user: { id: userId },
-      filename: file.name,
+      filename: file.name.replace(".pdf", "").trim(),
       content: text,
     });
     await ds.getRepository(Resume).save(resume);
