@@ -41,7 +41,7 @@ export async function getEvaluation(promptText: string): Promise<string> {
   const res = await fetch(`${BASE_URL}/v1/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${API_KEY}` },
-    body: JSON.stringify({ model: "deepseek-v4-pro", messages: [{ role: "user", content: promptText }], temperature: 0.7, max_tokens: 2048 }),
+    body: JSON.stringify({ model: "deepseek-v4-pro", messages: [{ role: "user", content: promptText }], temperature: 0 }),
   });
   if (!res.ok) {
     const body = await res.text();
