@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 interface ScoreCardProps {
   position: string; date: string; overallScore: number;
   categories: { tech: number; project: number; softSkills: number };
@@ -59,14 +61,14 @@ export default function ScoreCard({ position, date, overallScore, categories, st
       </div>
 
       <div className="flex gap-3">
-        <a href="/interview/setup"
+        <Link href="/interview/setup"
           className="flex-1 text-center py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm">
           再来一次
-        </a>
-        <a href="/dashboard"
+        </Link>
+        <Link href="/dashboard"
           className="flex-1 text-center py-3 bg-surface-1 border border-border text-text-secondary rounded-xl hover:border-text-muted transition-all duration-200 font-display text-sm">
           返回列表
-        </a>
+        </Link>
       </div>
     </div>
   );

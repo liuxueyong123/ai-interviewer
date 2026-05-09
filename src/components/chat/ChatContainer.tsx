@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Bubble, Sender } from "@ant-design/x";
-import { Avatar } from "antd";
+import { Avatar, message } from "antd";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
 const AIAvatar = () => (
@@ -13,7 +13,7 @@ const AIAvatar = () => (
 );
 const UserAvatar = () => (
   <Avatar style={{ background: "#e2e8f0", color: "#475569" }} size={36}>
-    我
+    面试者
   </Avatar>
 );
 
@@ -121,7 +121,9 @@ export default function ChatContainer() {
   async function finishInterview() {
     if (!interviewId || finished || finishing) return;
     setFinishing(true);
+    const hide = message.loading("正在评估中，请稍候...", 0);
     const res = await fetch(`/api/interviews/${interviewId}/finish`, { method: "POST" });
+    hide();
     if (res.ok) {
       router.push(`/results/${interviewId}`);
     } else {
@@ -171,18 +173,6 @@ export default function ChatContainer() {
           style={{ height: "100%", padding: "16px" }}
         />
       </div>
-
-      {finishing && (
-        <div className="text-center py-3 shrink-0 border-t border-border bg-surface-1">
-          <div className="inline-flex items-center gap-2 text-text-secondary text-sm">
-            <svg className="w-4 h-4 animate-spin text-accent" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            正在评估中，请稍候...
-          </div>
-        </div>
-      )}
 
       {error && <p className="text-red-500 text-xs text-center py-1 shrink-0">{error}</p>}
 

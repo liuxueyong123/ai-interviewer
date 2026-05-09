@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
+import Link from "next/link";
 
 const POSITIONS = ["前端开发工程师", "后端开发工程师", "全栈开发工程师", "iOS开发工程师", "Android开发工程师", "数据工程师", "DevOps工程师", "AI/ML工程师"];
 
@@ -140,12 +141,12 @@ export default function SetupForm() {
       <Button onClick={handleStart} loading={loading} disabled={!resumeText}>
         开始面试
       </Button>
-      <a
+      <Link
         href="/dashboard"
         className="block w-full text-center py-3 bg-surface-1 border border-border text-text-secondary rounded-xl hover:border-text-muted transition-all duration-200 font-display text-sm"
       >
         返回列表
-      </a>
+      </Link>
     </div>
   );
 }
