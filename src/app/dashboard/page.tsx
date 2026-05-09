@@ -25,7 +25,7 @@ export default async function DashboardPage() {
   const interviews = await getInterviews();
 
   return (
-    <div className="max-w-2xl mx-auto pt-12 pb-12 px-4">
+    <div className="max-w-2xl mx-auto pt-8 pb-12 px-4">
       <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight text-text-primary">
@@ -48,7 +48,12 @@ export default async function DashboardPage() {
         <div className="text-center py-24">
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent-muted to-transparent border border-accent/20 flex items-center justify-center">
             <svg className="w-10 h-10 text-accent/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
+              />
             </svg>
           </div>
           <h2 className="text-text-secondary text-lg font-semibold mb-2 font-display">准备好了吗？</h2>
@@ -74,7 +79,9 @@ export default async function DashboardPage() {
             >
               <div>
                 <h3 className="font-display font-semibold text-sm text-text-primary group-hover:text-accent transition-all duration-200">{iv.title}</h3>
-                <p className="text-text-muted text-xs mt-1">{new Date(iv.createdAt).toLocaleString("zh-CN", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                <p className="text-text-muted text-xs mt-1">
+                  {new Date(iv.createdAt).toLocaleString("zh-CN", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </p>
               </div>
               <div className="flex items-center gap-4">
                 {iv.overallScore !== null ? (
