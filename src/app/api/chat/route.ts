@@ -3,13 +3,14 @@ import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Message } from "@/entities/Message";
 import { buildInterviewSystemPrompt } from "@/lib/deepseek";
+import { getUserId } from "@/lib/utils";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
 const API_KEY = process.env.DEEPSEEK_API_KEY || "";
 const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 
 export async function POST(request: NextRequest) {
-  const userId = parseInt(request.headers.get("x-user-id") || "0", 10);
+  const userId = getUserId(request);
   const { interviewId, message } = await request.json();
   if (!interviewId || !message) {
     return new Response("Missing params", { status: 400 });

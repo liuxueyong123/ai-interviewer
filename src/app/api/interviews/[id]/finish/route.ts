@@ -3,12 +3,13 @@ import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Evaluation } from "@/entities/Evaluation";
 import { buildEvaluationPrompt, getEvaluation } from "@/lib/deepseek";
+import { getUserId } from "@/lib/utils";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = parseInt(request.headers.get("x-user-id") || "0", 10);
+  const userId = getUserId(request);
 
   const ds = await getDataSource();
   const { id } = await params;
@@ -25,9 +26,7 @@ export async function POST(
     .map((m) => `${m.role === "interviewer" ? "面试官" : "候选人"}：${m.content}`)
     .join("\n\n");
 
-  const evalResult = await getEvaluation([
-    { role: "user", content: buildEvaluationPrompt(conversationHistory, interview.resumeText) },
-  ]);
+  const evalResult = await getEvaluation(buildEvaluationPrompt(conversationHistory, interview.resumeText));
 
   // Parse the JSON response — strip potential markdown code fences
   const jsonStr = evalResult.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();

@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDataSource } from "@/lib/database";
 import { Resume } from "@/entities/Resume";
 import { parsePdfBuffer } from "@/lib/pdf";
-
-function getUserId(request: NextRequest): number {
-  return parseInt(request.headers.get("x-user-id") || "0", 10);
-}
+import { getUserId } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   const userId = getUserId(request);

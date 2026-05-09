@@ -1,41 +1,6 @@
-const API_KEY = process.env.DEEPSEEK_API_KEY || "";
 const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 
-interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
-
-async function chat(messages: ChatMessage[]): Promise<string> {
-  const res = await fetch(`${BASE_URL}/v1/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "deepseek-v4-pro",
-      messages,
-      temperature: 0.7,
-      max_tokens: 2048,
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text();
-    console.error("DeepSeek API error:", res.status, body);
-    throw new Error(`DeepSeek API error ${res.status}: ${body}`);
-  }
-
-  const data = await res.json();
-  return data.choices[0].message.content;
-}
-
-export function buildInterviewSystemPrompt(
-  position: string,
-  resumeText: string,
-  questionCount: number = 12
-): string {
+export function buildInterviewSystemPrompt(position: string, resumeText: string, questionCount: number = 12): string {
   return `你是 ${position} 的技术面试官。请严格遵守以下规则：
 
 规则：
@@ -71,10 +36,18 @@ ${conversationHistory}
 候选人简历：${resumeText}`;
 }
 
-export async function sendInterviewMessage(messages: ChatMessage[]): Promise<string> {
-  return chat(messages);
-}
-
-export async function getEvaluation(messages: ChatMessage[]): Promise<string> {
-  return chat(messages);
+export async function getEvaluation(promptText: string): Promise<string> {
+  const API_KEY = process.env.DEEPSEEK_API_KEY || "";
+  const res = await fetch(`${BASE_URL}/v1/chat/completions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${API_KEY}` },
+    body: JSON.stringify({ model: "deepseek-v4-pro", messages: [{ role: "user", content: promptText }], temperature: 0.7, max_tokens: 2048 }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    console.error("DeepSeek evaluation error:", res.status, body);
+    throw new Error(`DeepSeek API error ${res.status}: ${body}`);
+  }
+  const data = await res.json();
+  return data.choices[0].message.content;
 }

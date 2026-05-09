@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import Link from "next/link";
+import Spinner from "@/components/ui/Spinner";
+import { FileIcon as FileIconSmall } from "@/components/ui/Icons";
 
 interface Group {
   label: string;
@@ -158,12 +160,7 @@ export default function SetupForm() {
       <div>
         <label className="block text-sm font-medium text-text-secondary mb-2">选择简历</label>
         {loadingResumes ? (
-          <div className="flex items-center justify-center py-10">
-            <svg className="w-5 h-5 animate-spin text-accent" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          </div>
+          <Spinner className="py-10" />
         ) : savedResumes.length === 0 ? (
           <div className="text-center py-8 border border-border rounded-xl">
             <p className="text-text-muted text-sm mb-3">暂无保存的简历</p>
@@ -183,9 +180,7 @@ export default function SetupForm() {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                  </svg>
+                  <FileIconSmall className="w-4 h-4 shrink-0 text-text-muted" />
                   {r.filename}
                 </div>
               </button>

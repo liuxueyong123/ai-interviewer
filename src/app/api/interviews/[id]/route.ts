@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
+import { getUserId } from "@/lib/utils";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = parseInt(request.headers.get("x-user-id") || "0", 10);
+  const userId = getUserId(request);
 
   const ds = await getDataSource();
   const { id } = await params;
