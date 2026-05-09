@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function LoginPage() {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ login, password }),
     });
 
     const data = await res.json();
@@ -43,9 +43,9 @@ export default function LoginPage() {
           <h2 className="font-display text-lg font-semibold text-text-primary mb-6">登录</h2>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">用户名</label>
-              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
-                placeholder="请输入用户名"
+              <label className="block text-sm font-medium text-text-secondary mb-1.5">用户名/邮箱</label>
+              <input type="text" value={login} onChange={(e) => setLogin(e.target.value)}
+                placeholder="请输入用户名或邮箱"
                 className="w-full px-4 py-3 bg-surface-0 border border-border rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200"
                 required autoComplete="username" />
             </div>

@@ -4,19 +4,19 @@ import { User } from "@/entities/User";
 import { verifyPassword, signToken } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
-  const { username, password } = await request.json();
+  const { login, password } = await request.json();
 
-  if (!username || !password) {
-    return NextResponse.json({ error: "用户名和密码必填" }, { status: 400 });
+  if (!login || !password) {
+    return NextResponse.json({ error: "用户名/邮箱和密码必填" }, { status: 400 });
   }
 
   try {
     const ds = await getDataSource();
     const repo = ds.getRepository(User);
 
-    const user = await repo.findOne({ where: { username } });
+    const user = await repo.findOne({ where: [{ username: login }, { email: login }] });
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
-      return NextResponse.json({ error: "用户名或密码错误" }, { status: 401 });
+      return NextResponse.json({ error: "用户名/邮箱或密码错误" }, { status: 401 });
     }
 
     const token = signToken(user.id);
