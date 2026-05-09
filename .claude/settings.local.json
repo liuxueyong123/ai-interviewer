@@ -20,7 +20,10 @@
       "Bash(echo \"exit: $?\")",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({'deps':d.get\\('dependencies',{}\\),'devDeps':d.get\\('devDependencies',{}\\),'scripts':d.get\\('scripts',{}\\)}, indent=2\\)\\)\")",
       "Bash(npm run *)",
-      "Bash(find /Users/lxy/Documents/meeting/node_modules/.pnpm/pdfjs-dist* -name \"pdf.worker*.mjs\" -o -name \"pdf.worker*.js\")"
+      "Bash(find /Users/lxy/Documents/meeting/node_modules/.pnpm/pdfjs-dist* -name \"pdf.worker*.mjs\" -o -name \"pdf.worker*.js\")",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(npm install *)"
     ]
   }
 }

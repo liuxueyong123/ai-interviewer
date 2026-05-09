@@ -11,14 +11,18 @@ export function proxy(request: NextRequest) {
   }
 
   const token = request.cookies.get("token")?.value;
-  if (!token || !verifyToken(token)) {
+  const payload = token ? verifyToken(token) : null;
+
+  if (!payload) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "未登录" }, { status: 401 });
     }
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set("x-user-id", String(payload.userId));
+  return response;
 }
 
 export const config = {

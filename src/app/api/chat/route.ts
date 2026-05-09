@@ -1,30 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Message } from "@/entities/Message";
-import { verifyToken } from "@/lib/auth";
-import { buildInterviewSystemPrompt, sendInterviewMessage } from "@/lib/deepseek";
+import { buildInterviewSystemPrompt } from "@/lib/deepseek";
+
+const API_KEY = process.env.DEEPSEEK_API_KEY || "";
+const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 
 export async function POST(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
-  if (!token) return NextResponse.json({ error: "未登录" }, { status: 401 });
-
-  const payload = verifyToken(token);
-  if (!payload) return NextResponse.json({ error: "未登录" }, { status: 401 });
-
+  const userId = parseInt(request.headers.get("x-user-id") || "0", 10);
   const { interviewId, message } = await request.json();
   if (!interviewId || !message) {
-    return NextResponse.json({ error: "参数不完整" }, { status: 400 });
+    return new Response("Missing params", { status: 400 });
   }
 
   const ds = await getDataSource();
   const interview = await ds.getRepository(Interview).findOne({
-    where: { id: interviewId, user: { id: payload.userId } },
+    where: { id: interviewId, user: { id: userId } },
     relations: ["messages"],
   });
 
-  if (!interview) return NextResponse.json({ error: "面试不存在" }, { status: 404 });
-  if (interview.status === "done") return NextResponse.json({ error: "面试已结束" }, { status: 400 });
+  if (!interview) return new Response("Interview not found", { status: 404 });
+  if (interview.status === "done") return new Response("Interview ended", { status: 400 });
 
   const msgRepo = ds.getRepository(Message);
 
@@ -37,15 +34,13 @@ export async function POST(request: NextRequest) {
   });
   await msgRepo.save(userMsg);
 
-  // Count existing interviewer questions
   const questionCount = await msgRepo.count({
     where: { interview: { id: interviewId }, role: "interviewer" },
   });
 
   const isFirstMessage = questionCount === 0;
 
-  // Build message history for AI
-  const chatMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
+  const chatMessages: Array<{ role: string; content: string }> = [];
 
   if (isFirstMessage) {
     chatMessages.push({
@@ -53,7 +48,6 @@ export async function POST(request: NextRequest) {
       content: buildInterviewSystemPrompt(interview.position, interview.resumeText),
     });
   } else {
-    // Load conversation history
     const history = await msgRepo.find({
       where: { interview: { id: interviewId } },
       order: { createdAt: "ASC" },
@@ -71,32 +65,100 @@ export async function POST(request: NextRequest) {
 
   chatMessages.push({ role: "user", content: message });
 
-  try {
-    const reply = await sendInterviewMessage(chatMessages);
+  const deepseekRes = await fetch(`${BASE_URL}/v1/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "deepseek-v4-pro",
+      messages: chatMessages,
+      temperature: 0.7,
+      max_tokens: 2048,
+      stream: true,
+    }),
+  });
 
-    const newCount = questionCount + 1;
-    const interviewerMsg = msgRepo.create({
-      interview: { id: interviewId },
-      role: "interviewer",
-      content: reply,
-      questionNumber: newCount,
-    });
-    await msgRepo.save(interviewerMsg);
-
-    // Auto-finish if question limit reached
-    if (newCount >= 12) {
-      interview.status = "done";
-      await ds.getRepository(Interview).save(interview);
-    }
-
-    return NextResponse.json({
-      reply,
-      questionNumber: newCount,
-      isFinished: interview.status === "done",
-    });
-  } catch (error) {
-    console.error("Chat API error:", error);
-    const message = error instanceof Error ? error.message : "AI响应失败，请重试";
-    return NextResponse.json({ error: message }, { status: 500 });
+  if (!deepseekRes.ok) {
+    const body = await deepseekRes.text();
+    console.error("DeepSeek API error:", deepseekRes.status, body);
+    return new Response(body, { status: 502 });
   }
+
+  if (!deepseekRes.body) {
+    return new Response("No response body", { status: 500 });
+  }
+
+  const reader = deepseekRes.body.getReader();
+  const encoder = new TextEncoder();
+  let fullContent = "";
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const text = new TextDecoder().decode(value, { stream: true });
+          const lines = text.split("\n");
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const data = line.slice(6).trim();
+            if (data === "[DONE]") continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                fullContent += content;
+                const chunk = JSON.stringify({ type: "chunk", content });
+                controller.enqueue(encoder.encode(`data: ${chunk}\n\n`));
+              }
+            } catch {
+              // Skip unparseable lines
+            }
+          }
+        }
+
+        // Save interviewer message after stream completes
+        const newCount = questionCount + 1;
+        const interviewerMsg = msgRepo.create({
+          interview: { id: interviewId },
+          role: "interviewer",
+          content: fullContent,
+          questionNumber: newCount,
+        });
+        await msgRepo.save(interviewerMsg);
+
+        let isFinished = false;
+        if (newCount >= 12) {
+          interview.status = "done";
+          await ds.getRepository(Interview).save(interview);
+          isFinished = true;
+        }
+
+        const doneEvent = JSON.stringify({
+          type: "done",
+          questionNumber: newCount,
+          isFinished,
+        });
+        controller.enqueue(encoder.encode(`data: ${doneEvent}\n\n`));
+        controller.close();
+      } catch (err) {
+        console.error("Stream error:", err);
+        controller.error(err);
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }

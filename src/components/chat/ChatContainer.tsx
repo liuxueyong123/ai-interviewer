@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import ChatMessage from "./ChatMessage";
+import { Bubble, Sender } from "@ant-design/x";
 
-interface Message {
-  id: number;
+interface BubbleItem {
+  key: string;
   role: "interviewer" | "user";
   content: string;
-  questionNumber: number | null;
+  streaming?: boolean;
 }
 
 export default function ChatContainer() {
@@ -16,80 +16,157 @@ export default function ChatContainer() {
   const router = useRouter();
   const interviewId = searchParams.get("id");
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<BubbleItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [finished, setFinished] = useState(false);
   const [error, setError] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [questionCount, setQuestionCount] = useState(0);
+  const [senderValue, setSenderValue] = useState("");
+  const abortRef = useRef<AbortController | null>(null);
 
+  // Load existing messages on mount
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (!interviewId) return;
 
-  async function sendMessage() {
-    if (!input.trim() || loading || !interviewId) return;
+    fetch(`/api/interviews/${interviewId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.messages?.length) {
+          setMessages(
+            data.messages.map((m: { id: number; role: string; content: string; questionNumber: number | null }) => ({
+              key: String(m.id),
+              role: m.role as "interviewer" | "user",
+              content: m.content,
+            }))
+          );
+        }
+        const interviewerMsgs = data.messages?.filter(
+          (m: { role: string }) => m.role === "interviewer"
+        ).length || 0;
+        setQuestionCount(interviewerMsgs);
+        if (data.interview?.status === "done") setFinished(true);
+      })
+      .catch(() => {});
+  }, [interviewId]);
 
-    const userMsg = input.trim();
-    setInput("");
-    setError("");
+  const sendMessage = useCallback(
+    async (userMsg: string) => {
+      if (!interviewId || loading) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now(), role: "user", content: userMsg, questionNumber: null },
-    ]);
-    setLoading(true);
+      setError("");
+      setLoading(true);
+      setSenderValue("");
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interviewId: parseInt(interviewId, 10), message: userMsg }),
-      });
-
-      const data = await res.json();
-      setLoading(false);
-
-      if (!res.ok) {
-        setError(data.error || "发送失败");
-        return;
-      }
+      const userKey = Date.now().toString();
+      const aiKey = (Date.now() + 1).toString();
 
       setMessages((prev) => [
         ...prev,
-        { id: Date.now() + 1, role: "interviewer", content: data.reply, questionNumber: data.questionNumber },
+        { key: userKey, role: "user", content: userMsg },
+        { key: aiKey, role: "interviewer", content: "", streaming: true },
       ]);
 
-      if (data.isFinished) {
-        setFinished(true);
+      const abort = new AbortController();
+      abortRef.current = abort;
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ interviewId: parseInt(interviewId, 10), message: userMsg }),
+          signal: abort.signal,
+        });
+
+        if (!res.ok) {
+          throw new Error(`请求失败 (${res.status})`);
+        }
+
+        const reader = res.body?.getReader();
+        if (!reader) throw new Error("无法读取响应");
+
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const json = line.slice(6).trim();
+            if (!json) continue;
+
+            try {
+              const event = JSON.parse(json);
+
+              if (event.type === "chunk") {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.key === aiKey ? { ...m, content: m.content + event.content } : m
+                  )
+                );
+              } else if (event.type === "done") {
+                setQuestionCount(event.questionNumber);
+                if (event.isFinished) setFinished(true);
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.key === aiKey ? { ...m, streaming: false } : m
+                  )
+                );
+              }
+            } catch {
+              // skip unparseable lines
+            }
+          }
+        }
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          setError((err as Error).message || "网络错误");
+          setMessages((prev) => prev.filter((m) => m.key !== aiKey));
+        }
+      } finally {
+        setLoading(false);
+        abortRef.current = null;
       }
-    } catch {
-      setLoading(false);
-      setError("网络错误，请重试");
-    }
-  }
+    },
+    [interviewId, loading]
+  );
+
+  const cancelRequest = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
 
   async function finishInterview() {
     if (!interviewId || finished) return;
     setLoading(true);
-
     const res = await fetch(`/api/interviews/${interviewId}/finish`, { method: "POST" });
     setLoading(false);
-
     if (res.ok) {
       router.push(`/results/${interviewId}`);
     } else {
-      setError("结束面试失败，请重试");
+      setError("结束面试失败");
     }
   }
 
+  const roleConfig = {
+    interviewer: {
+      placement: "start" as const,
+    },
+    user: {
+      placement: "end" as const,
+      styles: { content: { background: "#4f46e5", color: "#fff" } },
+    },
+  };
+
   return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
-        <h1 className="font-semibold text-sm">AI 面试进行中</h1>
-        <span className="text-xs text-gray-400">
-          问题 {messages.filter((m) => m.role === "interviewer").length} / 12
-        </span>
+    <div className="flex flex-col h-screen max-w-2xl mx-auto bg-white">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
+        <h1 className="font-semibold text-sm text-gray-800">AI 面试进行中</h1>
+        <span className="text-xs text-gray-400">问题 {questionCount} / 12</span>
         <button
           onClick={finishInterview}
           disabled={loading || finished}
@@ -99,63 +176,46 @@ export default function ChatContainer() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        {messages.length === 0 && !loading && (
-          <div className="text-center text-gray-400 mt-20">
-            <p className="text-lg mb-2">面试即将开始</p>
-            <p className="text-sm">AI 面试官正在准备第一个问题...</p>
-          </div>
-        )}
-        {messages.map((msg) => (
-          <ChatMessage key={msg.id} role={msg.role} content={msg.content} />
-        ))}
-        {loading && (
-          <div className="flex justify-start mb-4">
-            <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
-              <span className="text-xs text-indigo-500">面试官</span>
-              <div className="flex gap-1 mt-2">
-                <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-              </div>
-            </div>
-          </div>
-        )}
-        {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
-        {finished && (
-          <div className="text-center mt-4">
-            <p className="text-green-600 text-sm mb-2">面试已完成</p>
-            <button
-              onClick={() => router.push(`/results/${interviewId}`)}
-              className="text-sm px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              查看评分报告
-            </button>
-          </div>
-        )}
-        <div ref={bottomRef} />
+      <div className="flex-1 overflow-hidden">
+        <Bubble.List
+          autoScroll
+          role={roleConfig}
+          items={messages.map((m) => ({
+            key: m.key,
+            role: m.role,
+            content: m.content,
+            streaming: m.streaming,
+          }))}
+          style={{ height: "100%", padding: "16px" }}
+        />
       </div>
 
-      {!finished && (
-        <div className="border-t border-gray-200 bg-white px-4 py-3">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") sendMessage(); }}
-              placeholder="输入你的回答..."
-              disabled={loading}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm disabled:opacity-50"
-            />
-            <button
-              onClick={sendMessage}
-              disabled={loading || !input.trim()}
-              className="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm font-medium"
-            >
-              发送
-            </button>
-          </div>
+      {error && (
+        <p className="text-red-500 text-xs text-center py-1 shrink-0">{error}</p>
+      )}
+
+      {finished ? (
+        <div className="text-center py-4 shrink-0 border-t border-gray-100">
+          <p className="text-green-600 text-sm mb-2">面试已完成</p>
+          <button
+            onClick={() => router.push(`/results/${interviewId}`)}
+            className="text-sm px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            查看评分报告
+          </button>
+        </div>
+      ) : (
+        <div className="shrink-0 border-t border-gray-100 px-4 py-3">
+          <Sender
+            value={senderValue}
+            onChange={setSenderValue}
+            loading={loading}
+            placeholder="输入你的回答..."
+            onSubmit={(val) => {
+              sendMessage(val);
+            }}
+            onCancel={cancelRequest}
+          />
         </div>
       )}
     </div>

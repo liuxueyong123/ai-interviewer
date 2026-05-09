@@ -2,23 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Evaluation } from "@/entities/Evaluation";
-import { verifyToken } from "@/lib/auth";
 import { buildEvaluationPrompt, getEvaluation } from "@/lib/deepseek";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const token = request.cookies.get("token")?.value;
-  if (!token) return NextResponse.json({ error: "未登录" }, { status: 401 });
-
-  const payload = verifyToken(token);
-  if (!payload) return NextResponse.json({ error: "未登录" }, { status: 401 });
+  const userId = parseInt(request.headers.get("x-user-id") || "0", 10);
 
   const ds = await getDataSource();
   const { id } = await params;
   const interview = await ds.getRepository(Interview).findOne({
-    where: { id: parseInt(id, 10), user: { id: payload.userId } },
+    where: { id: parseInt(id, 10), user: { id: userId } },
     relations: ["messages"],
   });
 
