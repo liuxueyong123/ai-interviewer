@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Bubble, Sender } from "@ant-design/x";
 import { Avatar } from "antd";
+import { EventSourceParserStream } from "eventsource-parser/stream";
 
 const AIAvatar = () => (
   <Avatar style={{ background: "#4f46e5" }} size={36}>
@@ -67,38 +68,28 @@ export default function ChatContainer() {
           throw new Error(`请求失败 (${res.status})`);
         }
 
-        const reader = res.body?.getReader();
-        if (!reader) throw new Error("无法读取响应");
+        const eventStream = res.body!
+          .pipeThrough(new TextDecoderStream())
+          .pipeThrough(new EventSourceParserStream());
 
-        const decoder = new TextDecoder();
-        let buffer = "";
+        const reader = eventStream.getReader();
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
+          try {
+            const event = JSON.parse(value.data);
 
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
-            const json = line.slice(6).trim();
-            if (!json) continue;
-
-            try {
-              const event = JSON.parse(json);
-
-              if (event.type === "chunk") {
-                setMessages((prev) => prev.map((m) => (m.key === aiKey ? { ...m, content: m.content + event.content, loading: false, streaming: true } : m)));
-              } else if (event.type === "done") {
-                setQuestionCount(event.questionNumber);
-                if (event.isFinished) setFinished(true);
-                setMessages((prev) => prev.map((m) => (m.key === aiKey ? { ...m, loading: false, streaming: false } : m)));
-              }
-            } catch {
-              // skip unparseable lines
+            if (event.type === "chunk") {
+              setMessages((prev) => prev.map((m) => (m.key === aiKey ? { ...m, content: m.content + event.content, loading: false, streaming: true } : m)));
+            } else if (event.type === "done") {
+              setQuestionCount(event.questionNumber);
+              if (event.isFinished) setFinished(true);
+              setMessages((prev) => prev.map((m) => (m.key === aiKey ? { ...m, loading: false, streaming: false } : m)));
             }
+          } catch {
+            // skip unparseable data
           }
         }
       } catch (err) {

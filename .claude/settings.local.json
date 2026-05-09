@@ -23,7 +23,8 @@
       "Bash(find /Users/lxy/Documents/meeting/node_modules/.pnpm/pdfjs-dist* -name \"pdf.worker*.mjs\" -o -name \"pdf.worker*.js\")",
       "mcp__plugin_context7_context7__resolve-library-id",
       "mcp__plugin_context7_context7__query-docs",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(grep *)"
     ]
   }
 }

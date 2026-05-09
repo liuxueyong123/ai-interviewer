@@ -3,6 +3,7 @@ import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Message } from "@/entities/Message";
 import { buildInterviewSystemPrompt } from "@/lib/deepseek";
+import { EventSourceParserStream } from "eventsource-parser/stream";
 
 const API_KEY = process.env.DEEPSEEK_API_KEY || "";
 const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
@@ -90,27 +91,27 @@ export async function POST(request: NextRequest) {
     return new Response("No response body", { status: 500 });
   }
 
-  const reader = deepseekRes.body.getReader();
+  const eventStream = deepseekRes.body
+    .pipeThrough(new TextDecoderStream())
+    .pipeThrough(new EventSourceParserStream());
+
+  const reader = eventStream.getReader();
   const encoder = new TextEncoder();
   let fullContent = "";
 
   const stream = new ReadableStream({
-    async start(controller) {
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+    start(controller) {
+      (async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-          const text = new TextDecoder().decode(value, { stream: true });
-          const lines = text.split("\n");
-
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
-            const data = line.slice(6).trim();
-            if (data === "[DONE]") continue;
+            // value is EventSourceMessage { data: string }
+            if (value.data === "[DONE]") continue;
 
             try {
-              const parsed = JSON.parse(data);
+              const parsed = JSON.parse(value.data);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 fullContent += content;
@@ -118,39 +119,38 @@ export async function POST(request: NextRequest) {
                 controller.enqueue(encoder.encode(`data: ${chunk}\n\n`));
               }
             } catch {
-              // Skip unparseable lines
+              // Skip unparseable data
             }
           }
+
+          const newCount = questionCount + 1;
+          const interviewerMsg = msgRepo.create({
+            interview: { id: interviewId },
+            role: "interviewer",
+            content: fullContent,
+            questionNumber: newCount,
+          });
+          await msgRepo.save(interviewerMsg);
+
+          let isFinished = false;
+          if (newCount >= 12) {
+            interview.status = "done";
+            await ds.getRepository(Interview).save(interview);
+            isFinished = true;
+          }
+
+          const doneEvent = JSON.stringify({
+            type: "done",
+            questionNumber: newCount,
+            isFinished,
+          });
+          controller.enqueue(encoder.encode(`data: ${doneEvent}\n\n`));
+          controller.close();
+        } catch (err) {
+          console.error("Stream error:", err);
+          controller.error(err);
         }
-
-        // Save interviewer message after stream completes
-        const newCount = questionCount + 1;
-        const interviewerMsg = msgRepo.create({
-          interview: { id: interviewId },
-          role: "interviewer",
-          content: fullContent,
-          questionNumber: newCount,
-        });
-        await msgRepo.save(interviewerMsg);
-
-        let isFinished = false;
-        if (newCount >= 12) {
-          interview.status = "done";
-          await ds.getRepository(Interview).save(interview);
-          isFinished = true;
-        }
-
-        const doneEvent = JSON.stringify({
-          type: "done",
-          questionNumber: newCount,
-          isFinished,
-        });
-        controller.enqueue(encoder.encode(`data: ${doneEvent}\n\n`));
-        controller.close();
-      } catch (err) {
-        console.error("Stream error:", err);
-        controller.error(err);
-      }
+      })();
     },
   });
 
