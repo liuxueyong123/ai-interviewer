@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from "typeorm";
 import type { Interview } from "./Interview";
 
-@Entity()
+@Entity("User", { name: "user" })
 export class User {
   @PrimaryGeneratedColumn()
   id: number;

@@ -4,7 +4,7 @@ import type { User } from "./User";
 import type { Message } from "./Message";
 import type { Evaluation } from "./Evaluation";
 
-@Entity()
+@Entity("Interview", { name: "interview" })
 export class Interview {
   @PrimaryGeneratedColumn()
   id: number;
