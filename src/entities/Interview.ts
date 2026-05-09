@@ -16,6 +16,9 @@ export class Interview {
   @Column({ type: "varchar", length: 100 })
   position: string;
 
+  @Column({ type: "varchar", length: 200 })
+  title: string;
+
   @Column({ type: "text", name: "resume_text" })
   resumeText: string;
 

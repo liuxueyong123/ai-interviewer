@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 
 interface InterviewSummary {
   id: number;
+  title: string;
   position: string;
   status: string;
   overallScore: number | null;
@@ -65,7 +66,7 @@ export default async function DashboardPage() {
               className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 hover:border-accent/30 hover:shadow-sm transition-all duration-200 group"
             >
               <div>
-                <h3 className="font-display font-semibold text-sm text-text-primary group-hover:text-accent transition-all duration-200">{iv.position}</h3>
+                <h3 className="font-display font-semibold text-sm text-text-primary group-hover:text-accent transition-all duration-200">{iv.title}</h3>
                 <p className="text-text-muted text-xs mt-1">{new Date(iv.createdAt).toLocaleString("zh-CN", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
               </div>
               <div className="flex items-center gap-4">

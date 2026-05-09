@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(
     interviews.map((i) => ({
       id: i.id,
+      title: i.title || i.position,
       position: i.position,
       status: i.status,
       overallScore: i.evaluation?.overallScore ?? null,
@@ -53,9 +54,15 @@ export async function POST(request: NextRequest) {
   }
 
   const ds = await getDataSource();
+  const count = await ds.getRepository(Interview).count({
+    where: { user: { id: userId } },
+  });
+  const title = `面试${count + 1}: ${position}`;
+
   const interview = ds.getRepository(Interview).create({
     user: { id: userId },
     position,
+    title,
     resumeText: finalResumeText,
     status: "ongoing",
   });

@@ -23,6 +23,7 @@ export async function GET(
   return NextResponse.json({
     interview: {
       id: interview.id,
+      title: interview.title || interview.position,
       position: interview.position,
       status: interview.status,
       createdAt: interview.createdAt,
