@@ -23,7 +23,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   return (
     <div className="min-h-screen pt-12 pb-16 px-4">
       <ScoreCard
-        position={interview.title}
+        heading={interview.title}
         date={new Date(interview.createdAt).toLocaleString("zh-CN", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
         overallScore={evaluation.overallScore}
         categories={evaluation.categories}

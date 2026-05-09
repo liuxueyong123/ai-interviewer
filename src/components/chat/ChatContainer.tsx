@@ -3,19 +3,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Bubble, Sender } from "@ant-design/x";
-import { Avatar, message } from "antd";
+import { message } from "antd";
 import { EventSourceParserStream } from "eventsource-parser/stream";
-
-const AIAvatar = () => (
-  <Avatar style={{ background: "#6366f1", color: "#fff", fontWeight: 700 }} size={36}>
-    AI
-  </Avatar>
-);
-const UserAvatar = () => (
-  <Avatar style={{ background: "#e2e8f0", color: "#475569" }} size={36}>
-    面试者
-  </Avatar>
-);
+import { roleConfig } from "./roleConfig";
 
 interface BubbleItem {
   key: string;
@@ -131,19 +121,6 @@ export default function ChatContainer() {
       setFinishing(false);
     }
   }
-
-  const roleConfig = {
-    interviewer: {
-      placement: "start" as const,
-      avatar: <AIAvatar />,
-      styles: { content: { background: "#f1f5f9", color: "#334155", borderRadius: 16 } },
-    },
-    user: {
-      placement: "end" as const,
-      avatar: <UserAvatar />,
-      styles: { content: { background: "#22c55e", color: "#fff", borderRadius: 16 } },
-    },
-  };
 
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto bg-white">

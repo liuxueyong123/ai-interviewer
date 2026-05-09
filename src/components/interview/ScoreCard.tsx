@@ -1,5 +1,5 @@
 interface ScoreCardProps {
-  position: string;
+  heading: string;
   date: string;
   overallScore: number;
   categories: { tech: number; project: number; softSkills: number };
@@ -15,7 +15,7 @@ function barColor(s: number) {
   return s >= 80 ? "bg-accent" : s >= 60 ? "bg-amber-400" : "bg-danger";
 }
 
-export default function ScoreCard({ position, date, overallScore, categories, strengths, weaknesses, resumeSuggestions }: ScoreCardProps) {
+export default function ScoreCard({ heading, date, overallScore, categories, strengths, weaknesses, resumeSuggestions }: ScoreCardProps) {
   const dims = [
     { key: "tech" as const, label: "技术基础" },
     { key: "project" as const, label: "项目经验" },
@@ -26,7 +26,7 @@ export default function ScoreCard({ position, date, overallScore, categories, st
     <div className="max-w-lg mx-auto space-y-6">
       <div className="text-center">
         <p className="text-text-muted text-xs mb-2">{date}</p>
-        <h1 className="font-display text-xl font-bold text-text-primary">{position} 面试评分</h1>
+        <h1 className="font-display text-xl font-bold text-text-primary">{heading} 面试评分</h1>
       </div>
 
       <div className="flex justify-center">
