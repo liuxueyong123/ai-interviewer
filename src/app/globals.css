@@ -1,29 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme inline {
-  --color-surface: var(--color-surface);
-  --color-bg: var(--color-bg);
-  --color-text: var(--color-text);
-  --color-text-muted: var(--color-text-muted);
-  --color-accent: var(--color-accent);
-  --color-border: var(--color-border);
-  --color-success: var(--color-success);
-  --color-warning: var(--color-warning);
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --color-surface-0: #f8fafc;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #f1f5f9;
+  --color-surface-3: #e2e8f0;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  --color-accent: #22c55e;
+  --color-accent-hover: #16a34a;
+  --color-accent-muted: rgba(34, 197, 94, 0.08);
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-danger: #ef4444;
+  --color-danger-muted: rgba(239, 68, 68, 0.06);
 }
 
-:root {
-  --color-surface: #ffffff;
-  --color-bg: #f8f9fa;
-  --color-text: #1a1a2e;
-  --color-text-muted: #6b7280;
-  --color-accent: #4f46e5;
-  --color-border: #e5e7eb;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
+* { box-sizing: border-box; }
+
+html {
+  background: #f8fafc;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: var(--font-sans);
 }
+
+button, a, select, [role="button"], input[type="file"] { cursor: pointer; }
+button:disabled, a[aria-disabled="true"] { cursor: not-allowed; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }

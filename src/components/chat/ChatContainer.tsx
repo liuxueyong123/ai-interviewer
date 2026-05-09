@@ -7,13 +7,12 @@ import { Avatar } from "antd";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
 const AIAvatar = () => (
-  <Avatar style={{ background: "#4f46e5" }} size={36}>
+  <Avatar style={{ background: "#6366f1", color: "#fff", fontWeight: 700 }} size={36}>
     AI
   </Avatar>
 );
-
 const UserAvatar = () => (
-  <Avatar style={{ background: "#10b981" }} size={36}>
+  <Avatar style={{ background: "#e2e8f0", color: "#475569" }} size={36}>
     我
   </Avatar>
 );
@@ -33,6 +32,7 @@ export default function ChatContainer() {
 
   const [messages, setMessages] = useState<BubbleItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [finishing, setFinishing] = useState(false);
   const [finished, setFinished] = useState(false);
   const [error, setError] = useState("");
   const [questionCount, setQuestionCount] = useState(0);
@@ -43,16 +43,12 @@ export default function ChatContainer() {
   const sendMessage = useCallback(
     async function sendMessageFn(userMsg: string) {
       if (!interviewId || loading) return;
-
       setError("");
       setLoading(true);
       setSenderValue("");
-
       const userKey = Date.now().toString();
       const aiKey = (Date.now() + 1).toString();
-
       setMessages((prev) => [...prev, { key: userKey, role: "user", content: userMsg }, { key: aiKey, role: "interviewer", content: "", loading: true }]);
-
       const abort = new AbortController();
       abortRef.current = abort;
 
@@ -63,24 +59,14 @@ export default function ChatContainer() {
           body: JSON.stringify({ interviewId: parseInt(interviewId, 10), message: userMsg }),
           signal: abort.signal,
         });
-
-        if (!res.ok) {
-          throw new Error(`请求失败 (${res.status})`);
-        }
-
-        const eventStream = res.body!
-          .pipeThrough(new TextDecoderStream())
-          .pipeThrough(new EventSourceParserStream());
-
+        if (!res.ok) throw new Error(`请求失败 (${res.status})`);
+        const eventStream = res.body!.pipeThrough(new TextDecoderStream()).pipeThrough(new EventSourceParserStream());
         const reader = eventStream.getReader();
-
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-
           try {
             const event = JSON.parse(value.data);
-
             if (event.type === "chunk") {
               setMessages((prev) => prev.map((m) => (m.key === aiKey ? { ...m, content: m.content + event.content, loading: false, streaming: true } : m)));
             } else if (event.type === "done") {
@@ -89,7 +75,7 @@ export default function ChatContainer() {
               setMessages((prev) => prev.map((m) => (m.key === aiKey ? { ...m, loading: false, streaming: false } : m)));
             }
           } catch {
-            // skip unparseable data
+            /* skip */
           }
         }
       } catch (err) {
@@ -105,26 +91,22 @@ export default function ChatContainer() {
     [interviewId, loading],
   );
 
-  // Load existing messages on mount, auto-send greeting for fresh interviews
   useEffect(() => {
     if (!interviewId) return;
-
     fetch(`/api/interviews/${interviewId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.messages?.length) {
           setMessages(
-            data.messages.map((m: { id: number; role: string; content: string; questionNumber: number | null }) => ({
+            data.messages.map((m: { id: number; role: string; content: string }) => ({
               key: String(m.id),
               role: m.role as "interviewer" | "user",
               content: m.content,
             })),
           );
-          const count = data.messages.filter((m: { role: string }) => m.role === "interviewer").length;
-          setQuestionCount(count);
+          setQuestionCount(data.messages.filter((m: { role: string }) => m.role === "interviewer").length);
         } else if (!greetingSentRef.current) {
           greetingSentRef.current = true;
-          // Defer so sendMessage is initialized by call time
           setTimeout(() => sendMessage("面试官你好"), 100);
         }
         if (data.interview?.status === "done") setFinished(true);
@@ -137,14 +119,14 @@ export default function ChatContainer() {
   }, []);
 
   async function finishInterview() {
-    if (!interviewId || finished) return;
-    setLoading(true);
+    if (!interviewId || finished || finishing) return;
+    setFinishing(true);
     const res = await fetch(`/api/interviews/${interviewId}/finish`, { method: "POST" });
-    setLoading(false);
     if (res.ok) {
       router.push(`/results/${interviewId}`);
     } else {
       setError("结束面试失败");
+      setFinishing(false);
     }
   }
 
@@ -152,21 +134,26 @@ export default function ChatContainer() {
     interviewer: {
       placement: "start" as const,
       avatar: <AIAvatar />,
+      styles: { content: { background: "#f1f5f9", color: "#334155", borderRadius: 16 } },
     },
     user: {
       placement: "end" as const,
       avatar: <UserAvatar />,
-      styles: { content: { background: "#4f46e5", color: "#fff" } },
+      styles: { content: { background: "#22c55e", color: "#fff", borderRadius: 16 } },
     },
   };
 
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto bg-white">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <h1 className="font-semibold text-sm text-gray-800">AI 面试进行中</h1>
-        <span className="text-xs text-gray-400">问题 {questionCount} / 12</span>
-        <button onClick={finishInterview} disabled={loading || finished} className="text-xs px-3 py-1 bg-red-50 text-red-600 rounded-full hover:bg-red-100 disabled:opacity-50 transition-colors">
-          结束面试
+        <span className="text-xs text-text-muted tabular-nums">问题 {questionCount} / 12</span>
+        <button
+          onClick={finishInterview}
+          disabled={loading || finished || finishing}
+          className="text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 disabled:opacity-40 transition-all duration-200 font-medium cursor-pointer"
+        >
+          {finishing ? "评估中..." : "结束面试"}
         </button>
       </div>
 
@@ -185,17 +172,32 @@ export default function ChatContainer() {
         />
       </div>
 
+      {finishing && (
+        <div className="text-center py-3 shrink-0 border-t border-border bg-surface-1">
+          <div className="inline-flex items-center gap-2 text-text-secondary text-sm">
+            <svg className="w-4 h-4 animate-spin text-accent" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            正在评估中，请稍候...
+          </div>
+        </div>
+      )}
+
       {error && <p className="text-red-500 text-xs text-center py-1 shrink-0">{error}</p>}
 
       {finished ? (
-        <div className="text-center py-4 shrink-0 border-t border-gray-100">
-          <p className="text-green-600 text-sm mb-2">面试已完成</p>
-          <button onClick={() => router.push(`/results/${interviewId}`)} className="text-sm px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+        <div className="text-center py-4 shrink-0 border-t border-border">
+          <p className="text-accent text-sm font-medium mb-2">面试已完成</p>
+          <button
+            onClick={() => router.push(`/results/${interviewId}`)}
+            className="text-sm px-4 py-2 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display cursor-pointer"
+          >
             查看评分报告
           </button>
         </div>
       ) : (
-        <div className="shrink-0 border-t border-gray-100 px-4 py-3">
+        <div className="shrink-0 border-t border-border px-4 py-3">
           <Sender
             value={senderValue}
             onChange={setSenderValue}

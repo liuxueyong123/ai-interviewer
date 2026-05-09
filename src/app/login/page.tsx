@@ -25,50 +25,49 @@ export default function LoginPage() {
     const data = await res.json();
     setLoading(false);
 
-    if (!res.ok) {
-      setError(data.error);
-      return;
-    }
-
+    if (!res.ok) { setError(data.error); return; }
     router.push("/dashboard");
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-center mb-8">InterviewAI</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">用户名</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">密码</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              required
-            />
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {loading ? "登录中..." : "登录"}
-          </button>
-        </form>
-        <p className="text-center text-sm text-gray-500 mt-4">
-          没有账号？<Link href="/register" className="text-indigo-600 hover:underline">注册</Link>
+      <div className="w-full max-w-md">
+        <div className="text-center mb-10">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-text-primary">
+            Interview<span className="text-accent">AI</span>
+          </h1>
+          <p className="text-text-muted text-sm mt-2">专业 AI 模拟面试练习平台</p>
+        </div>
+
+        <div className="bg-surface-1 border border-border rounded-2xl p-8 shadow-sm">
+          <h2 className="font-display text-lg font-semibold text-text-primary mb-6">登录</h2>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1.5">用户名</label>
+              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
+                placeholder="请输入用户名"
+                className="w-full px-4 py-3 bg-surface-0 border border-border rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200"
+                required autoComplete="username" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1.5">密码</label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                placeholder="请输入密码"
+                className="w-full px-4 py-3 bg-surface-0 border border-border rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200"
+                required autoComplete="current-password" />
+            </div>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 font-medium">{error}</div>
+            )}
+            <button type="submit" disabled={loading}
+              className="w-full py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] disabled:opacity-50 transition-all duration-200 font-display cursor-pointer">
+              {loading ? "登录中..." : "登录"}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-center text-text-muted text-sm mt-6">
+          没有账号？<Link href="/register" className="text-accent hover:text-accent-hover font-medium transition-all duration-200">注册</Link>
         </p>
       </div>
     </div>
