@@ -40,34 +40,26 @@ export async function POST(request: NextRequest) {
     where: { interview: { id: interviewId }, role: "interviewer" },
   });
 
-  const isFirstMessage = questionCount === 0;
+  // Build messages: system prompt + conversation history + current user message
+  const chatMessages: Array<{ role: string; content: string }> = [{ role: "system", content: buildInterviewSystemPrompt(interview.position, interview.resumeText) }];
 
-  const chatMessages: Array<{ role: string; content: string }> = [];
+  // Load and append any previous messages as proper role-based messages
+  const history = await msgRepo.find({
+    where: { interview: { id: interviewId } },
+    order: { createdAt: "ASC" },
+  });
 
-  if (isFirstMessage) {
+  for (const m of history) {
     chatMessages.push({
-      role: "system",
-      content: buildInterviewSystemPrompt(interview.position, interview.resumeText),
-    });
-  } else {
-    const history = await msgRepo.find({
-      where: { interview: { id: interviewId } },
-      order: { createdAt: "ASC" },
-    });
-
-    const historyText = history
-      .map((m) => `${m.role === "interviewer" ? "面试官" : "候选人"}：${m.content}`)
-      .join("\n\n");
-
-    chatMessages.push({
-      role: "system",
-      content: `${buildInterviewSystemPrompt(interview.position, interview.resumeText)}\n\n以下是已经进行的对话：\n${historyText}\n\n请根据以上对话继续提出下一个问题。`,
+      role: m.role === "interviewer" ? "assistant" : "user",
+      content: m.content,
     });
   }
 
+  // Append the current user message (not yet saved to DB)
   chatMessages.push({ role: "user", content: message });
 
-  const deepseekRes = await fetch(`${BASE_URL}/v1/chat/completions`, {
+  const deepseekRes = await fetch(`${BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -77,7 +69,6 @@ export async function POST(request: NextRequest) {
       model: "deepseek-v4-pro",
       messages: chatMessages,
       temperature: 0.7,
-      max_tokens: 2048,
       stream: true,
     }),
   });
@@ -92,9 +83,7 @@ export async function POST(request: NextRequest) {
     return new Response("No response body", { status: 500 });
   }
 
-  const eventStream = deepseekRes.body
-    .pipeThrough(new TextDecoderStream())
-    .pipeThrough(new EventSourceParserStream());
+  const eventStream = deepseekRes.body.pipeThrough(new TextDecoderStream()).pipeThrough(new EventSourceParserStream());
 
   const reader = eventStream.getReader();
   const encoder = new TextEncoder();
@@ -133,17 +122,9 @@ export async function POST(request: NextRequest) {
           });
           await msgRepo.save(interviewerMsg);
 
-          let isFinished = false;
-          if (newCount >= 12) {
-            interview.status = "done";
-            await ds.getRepository(Interview).save(interview);
-            isFinished = true;
-          }
-
           const doneEvent = JSON.stringify({
             type: "done",
             questionNumber: newCount,
-            isFinished,
           });
           controller.enqueue(encoder.encode(`data: ${doneEvent}\n\n`));
           controller.close();

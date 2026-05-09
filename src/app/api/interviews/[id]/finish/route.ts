@@ -42,8 +42,7 @@ export async function POST(
   });
   await ds.getRepository(Evaluation).save(evaluation);
 
-  interview.status = "done";
-  await ds.getRepository(Interview).save(interview);
+  await ds.getRepository(Interview).update(interview.id, { status: "done" });
 
   return NextResponse.json({ evaluation: parsed });
 }

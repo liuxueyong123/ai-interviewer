@@ -38,7 +38,6 @@ export default function ChatContainer() {
   const [questionCount, setQuestionCount] = useState(0);
   const [senderValue, setSenderValue] = useState("");
   const abortRef = useRef<AbortController | null>(null);
-  const greetingSentRef = useRef(false);
 
   const sendMessage = useCallback(
     async function sendMessageFn(userMsg: string) {
@@ -62,17 +61,21 @@ export default function ChatContainer() {
         if (!res.ok) throw new Error(`请求失败 (${res.status})`);
         const eventStream = res.body!.pipeThrough(new TextDecoderStream()).pipeThrough(new EventSourceParserStream());
         const reader = eventStream.getReader();
+        let fullContent = "";
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           try {
             const event = JSON.parse(value.data);
             if (event.type === "chunk") {
+              fullContent += event.content;
               setMessages((prev) => prev.map((m) => (m.key === aiKey ? { ...m, content: m.content + event.content, loading: false, streaming: true } : m)));
             } else if (event.type === "done") {
               setQuestionCount(event.questionNumber);
-              if (event.isFinished) setFinished(true);
               setMessages((prev) => prev.map((m) => (m.key === aiKey ? { ...m, loading: false, streaming: false } : m)));
+              if (fullContent.includes("面试环节已结束")) {
+                finishInterview();
+              }
             }
           } catch {
             /* skip */
@@ -105,9 +108,6 @@ export default function ChatContainer() {
             })),
           );
           setQuestionCount(data.messages.filter((m: { role: string }) => m.role === "interviewer").length);
-        } else if (!greetingSentRef.current) {
-          greetingSentRef.current = true;
-          setTimeout(() => sendMessage("面试官你好"), 100);
         }
         if (data.interview?.status === "done") setFinished(true);
       })
@@ -149,7 +149,7 @@ export default function ChatContainer() {
     <div className="flex flex-col h-screen max-w-2xl mx-auto bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <h1 className="font-semibold text-sm text-gray-800">AI 面试进行中</h1>
-        <span className="text-xs text-text-muted tabular-nums">问题 {questionCount} / 12</span>
+        <span className="text-xs text-text-muted tabular-nums">问题 {questionCount}</span>
         <button
           onClick={finishInterview}
           disabled={loading || finished || finishing}

@@ -3,6 +3,7 @@ import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Resume } from "@/entities/Resume";
 import { getUserId } from "@/lib/utils";
+import { Message } from "@/entities/Message";
 
 export async function GET(request: NextRequest) {
   const userId = getUserId(request);
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
       status: i.status,
       overallScore: i.evaluation?.overallScore ?? null,
       createdAt: i.createdAt,
-    }))
+    })),
   );
 }
 
@@ -59,6 +60,15 @@ export async function POST(request: NextRequest) {
     status: "ongoing",
   });
   await ds.getRepository(Interview).save(interview);
+
+  const msgRepo = ds.getRepository(Message);
+  const interviewerMsg = msgRepo.create({
+    interview: { id: interview.id },
+    role: "interviewer",
+    content: `同学你好，很高兴见到你。我是今天${interview.position}岗位的面试官，要不咱们先聊聊你的基本情况？请简单介绍一下自己。`,
+    questionNumber: 1,
+  });
+  await msgRepo.save(interviewerMsg);
 
   return NextResponse.json({ interviewId: interview.id });
 }
