@@ -92,7 +92,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {chartData.length > 2 && (
+      {chartData.length >= 2 && (
         <div className="mb-8">
           <ProgressPanel data={chartData} />
         </div>
