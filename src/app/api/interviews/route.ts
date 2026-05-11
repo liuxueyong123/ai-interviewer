@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
       position: i.position,
       status: i.status,
       overallScore: i.evaluation?.overallScore ?? null,
+      categories: i.evaluation?.categories ?? null,
       createdAt: i.createdAt,
     })),
   );

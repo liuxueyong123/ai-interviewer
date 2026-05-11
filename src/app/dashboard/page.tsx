@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import ProgressPanel from "@/components/interview/ProgressPanel";
+
+interface Categories {
+  tech: number;
+  project: number;
+  softSkills: number;
+}
 
 interface InterviewSummary {
   id: number;
@@ -7,6 +14,7 @@ interface InterviewSummary {
   position: string;
   status: string;
   overallScore: number | null;
+  categories: Categories | null;
   createdAt: string;
 }
 
@@ -35,6 +43,17 @@ export default async function DashboardPage() {
   const completed = interviews.filter((i) => i.overallScore !== null);
   const avgScore = completed.length > 0 ? Math.round(completed.reduce((s, i) => s + i.overallScore!, 0) / completed.length) : null;
   const bestScore = completed.length > 0 ? Math.max(...completed.map((i) => i.overallScore!)) : null;
+
+  const chartData = completed
+    .filter((i) => i.categories)
+    .reverse()
+    .map((i) => ({
+      title: i.title.replace(/^面试\d+: /, ""),
+      date: i.createdAt,
+      tech: i.categories!.tech,
+      project: i.categories!.project,
+      softSkills: i.categories!.softSkills,
+    }));
 
   return (
     <div className="max-w-2xl mx-auto pt-8 pb-12 px-4">
@@ -70,6 +89,12 @@ export default async function DashboardPage() {
             value={bestScore !== null ? bestScore : "--"}
             color={bestScore !== null ? (bestScore >= 80 ? "text-accent" : bestScore >= 60 ? "text-amber-500" : "text-danger") : "text-text-muted"}
           />
+        </div>
+      )}
+
+      {chartData.length > 2 && (
+        <div className="mb-8">
+          <ProgressPanel data={chartData} />
         </div>
       )}
 
