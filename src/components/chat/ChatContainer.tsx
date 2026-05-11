@@ -131,14 +131,24 @@ export default function ChatContainer() {
     <div className="flex flex-col h-screen max-w-2xl mx-auto bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <h1 className="font-semibold text-sm text-gray-800">AI 面试进行中</h1>
-        <span className="text-xs text-text-muted tabular-nums">问题 {questionCount}</span>
-        <button
-          onClick={finishInterview}
-          disabled={loading || finished || finishing}
-          className="text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 disabled:opacity-40 transition-all duration-200 font-medium cursor-pointer"
-        >
-          {finishing ? "评估中..." : "结束面试"}
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-text-muted tabular-nums">问题 {questionCount}</span>
+          <button
+            onClick={sendHint}
+            disabled={loading || finished}
+            className="text-xs px-3 py-1.5 text-text-secondary hover:text-accent hover:bg-accent-muted rounded-lg disabled:opacity-30 transition-all duration-200 font-medium"
+            title="给点提示"
+          >
+            提示
+          </button>
+          <button
+            onClick={finishInterview}
+            disabled={loading || finished || finishing}
+            className="text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 disabled:opacity-40 transition-all duration-200 font-medium cursor-pointer"
+          >
+            {finishing ? "评估中..." : "结束面试"}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden">
@@ -170,20 +180,7 @@ export default function ChatContainer() {
         </div>
       ) : (
         <div className="shrink-0 border-t border-border px-4 py-3">
-          <div className="flex items-end gap-2">
-            <button
-              onClick={sendHint}
-              disabled={loading || finished}
-              className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent disabled:opacity-30 transition-colors duration-200 font-medium shrink-0 pb-2"
-              title="给点提示"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
-              </svg>
-              提示
-            </button>
-            <div className="flex-1">
-              <Sender
+          <Sender
             value={senderValue}
             onChange={setSenderValue}
             loading={loading}
@@ -193,8 +190,6 @@ export default function ChatContainer() {
             }}
             onCancel={cancelRequest}
           />
-            </div>
-          </div>
         </div>
       )}
     </div>
