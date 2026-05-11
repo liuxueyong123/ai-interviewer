@@ -1,11 +1,12 @@
 const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 
 export function buildInterviewSystemPrompt(position: string, resumeText: string, questionCount: number = 12, difficulty: string = "mid"): string {
-  const difficultyHint = difficulty === "junior"
-    ? "面试者处于初级水平，问题应偏重基础概念和常见场景，适当给予引导和鼓励。"
-    : difficulty === "senior"
-    ? "面试者处于高级水平，问题应偏重架构设计、系统优化、技术决策和深度原理，可适当追问和挑战。"
-    : "面试者处于中级水平，问题应兼顾基础深度和实际项目经验，保持适度挑战。";
+  const difficultyHint =
+    difficulty === "junior"
+      ? "面试者处于初级水平，问题应偏重基础概念和常见场景，适当给予引导和鼓励。"
+      : difficulty === "senior"
+        ? "面试者处于高级水平，问题应偏重架构设计、系统优化、技术决策和深度原理，可适当追问和挑战。"
+        : "面试者处于中级水平，问题应兼顾基础深度和实际项目经验，保持适度挑战。";
 
   return `你是 ${position} 的技术面试官。请严格遵守以下规则：
 
@@ -40,7 +41,7 @@ export function buildEvaluationPrompt(conversationHistory: string, resumeText: s
       "questionNumber": 1,
       "question": "<面试官的提问原文摘要>",
       "score": <0-100>,
-      "comment": "<针对该题回答的简短点评，20字以内>"
+      "comment": "<针对该题回答的简短点评，50字以内>"
     }
   ]
 }
