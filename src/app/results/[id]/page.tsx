@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ScoreRing, CategoryBars, EvaluationText, QuestionReviewList } from "@/components/interview/ScoreCard";
-import ChatHistory from "@/components/chat/ChatHistory";
+import { ScoreRing, CategoryBars, EvaluationText, InterviewReview } from "@/components/interview/ScoreCard";
 import RetryButton from "@/components/interview/RetryButton";
 
 async function getInterviewData(id: string) {
@@ -44,32 +43,20 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* Row 2: Detail scores + Chat history — two columns */}
+        {/* Row 2: Scores + Interview review */}
         <div className="lg:grid lg:grid-cols-2 lg:gap-8">
           {/* Left column: category bars + evaluation text */}
           <div className="space-y-6 min-w-0">
             <CategoryBars categories={evaluation.categories} />
             <EvaluationText strengths={evaluation.strengths} weaknesses={evaluation.weaknesses} resumeSuggestions={evaluation.resumeSuggestions} />
-            {evaluation.questionReviews && evaluation.questionReviews.length > 0 && (
-              <QuestionReviewList reviews={evaluation.questionReviews} />
-            )}
           </div>
 
-          {/* Right column: chat history */}
-          {messages?.length > 0 ? (
-            <div className="min-w-0 mt-8 lg:mt-0">
-              <div className="lg:top-20">
-                <div className="flex items-center gap-4 mb-6 lg:hidden">
-                  <div className="flex-1 h-px bg-border" />
-                  <span className="text-xs text-text-muted font-medium shrink-0">面试对话记录</span>
-                  <div className="flex-1 h-px bg-border" />
-                </div>
-                <ChatHistory messages={messages} />
-              </div>
+          {/* Right column: merged Q&A + reviews */}
+          <div className="min-w-0 mt-8 lg:mt-0">
+            <div className="lg:top-20">
+              <InterviewReview messages={messages} reviews={evaluation.questionReviews} />
             </div>
-          ) : (
-            <div className="hidden lg:block" />
-          )}
+          </div>
         </div>
       </div>
     </div>
