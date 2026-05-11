@@ -13,7 +13,7 @@ const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 
 export async function POST(request: NextRequest) {
   const userId = getUserId(request);
-  const { interviewId, message } = await request.json();
+  const { interviewId, message, hint } = await request.json();
   if (!interviewId || !message) {
     return new Response("Missing params", { status: 400 });
   }
@@ -59,7 +59,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Append the current user message (not yet saved to DB)
-  chatMessages.push({ role: "user", content: message });
+  const displayMessage = hint
+    ? `[提示请求] 用户需要一些思考方向。请针对当前问题给出简短提示或关键概念引导，但不要直接给出答案，也不要进入下一个问题。提示后等待用户正式回答。用户原文：${message}`
+    : message;
+  chatMessages.push({ role: "user", content: displayMessage });
 
   const deepseekRes = await fetch(`${BASE_URL}/chat/completions`, {
     method: "POST",
