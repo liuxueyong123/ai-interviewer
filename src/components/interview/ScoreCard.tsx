@@ -14,6 +14,16 @@ export function scoreColor(s: number) {
 export function barColor(s: number) {
   return s >= 80 ? "bg-accent" : s >= 60 ? "bg-amber-400" : "bg-danger";
 }
+export function reviewBg(s: number) {
+  return s >= 80
+    ? "bg-accent-muted border-accent/20"
+    : s >= 60
+    ? "bg-amber-50 border-amber-200"
+    : "bg-danger-muted border-danger/20";
+}
+export function reviewText(s: number) {
+  return s >= 80 ? "text-accent" : s >= 60 ? "text-amber-600" : "text-danger";
+}
 
 export function ScoreRing({ score }: { score: number }) {
   const color = score >= 80 ? "#22c55e" : score >= 60 ? "#f59e0b" : "#ef4444";
@@ -164,8 +174,8 @@ export function InterviewReview({ messages, reviews }: { messages: MessageItem[]
                   </div>
                 </div>
                 {p.review && (
-                  <div className="bg-accent-muted rounded-lg p-3 border border-accent/10">
-                    <p className="text-sm text-text-secondary leading-relaxed">{p.review.comment}</p>
+                  <div className={`rounded-lg p-3 border ${reviewBg(p.review.score)}`}>
+                    <p className={`text-sm leading-relaxed font-medium ${reviewText(p.review.score)}`}>{p.review.comment}</p>
                   </div>
                 )}
               </div>
