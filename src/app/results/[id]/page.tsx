@@ -31,7 +31,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
           <p className="text-text-muted text-xs mb-2">{dateStr}</p>
           <h1 className="font-display text-xl font-bold text-text-primary mb-4">{interview.title} 面试评分</h1>
           <div className="flex justify-center gap-3 mb-8">
-            <RetryButton position={interview.position} resumeText={interview.resumeText} />
+            <RetryButton position={interview.position} resumeText={interview.resumeText} questionCount={interview.questionCount} difficulty={interview.difficulty} />
             <a
               href="/dashboard"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface-1 border border-border text-text-secondary font-medium rounded-xl hover:border-text-muted active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm"

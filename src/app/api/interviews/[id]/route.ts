@@ -27,6 +27,8 @@ export async function GET(
       position: interview.position,
       status: interview.status,
       resumeText: interview.resumeText,
+      questionCount: interview.questionCount,
+      difficulty: interview.difficulty,
       createdAt: interview.createdAt,
     },
     messages: interview.messages.map((m) => ({

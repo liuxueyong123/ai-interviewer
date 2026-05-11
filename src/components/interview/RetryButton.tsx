@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 interface RetryButtonProps {
   position: string;
   resumeText: string;
+  questionCount: number;
+  difficulty: string;
 }
 
-export default function RetryButton({ position, resumeText }: RetryButtonProps) {
+export default function RetryButton({ position, resumeText, questionCount, difficulty }: RetryButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +19,7 @@ export default function RetryButton({ position, resumeText }: RetryButtonProps) 
     const res = await fetch("/api/interviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ position, resumeText }),
+      body: JSON.stringify({ position, resumeText, questionCount, difficulty }),
     });
     const data = await res.json();
     setLoading(false);
