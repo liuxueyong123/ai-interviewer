@@ -26,6 +26,9 @@ export class Evaluation {
   @Column({ type: "text", name: "resume_suggestions" })
   resumeSuggestions: string;
 
+  @Column({ type: "json", name: "question_reviews", nullable: true })
+  questionReviews: Array<{ questionNumber: number; question: string; score: number; comment: string }> | null;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 }

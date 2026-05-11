@@ -98,6 +98,45 @@ export function EvaluationText({ strengths, weaknesses, resumeSuggestions }: { s
   );
 }
 
+interface QuestionReview {
+  questionNumber: number;
+  question: string;
+  score: number;
+  comment: string;
+}
+
+export function QuestionReviewList({ reviews }: { reviews: QuestionReview[] }) {
+  if (!reviews || reviews.length === 0) return null;
+  return (
+    <div className="bg-surface-1 border border-border rounded-2xl p-6 shadow-sm">
+      <h3 className="font-display text-sm font-semibold text-text-primary mb-4 inline-flex items-center gap-2">
+        <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+        </svg>
+        逐题回顾
+      </h3>
+      <div className="space-y-3">
+        {reviews
+          .sort((a, b) => a.questionNumber - b.questionNumber)
+          .map((r) => (
+            <details key={r.questionNumber} className="group bg-surface-2 rounded-xl transition-all duration-200">
+              <summary className="flex items-center justify-between px-4 py-3 cursor-pointer select-none">
+                <span className="text-sm font-medium text-text-secondary">
+                  Q{r.questionNumber} {r.question.length > 40 ? r.question.slice(0, 40) + "..." : r.question}
+                </span>
+                <span className={`font-display text-sm font-bold ml-3 shrink-0 ${scoreColor(r.score)}`}>{r.score}</span>
+              </summary>
+              <div className="px-4 pb-3 space-y-2">
+                <p className="text-xs text-text-muted leading-relaxed">{r.question}</p>
+                <p className="text-sm text-text-secondary leading-relaxed bg-surface-1 rounded-lg p-3 border border-border">{r.comment}</p>
+              </div>
+            </details>
+          ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ScoreCard({ heading, date, overallScore, categories, strengths, weaknesses, resumeSuggestions }: ScoreCardProps) {
   return (
     <div className="max-w-lg mx-auto space-y-6">

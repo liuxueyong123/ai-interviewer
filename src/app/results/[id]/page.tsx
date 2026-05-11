@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ScoreRing, CategoryBars, EvaluationText } from "@/components/interview/ScoreCard";
+import { ScoreRing, CategoryBars, EvaluationText, QuestionReviewList } from "@/components/interview/ScoreCard";
 import ChatHistory from "@/components/chat/ChatHistory";
 import RetryButton from "@/components/interview/RetryButton";
 
@@ -50,6 +50,9 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
           <div className="space-y-6 min-w-0">
             <CategoryBars categories={evaluation.categories} />
             <EvaluationText strengths={evaluation.strengths} weaknesses={evaluation.weaknesses} resumeSuggestions={evaluation.resumeSuggestions} />
+            {evaluation.questionReviews && evaluation.questionReviews.length > 0 && (
+              <QuestionReviewList reviews={evaluation.questionReviews} />
+            )}
           </div>
 
           {/* Right column: chat history */}

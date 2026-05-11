@@ -27,8 +27,22 @@ export function buildEvaluationPrompt(conversationHistory: string, resumeText: s
   },
   "strengths": "<优点>",
   "weaknesses": "<待改进>",
-  "resumeSuggestions": "<简历优化建议>"
+  "resumeSuggestions": "<简历优化建议>",
+  "questionReviews": [
+    {
+      "questionNumber": 1,
+      "question": "<面试官的提问原文摘要>",
+      "score": <0-100>,
+      "comment": "<针对该题回答的简短点评，20字以内>"
+    }
+  ]
 }
+
+注意：
+- questionReviews 数组中每道面试官提问对应一条记录
+- questionNumber 从 1 开始递增
+- score 为该题回答质量的独立评分
+- comment 要简短精炼，点出关键问题或亮点
 
 面试记录：
 ${conversationHistory}
