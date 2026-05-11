@@ -25,6 +25,12 @@ export class Interview {
   @Column({ type: "enum", enum: ["ongoing", "done"], default: "ongoing" })
   status: "ongoing" | "done";
 
+  @Column({ type: "int", name: "question_count", default: 12 })
+  questionCount: number;
+
+  @Column({ type: "varchar", length: 20, name: "difficulty", default: "mid" })
+  difficulty: "junior" | "mid" | "senior";
+
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 

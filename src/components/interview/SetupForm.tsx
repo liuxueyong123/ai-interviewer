@@ -63,6 +63,8 @@ export default function SetupForm() {
   const [loadingResumes, setLoadingResumes] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [questionCount, setQuestionCount] = useState(12);
+  const [difficulty, setDifficulty] = useState<string>("mid");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -100,7 +102,7 @@ export default function SetupForm() {
     const res = await fetch("/api/interviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ position, resumeId: selectedResumeId }),
+      body: JSON.stringify({ position, resumeId: selectedResumeId, questionCount, difficulty }),
     });
     const data = await res.json();
     setLoading(false);
@@ -194,6 +196,34 @@ export default function SetupForm() {
             </Link>
           </div>
         )}
+      </div>
+
+      {/* Interview parameters */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-2">面试长度</label>
+          <select
+            value={questionCount}
+            onChange={(e) => setQuestionCount(Number(e.target.value))}
+            className="w-full px-4 py-3 bg-surface-0 border border-border rounded-xl text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200 appearance-none"
+          >
+            <option value={6}>快速面试（6 题）</option>
+            <option value={12}>标准面试（12 题）</option>
+            <option value={20}>深度面试（20 题）</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-2">目标难度</label>
+          <select
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+            className="w-full px-4 py-3 bg-surface-0 border border-border rounded-xl text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200 appearance-none"
+          >
+            <option value="junior">初级</option>
+            <option value="mid">中级</option>
+            <option value="senior">高级</option>
+          </select>
+        </div>
       </div>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 font-medium">{error}</div>}

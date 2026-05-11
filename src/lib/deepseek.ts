@@ -1,14 +1,21 @@
 const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 
-export function buildInterviewSystemPrompt(position: string, resumeText: string, questionCount: number = 12): string {
+export function buildInterviewSystemPrompt(position: string, resumeText: string, questionCount: number = 12, difficulty: string = "mid"): string {
+  const difficultyHint = difficulty === "junior"
+    ? "面试者处于初级水平，问题应偏重基础概念和常见场景，适当给予引导和鼓励。"
+    : difficulty === "senior"
+    ? "面试者处于高级水平，问题应偏重架构设计、系统优化、技术决策和深度原理，可适当追问和挑战。"
+    : "面试者处于中级水平，问题应兼顾基础深度和实际项目经验，保持适度挑战。";
+
   return `你是 ${position} 的技术面试官。请严格遵守以下规则：
 
 规则：
 1. 每次只提一个问题，等待回答后再提下一个
 2. 问题覆盖技术深度、项目经验、行为面试三个维度（比例约 50%/45%/5%）
-3. 根据回答质量动态调整难度
-4. 不评价回答，保持中立
-5. 共提问约 ${questionCount} 个问题，如果提问结束，只回复“我们的面试环节已结束，谢谢您的真诚分享和参与。”。
+3. 不评价回答，保持中立
+4. 共提问约 ${questionCount} 个问题，如果提问结束，只回复"我们的面试环节已结束，谢谢您的真诚分享和参与。"。
+
+${difficultyHint}
 
 候选人简历：${resumeText}
 

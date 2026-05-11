@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const userId = getUserId(request);
-  const { position, resumeText, resumeId } = await request.json();
+  const { position, resumeText, resumeId, questionCount, difficulty } = await request.json();
 
   if (!position) {
     return NextResponse.json({ error: "请选择目标岗位" }, { status: 400 });
@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
     title,
     resumeText: finalResumeText,
     status: "ongoing",
+    questionCount: questionCount || 12,
+    difficulty: difficulty || "mid",
   });
   await ds.getRepository(Interview).save(interview);
 

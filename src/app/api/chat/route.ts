@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
   });
 
   // Build messages: system prompt + conversation history + current user message
-  const chatMessages: Array<{ role: string; content: string }> = [{ role: "system", content: buildInterviewSystemPrompt(interview.position, interview.resumeText) }];
+  const chatMessages: Array<{ role: string; content: string }> = [
+    { role: "system", content: buildInterviewSystemPrompt(interview.position, interview.resumeText, interview.questionCount, interview.difficulty) },
+  ];
 
   // Load and append any previous messages as proper role-based messages
   const history = await msgRepo.find({
