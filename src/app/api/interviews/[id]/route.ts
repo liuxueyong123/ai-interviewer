@@ -26,6 +26,7 @@ export async function GET(
       title: interview.title || interview.position,
       position: interview.position,
       status: interview.status,
+      resumeText: interview.resumeText,
       createdAt: interview.createdAt,
     },
     messages: interview.messages.map((m) => ({

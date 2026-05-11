@@ -21,8 +21,20 @@ async function getInterviews(): Promise<InterviewSummary[]> {
   return res.json();
 }
 
+function StatCard({ label, value, color = "text-text-primary" }: { label: string; value: string | number; color?: string }) {
+  return (
+    <div className="bg-surface-1 border border-border rounded-2xl p-4 text-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+      <p className={`font-display text-2xl font-bold ${color}`}>{value}</p>
+      <p className="text-text-muted text-xs mt-1">{label}</p>
+    </div>
+  );
+}
+
 export default async function DashboardPage() {
   const interviews = await getInterviews();
+  const completed = interviews.filter((i) => i.overallScore !== null);
+  const avgScore = completed.length > 0 ? Math.round(completed.reduce((s, i) => s + i.overallScore!, 0) / completed.length) : null;
+  const bestScore = completed.length > 0 ? Math.max(...completed.map((i) => i.overallScore!)) : null;
 
   return (
     <div className="max-w-2xl mx-auto pt-8 pb-12 px-4">
@@ -43,6 +55,23 @@ export default async function DashboardPage() {
           开始新面试
         </Link>
       </div>
+
+      {interviews.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 animate-fade-in-up">
+          <StatCard label="面试总次数" value={interviews.length} />
+          <StatCard label="已完成" value={completed.length} />
+          <StatCard
+            label="平均分"
+            value={avgScore !== null ? avgScore : "--"}
+            color={avgScore !== null ? (avgScore >= 80 ? "text-accent" : avgScore >= 60 ? "text-amber-500" : "text-danger") : "text-text-muted"}
+          />
+          <StatCard
+            label="最高分"
+            value={bestScore !== null ? bestScore : "--"}
+            color={bestScore !== null ? (bestScore >= 80 ? "text-accent" : bestScore >= 60 ? "text-amber-500" : "text-danger") : "text-text-muted"}
+          />
+        </div>
+      )}
 
       {interviews.length === 0 ? (
         <div className="text-center py-24">

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ScoreRing, CategoryBars, EvaluationText } from "@/components/interview/ScoreCard";
 import ChatHistory from "@/components/chat/ChatHistory";
+import RetryButton from "@/components/interview/RetryButton";
 
 async function getInterviewData(id: string) {
   const cookieStore = await cookies();
@@ -28,7 +29,16 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
         {/* Row 1: Overall score — full width */}
         <div className="text-center">
           <p className="text-text-muted text-xs mb-2">{dateStr}</p>
-          <h1 className="font-display text-xl font-bold text-text-primary mb-8">{interview.title} 面试评分</h1>
+          <h1 className="font-display text-xl font-bold text-text-primary mb-4">{interview.title} 面试评分</h1>
+          <div className="flex justify-center gap-3 mb-8">
+            <RetryButton position={interview.position} resumeText={interview.resumeText} />
+            <a
+              href="/dashboard"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface-1 border border-border text-text-secondary font-medium rounded-xl hover:border-text-muted active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm"
+            >
+              返回列表
+            </a>
+          </div>
           <div className="flex justify-center">
             <ScoreRing score={evaluation.overallScore} />
           </div>
