@@ -40,6 +40,14 @@ export function ChevronRightIcon({ className = "w-5 h-5 text-text-muted" }: { cl
   );
 }
 
+export function ChevronDownIcon({ className = "w-4 h-4 text-text-muted" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+    </svg>
+  );
+}
+
 export function ClockIcon({ className = "w-8 h-8 text-text-muted" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">

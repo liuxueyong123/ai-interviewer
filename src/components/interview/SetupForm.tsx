@@ -5,7 +5,67 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import Link from "next/link";
 import Spinner from "@/components/ui/Spinner";
-import { FileIcon as FileIconSmall } from "@/components/ui/Icons";
+import { FileIcon as FileIconSmall, ChevronDownIcon } from "@/components/ui/Icons";
+
+interface SelectOption<T extends string | number> {
+  value: T;
+  label: string;
+}
+
+function SelectPopover<T extends string | number>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: SelectOption<T>[];
+  onChange: (v: T) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const selectedLabel = options.find((o) => o.value === value)?.label ?? "";
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-surface-0 border border-border rounded-xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200"
+      >
+        <span className="text-text-primary">{selectedLabel}</span>
+        <ChevronDownIcon className={`w-4 h-4 text-text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-surface-1 border border-border rounded-xl shadow-lg overflow-hidden">
+          {options.map((opt) => (
+            <button
+              key={String(opt.value)}
+              type="button"
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2.5 text-sm transition-all duration-150 hover:bg-accent-muted ${
+                value === opt.value ? "text-accent font-semibold bg-accent-muted" : "text-text-primary"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface Group {
   label: string;
@@ -70,7 +130,10 @@ export default function SetupForm() {
   useEffect(() => {
     fetch("/api/resumes")
       .then((r) => r.json())
-      .then((data) => setSavedResumes(data))
+      .then((data) => {
+        setSavedResumes(data);
+        if (data.length === 1) setSelectedResumeId(data[0].id);
+      })
       .catch(() => {})
       .finally(() => setLoadingResumes(false));
   }, []);
@@ -202,27 +265,27 @@ export default function SetupForm() {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">面试长度</label>
-          <select
+          <SelectPopover
             value={questionCount}
-            onChange={(e) => setQuestionCount(Number(e.target.value))}
-            className="w-full px-4 py-3 bg-surface-0 border border-border rounded-xl text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200 appearance-none"
-          >
-            <option value={6}>快速面试（6 题）</option>
-            <option value={12}>标准面试（12 题）</option>
-            <option value={20}>深度面试（20 题）</option>
-          </select>
+            options={[
+              { value: 6, label: "快速面试（6 题）" },
+              { value: 12, label: "标准面试（12 题）" },
+              { value: 20, label: "深度面试（20 题）" },
+            ]}
+            onChange={setQuestionCount}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">目标难度</label>
-          <select
+          <SelectPopover
             value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-            className="w-full px-4 py-3 bg-surface-0 border border-border rounded-xl text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200 appearance-none"
-          >
-            <option value="junior">初级</option>
-            <option value="mid">中级</option>
-            <option value="senior">高级</option>
-          </select>
+            options={[
+              { value: "junior", label: "初级" },
+              { value: "mid", label: "中级" },
+              { value: "senior", label: "高级" },
+            ]}
+            onChange={setDifficulty}
+          />
         </div>
       </div>
 

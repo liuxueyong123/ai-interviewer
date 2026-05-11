@@ -51,6 +51,7 @@ export function buildEvaluationPrompt(conversationHistory: string, resumeText: s
 - questionNumber 从 1 开始递增
 - score 为该题回答质量的独立评分
 - comment 要简短精炼，点出关键问题或亮点
+- 面试官的结束语不要放进 questionReviews 中
 
 面试记录：
 ${conversationHistory}
