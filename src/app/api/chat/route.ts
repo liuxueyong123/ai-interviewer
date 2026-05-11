@@ -29,15 +29,6 @@ export async function POST(request: NextRequest) {
 
   const msgRepo = ds.getRepository(Message);
 
-  // Save user message
-  const userMsg = msgRepo.create({
-    interview: { id: interviewId },
-    role: "user",
-    content: message,
-    questionNumber: null,
-  });
-  await msgRepo.save(userMsg);
-
   const questionCount = await msgRepo.count({
     where: { interview: { id: interviewId }, role: "interviewer" },
   });
@@ -47,7 +38,6 @@ export async function POST(request: NextRequest) {
     { role: "system", content: buildInterviewSystemPrompt(interview.position, interview.resumeText, interview.questionCount, interview.difficulty) },
   ];
 
-  // Load and append any previous messages as proper role-based messages
   const history = await msgRepo.find({
     where: { interview: { id: interviewId } },
     order: { createdAt: "ASC" },
@@ -60,7 +50,6 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // Append the current user message (not yet saved to DB)
   const displayMessage = hint
     ? `[提示请求] 用户需要一些思考方向。请针对当前问题给出简短提示或关键概念引导，但不要直接给出答案，也不要进入下一个问题。提示后等待用户正式回答。用户原文：${message}`
     : message;
@@ -91,7 +80,6 @@ export async function POST(request: NextRequest) {
   }
 
   const eventStream = deepseekRes.body.pipeThrough(new TextDecoderStream()).pipeThrough(new EventSourceParserStream());
-
   const reader = eventStream.getReader();
   const encoder = new TextEncoder();
   let fullContent = "";
@@ -119,6 +107,15 @@ export async function POST(request: NextRequest) {
               // Skip unparseable data
             }
           }
+
+          // Save user message after building the API request
+          const userMsg = msgRepo.create({
+            interview: { id: interviewId },
+            role: "user",
+            content: message,
+            questionNumber: null,
+          });
+          await msgRepo.save(userMsg);
 
           const newCount = questionCount + 1;
           const interviewerMsg = msgRepo.create({
