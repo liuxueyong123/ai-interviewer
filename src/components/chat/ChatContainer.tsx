@@ -180,7 +180,7 @@ export default function ChatContainer() {
       type="button"
       onClick={recState === "recording" ? stopListening : startListening}
       disabled={recState === "processing" || loading}
-      className={`inline-flex items-center h-9 px-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+      className={`inline-flex items-center h-9 px-2 -ml-1.5 -mr-1 rounded-lg text-xs font-medium transition-all duration-200 ${
         recState === "recording"
           ? "bg-danger text-white shadow-[0_0_0_3px_rgba(239,68,68,0.2)]"
           : recState === "processing"
