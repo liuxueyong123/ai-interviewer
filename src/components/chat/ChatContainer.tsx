@@ -6,6 +6,7 @@ import { Bubble, Sender } from "@ant-design/x";
 import { message } from "antd";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import { roleConfig } from "./roleConfig";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 interface BubbleItem {
   key: string;
@@ -13,6 +14,12 @@ interface BubbleItem {
   content: string;
   loading?: boolean;
   streaming?: boolean;
+}
+
+function formatElapsed(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
 export default function ChatContainer() {
@@ -29,6 +36,13 @@ export default function ChatContainer() {
   const [senderValue, setSenderValue] = useState("");
   const abortRef = useRef<AbortController | null>(null);
 
+  // Timer
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // Voice
+  const { isListening, isSupported: micSupported, startListening, stopListening, transcriptRef } = useSpeechRecognition();
+
   const sendMessage = useCallback(
     async function sendMessageFn(userMsg: string, isHint = false) {
       if (!interviewId || loading) return;
@@ -38,7 +52,11 @@ export default function ChatContainer() {
       const displayMsg = isHint ? "（请求提示）" : userMsg;
       const userKey = Date.now().toString();
       const aiKey = (Date.now() + 1).toString();
-      setMessages((prev) => [...prev, { key: userKey, role: "user", content: displayMsg }, { key: aiKey, role: "interviewer", content: "", loading: true }]);
+      setMessages((prev) => [
+        ...prev,
+        { key: userKey, role: "user", content: displayMsg },
+        { key: aiKey, role: "interviewer", content: "AI 正在思考...", loading: true },
+      ]);
       const abort = new AbortController();
       abortRef.current = abort;
 
@@ -60,7 +78,13 @@ export default function ChatContainer() {
             const event = JSON.parse(value.data);
             if (event.type === "chunk") {
               fullContent += event.content;
-              setMessages((prev) => prev.map((m) => (m.key === aiKey ? { ...m, content: m.content + event.content, loading: false, streaming: true } : m)));
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.key === aiKey
+                    ? { ...m, content: m.content === "AI 正在思考..." ? event.content : m.content + event.content, loading: false, streaming: true }
+                    : m,
+                ),
+              );
             } else if (event.type === "done") {
               setQuestionCount(event.questionNumber);
               setMessages((prev) => prev.map((m) => (m.key === aiKey ? { ...m, loading: false, streaming: false } : m)));
@@ -85,6 +109,7 @@ export default function ChatContainer() {
     [interviewId, loading],
   );
 
+  // Load interview history
   useEffect(() => {
     if (!interviewId) return;
     fetch(`/api/interviews/${interviewId}`)
@@ -101,9 +126,40 @@ export default function ChatContainer() {
           setQuestionCount(data.messages.filter((m: { role: string }) => m.role === "interviewer").length);
         }
         if (data.interview?.status === "done") setFinished(true);
+        if (data.interview?.createdAt) setStartTime(new Date(data.interview.createdAt));
       })
       .catch(() => {});
   }, [interviewId]);
+
+  // Timer tick
+  useEffect(() => {
+    if (!startTime) return;
+    const interval = setInterval(() => setElapsedSeconds(Math.floor((Date.now() - startTime.getTime()) / 1000)), 1000);
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  // Leave confirmation
+  useEffect(() => {
+    if (finished) return;
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [finished]);
+
+  // Voice transcript → input
+  useEffect(() => {
+    const ref = transcriptRef;
+    const check = setInterval(() => {
+      if (ref.current && !isListening) {
+        setSenderValue((prev) => prev + ref.current);
+        ref.current = "";
+      }
+    }, 200);
+    return () => clearInterval(check);
+  }, [isListening, transcriptRef]);
 
   const cancelRequest = useCallback(() => {
     abortRef.current?.abort();
@@ -123,14 +179,37 @@ export default function ChatContainer() {
     }
   }
 
+  function handleFinishClick() {
+    if (!window.confirm("确定要结束当前面试吗？结束后将无法继续回答。")) return;
+    finishInterview();
+  }
+
   async function sendHint() {
     await sendMessage("请给我一点提示，帮助我思考当前问题", true);
   }
 
+  const micButton = micSupported ? (
+    <button
+      type="button"
+      onClick={isListening ? stopListening : startListening}
+      className={`inline-flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 ${
+        isListening ? "bg-danger text-white animate-pulse" : "text-text-muted hover:text-accent hover:bg-accent-muted"
+      }`}
+      title={isListening ? "停止录音" : "语音输入"}
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+      </svg>
+    </button>
+  ) : null;
+
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-        <h1 className="font-semibold text-sm text-gray-800">AI 面试进行中</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="font-semibold text-sm text-gray-800">AI 面试进行中</h1>
+          <span className="text-xs text-text-muted tabular-nums font-mono">{formatElapsed(elapsedSeconds)}</span>
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-text-muted tabular-nums">问题 {questionCount}</span>
           <button
@@ -144,7 +223,7 @@ export default function ChatContainer() {
             给点提示
           </button>
           <button
-            onClick={finishInterview}
+            onClick={handleFinishClick}
             disabled={loading || finished || finishing}
             className="text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 disabled:opacity-40 transition-all duration-200 font-medium cursor-pointer"
           >
@@ -187,6 +266,7 @@ export default function ChatContainer() {
             onChange={setSenderValue}
             loading={loading}
             placeholder="输入你的回答..."
+            prefix={micButton}
             onSubmit={(val) => {
               sendMessage(val);
             }}
