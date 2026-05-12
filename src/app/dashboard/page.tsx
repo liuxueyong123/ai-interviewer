@@ -50,7 +50,7 @@ export default async function DashboardPage() {
     .filter((i) => i.categories)
     .reverse()
     .map((i) => ({
-      title: i.title.replace(/^面试\d+: /, ""),
+      title: i.title,
       date: i.createdAt,
       tech: i.categories!.tech,
       project: i.categories!.project,
