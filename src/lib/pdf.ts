@@ -1,6 +1,7 @@
 import { PDFParse } from "pdf-parse";
 import path from "path";
 import fs from "fs";
+import "@napi-rs/canvas";
 
 function resolveWorkerPath(): string {
   const candidates = [
