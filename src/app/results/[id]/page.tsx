@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ScoreRing, CategoryBars, EvaluationText, InterviewReview } from "@/components/interview/ScoreCard";
+import { ScoreRing, CategoryBars, EvaluationText, InterviewReview, PracticePanel } from "@/components/interview/ScoreCard";
 import RetryButton from "@/components/interview/RetryButton";
 
 async function getInterviewData(id: string) {
@@ -49,6 +49,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
           <div className="space-y-6 min-w-0">
             <CategoryBars categories={evaluation.categories} />
             <EvaluationText strengths={evaluation.strengths} weaknesses={evaluation.weaknesses} resumeSuggestions={evaluation.resumeSuggestions} />
+            <PracticePanel suggestions={evaluation.practiceSuggestions} />
           </div>
 
           {/* Right column: merged Q&A + reviews */}

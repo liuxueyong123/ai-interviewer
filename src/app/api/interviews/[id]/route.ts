@@ -46,6 +46,7 @@ export async function GET(
           weaknesses: interview.evaluation.weaknesses,
           resumeSuggestions: interview.evaluation.resumeSuggestions,
           questionReviews: interview.evaluation.questionReviews,
+          practiceSuggestions: interview.evaluation.practiceSuggestions,
         }
       : null,
   });

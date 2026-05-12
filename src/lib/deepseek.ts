@@ -38,6 +38,13 @@ export function buildEvaluationPrompt(conversationHistory: string, resumeText: s
   "strengths": "<优点>",
   "weaknesses": "<待改进>",
   "resumeSuggestions": "<简历优化建议>",
+  "practiceSuggestions": [
+    {
+      "area": "<薄弱领域，如：系统设计、算法、沟通表达>",
+      "description": "<具体问题表现，50字以内>",
+      "suggestion": "<可执行的练习方案，100字以内>"
+    }
+  ],
   "questionReviews": [
     {
       "questionNumber": 1,
@@ -53,6 +60,7 @@ export function buildEvaluationPrompt(conversationHistory: string, resumeText: s
 - questionNumber 从 1 开始递增
 - score 为该题回答质量的独立评分
 - comment 要简短精炼，点出关键问题或亮点
+- practiceSuggestions 针对候选人的薄弱环节给出 2-4 条结构化练习建议
 - 面试官的结束语不要放进 questionReviews 中
 
 面试记录：

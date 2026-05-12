@@ -40,6 +40,7 @@ export async function POST(
     weaknesses: parsed.weaknesses,
     resumeSuggestions: parsed.resumeSuggestions,
     questionReviews: parsed.questionReviews || null,
+    practiceSuggestions: parsed.practiceSuggestions || null,
   });
   await ds.getRepository(Evaluation).save(evaluation);
 
