@@ -35,8 +35,8 @@ interface InterviewData {
   } | null;
 }
 
-const POLL_INTERVAL = 2000;
-const TIMEOUT_MS = 60_000;
+const POLL_INTERVAL = 5000;
+const TIMEOUT_MS = 600_000;
 
 export default function ResultsPage() {
   const { id } = useParams<{ id: string }>();
@@ -160,7 +160,7 @@ export default function ResultsPage() {
           <div>
             <h1 className="font-display text-xl font-bold text-text-primary mb-2">评估进行中</h1>
             <p className="text-text-muted text-sm">AI 正在分析你的面试表现，包括技术能力、项目经验和沟通表达...</p>
-            <p className="text-text-muted text-xs mt-2">预计需要 2 分钟左右</p>
+            <p className="text-text-muted text-xs mt-2">预计需要 3 分钟左右</p>
           </div>
           {timedOut && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">

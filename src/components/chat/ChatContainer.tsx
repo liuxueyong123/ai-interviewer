@@ -3,6 +3,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Bubble, Sender } from "@ant-design/x";
+import { XMarkdown } from "@ant-design/x-markdown";
+import "@ant-design/x-markdown/dist/x-markdown.css";
 import { toast } from "@/components/ui/Toast";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import { roleConfig } from "./roleConfig";
@@ -262,6 +264,13 @@ export default function ChatContainer() {
             content: m.content,
             loading: m.loading,
             streaming: m.streaming,
+            ...(m.role === "interviewer" && !m.loading
+              ? {
+                  contentRender: (content: string) => (
+                    <XMarkdown content={content} streaming={{ hasNextChunk: m.streaming ?? false, enableAnimation: true }} />
+                  ),
+                }
+              : {}),
           }))}
           style={{ height: "100%", padding: "16px" }}
         />
