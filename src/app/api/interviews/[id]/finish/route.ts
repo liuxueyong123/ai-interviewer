@@ -6,10 +6,7 @@ import { buildEvaluationPrompt, getEvaluation } from "@/lib/deepseek";
 import { getUserId } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const userId = getUserId(request);
 
   const ds = await getDataSource();
@@ -21,9 +18,11 @@ export async function POST(
 
   if (!interview) return NextResponse.json({ error: "面试不存在" }, { status: 404 });
   if (interview.status === "done") return NextResponse.json({ error: "面试已结束" }, { status: 400 });
-  if (interview.status === "evaluating") return NextResponse.json({ error: "面试评估中" }, { status: 400 });
 
   await ds.getRepository(Interview).update(interview.id, { status: "evaluating" });
+
+  // Delete any stale evaluation from a previous attempt (e.g. server restarted mid-evaluation)
+  await ds.getRepository(Evaluation).delete({ interview: { id: interview.id } });
 
   // Fire-and-forget: run evaluation in background, do not block the response
   const conversationHistory = interview.messages
@@ -37,7 +36,10 @@ export async function POST(
 
   getEvaluation(buildEvaluationPrompt(conversationHistory, interview.resumeText))
     .then(async (evalResult) => {
-      const jsonStr = evalResult.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const jsonStr = evalResult
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
       const parsed = JSON.parse(jsonStr);
 
       const evaluation = ds.getRepository(Evaluation).create({
