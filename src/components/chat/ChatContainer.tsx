@@ -59,11 +59,7 @@ export default function ChatContainer() {
       const displayMsg = isHint ? "（请求提示）" : userMsg;
       const userKey = Date.now().toString();
       const aiKey = (Date.now() + 1).toString();
-      setMessages((prev) => [
-        ...prev,
-        { key: userKey, role: "user", content: displayMsg },
-        { key: aiKey, role: "interviewer", content: "AI 正在思考...", loading: true },
-      ]);
+      setMessages((prev) => [...prev, { key: userKey, role: "user", content: displayMsg }, { key: aiKey, role: "interviewer", content: "AI 正在思考...", loading: true }]);
       const abort = new AbortController();
       abortRef.current = abort;
 
@@ -86,11 +82,7 @@ export default function ChatContainer() {
             if (event.type === "chunk") {
               fullContent += event.content;
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.key === aiKey
-                    ? { ...m, content: m.content === "AI 正在思考..." ? event.content : m.content + event.content, loading: false, streaming: true }
-                    : m,
-                ),
+                prev.map((m) => (m.key === aiKey ? { ...m, content: m.content === "AI 正在思考..." ? event.content : m.content + event.content, loading: false, streaming: true } : m)),
               );
             } else if (event.type === "done") {
               setQuestionCount(event.questionNumber);
@@ -188,7 +180,7 @@ export default function ChatContainer() {
       type="button"
       onClick={recState === "recording" ? stopListening : startListening}
       disabled={recState === "processing" || loading}
-      className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
+      className={`inline-flex items-center h-9 px-2 rounded-lg text-xs font-medium transition-all duration-200 ${
         recState === "recording"
           ? "bg-danger text-white shadow-[0_0_0_3px_rgba(239,68,68,0.2)]"
           : recState === "processing"
@@ -200,7 +192,11 @@ export default function ChatContainer() {
       {recState === "processing" ? (
         <>
           <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"
+            />
           </svg>
           识别中...
         </>
@@ -214,10 +210,13 @@ export default function ChatContainer() {
         </>
       ) : (
         <>
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"
+            />
           </svg>
-          语音输入
         </>
       )}
     </button>
@@ -238,7 +237,11 @@ export default function ChatContainer() {
             className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 text-text-secondary hover:text-accent hover:bg-accent-muted rounded-lg disabled:opacity-30 transition-all duration-200 font-medium"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"
+              />
             </svg>
             给点提示
           </button>
