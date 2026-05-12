@@ -2,6 +2,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import ProgressPanel from "@/components/interview/ProgressPanel";
 
+export const dynamic = "force-dynamic";
+
 interface Categories {
   tech: number;
   project: number;

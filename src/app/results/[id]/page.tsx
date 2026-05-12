@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { ScoreRing, CategoryBars, EvaluationText, InterviewReview, PracticePanel } from "@/components/interview/ScoreCard";
 import RetryButton from "@/components/interview/RetryButton";
 
+export const dynamic = "force-dynamic";
+
 async function getInterviewData(id: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;

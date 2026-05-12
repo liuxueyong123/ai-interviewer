@@ -19,10 +19,12 @@ export const AppDataSource = new DataSource({
   synchronize: !isProduction,
   logging: false,
   entities: [User, Interview, Message, Evaluation, Resume],
-  ...(useSSL && {
-    ssl: { rejectUnauthorized: false },
-    extra: { ssl: { rejectUnauthorized: false } },
-  }),
+  connectTimeout: 10000,
+  extra: {
+    connectTimeout: 10000,
+    ...(useSSL ? { ssl: { rejectUnauthorized: false } } : {}),
+  },
+  ...(useSSL ? { ssl: { rejectUnauthorized: false } } : {}),
 });
 
 export async function getDataSource(): Promise<DataSource> {
