@@ -27,7 +27,8 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "sharp",
-      "unrs-resolver"
+      "unrs-resolver",
+      "@napi-rs/canvas"
     ]
   },
   "devDependencies": {
