@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+
 const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 
 export function buildInterviewSystemPrompt(position: string, resumeText: string, questionCount: number = 12, difficulty: string = "mid"): string {
@@ -68,7 +70,7 @@ export async function getEvaluation(promptText: string): Promise<string> {
   });
   if (!res.ok) {
     const body = await res.text();
-    console.error("DeepSeek evaluation error:", res.status, body);
+    logger.error("DeepSeek evaluation error", { status: res.status, body });
     throw new Error(`DeepSeek API error ${res.status}: ${body}`);
   }
   const data = await res.json();

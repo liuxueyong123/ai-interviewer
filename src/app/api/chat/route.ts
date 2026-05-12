@@ -5,6 +5,7 @@ import { Message } from "@/entities/Message";
 import { buildInterviewSystemPrompt } from "@/lib/deepseek";
 import { getUserId } from "@/lib/utils";
 import { validate, chatSchema } from "@/lib/validations";
+import { logger } from "@/lib/logger";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
 export const maxDuration = 60;
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
 
   if (!deepseekRes.ok) {
     const body = await deepseekRes.text();
-    console.error("DeepSeek API error:", deepseekRes.status, body);
+    logger.error("DeepSeek API error", { status: deepseekRes.status, body });
     return new Response(body, { status: 502 });
   }
 
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
           controller.enqueue(encoder.encode(`data: ${doneEvent}\n\n`));
           controller.close();
         } catch (err) {
-          console.error("Stream error:", err);
+          logger.error("Stream error", { error: String(err) });
           controller.error(err);
         }
       })();
