@@ -1,0 +1,52 @@
+import { z } from "zod";
+
+// ── Auth ──
+export const loginSchema = z.object({
+  login: z.string().min(1, "用户名/邮箱不能为空"),
+  password: z.string().min(1, "密码不能为空"),
+});
+
+export const registerSchema = z.object({
+  username: z.string().min(2, "用户名至少2个字符").max(50, "用户名最多50个字符"),
+  email: z.string().email("邮箱格式不正确"),
+  password: z.string().min(6, "密码至少6个字符"),
+});
+
+// ── Chat ──
+export const chatSchema = z.object({
+  interviewId: z.number().int().positive("无效的面试ID"),
+  message: z.string().min(1, "消息不能为空"),
+  hint: z.boolean().optional(),
+});
+
+// ── Interviews ──
+export const createInterviewSchema = z.object({
+  position: z.string().min(1, "请选择目标岗位"),
+  resumeText: z.string().optional(),
+  resumeId: z.number().int().positive().optional(),
+  questionCount: z.number().int().min(1).max(50).optional(),
+  difficulty: z.enum(["junior", "mid", "senior"]).optional(),
+});
+
+// ── Resumes ──
+export const updateResumeSchema = z.object({
+  filename: z.string().min(1, "文件名不能为空").optional(),
+  content: z.string().optional(),
+});
+
+// ── Helper ──
+export function validate<T>(schema: z.ZodSchema<T>, data: unknown): T {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    const message = result.error.issues.map((i) => i.message).join("; ");
+    throw new ValidationError(message);
+  }
+  return result.data;
+}
+
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}

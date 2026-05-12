@@ -3,6 +3,7 @@ import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Resume } from "@/entities/Resume";
 import { getUserId } from "@/lib/utils";
+import { validate, createInterviewSchema, ValidationError } from "@/lib/validations";
 import { Message } from "@/entities/Message";
 
 export async function GET(request: NextRequest) {
@@ -30,12 +31,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const userId = getUserId(request);
-  const { position, resumeText, resumeId, questionCount, difficulty } = await request.json();
-
-  if (!position) {
-    return NextResponse.json({ error: "请选择目标岗位" }, { status: 400 });
+  let body: { position: string; resumeText?: string; resumeId?: number; questionCount?: number; difficulty?: "junior" | "mid" | "senior" };
+  try {
+    body = validate(createInterviewSchema, await request.json());
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return NextResponse.json({ error: e.message }, { status: 400 });
+    }
+    throw e;
   }
 
+  const { position, resumeText, resumeId, questionCount = 12, difficulty = "mid" } = body;
   let finalResumeText = resumeText || "";
 
   // If resumeId is provided, fetch the saved resume content
@@ -66,8 +72,8 @@ export async function POST(request: NextRequest) {
     title,
     resumeText: finalResumeText,
     status: "ongoing",
-    questionCount: questionCount || 12,
-    difficulty: difficulty || "mid",
+    questionCount,
+    difficulty,
   });
   await ds.getRepository(Interview).save(interview);
 

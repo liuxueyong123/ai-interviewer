@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { loginSchema } from "@/lib/validations";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +15,13 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+
+    const parsed = loginSchema.safeParse({ login, password });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0].message);
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch("/api/auth/login", {

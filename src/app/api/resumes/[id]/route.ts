@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDataSource } from "@/lib/database";
 import { Resume } from "@/entities/Resume";
 import { getUserId } from "@/lib/utils";
+import { validate, updateResumeSchema, ValidationError } from "@/lib/validations";
 
 function getResumeId(params: { id: string }) {
   return parseInt(params.id, 10);
@@ -26,7 +27,15 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userId = getUserId(request);
-  const { filename, content } = await request.json();
+  let body: { filename?: string; content?: string };
+  try {
+    body = validate(updateResumeSchema, await request.json());
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return NextResponse.json({ error: e.message }, { status: 400 });
+    }
+    throw e;
+  }
 
   const ds = await getDataSource();
   const { id } = await params;
@@ -36,12 +45,11 @@ export async function PATCH(
   });
   if (!resume) return NextResponse.json({ error: "简历不存在" }, { status: 404 });
 
-  if (filename !== undefined) {
-    if (!filename.trim()) return NextResponse.json({ error: "文件名不能为空" }, { status: 400 });
-    resume.filename = filename.trim();
+  if (body.filename !== undefined) {
+    resume.filename = body.filename.trim();
   }
-  if (content !== undefined) {
-    resume.content = content;
+  if (body.content !== undefined) {
+    resume.content = body.content;
   }
 
   await repo.save(resume);

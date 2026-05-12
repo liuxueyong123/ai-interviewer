@@ -4,6 +4,7 @@ import { Interview } from "@/entities/Interview";
 import { Message } from "@/entities/Message";
 import { buildInterviewSystemPrompt } from "@/lib/deepseek";
 import { getUserId } from "@/lib/utils";
+import { validate, chatSchema } from "@/lib/validations";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
 export const maxDuration = 60;
@@ -13,10 +14,8 @@ const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 
 export async function POST(request: NextRequest) {
   const userId = getUserId(request);
-  const { interviewId, message, hint } = await request.json();
-  if (!interviewId || !message) {
-    return new Response("Missing params", { status: 400 });
-  }
+  const body = validate(chatSchema, await request.json());
+  const { interviewId, message, hint } = body;
 
   const ds = await getDataSource();
   const interview = await ds.getRepository(Interview).findOne({

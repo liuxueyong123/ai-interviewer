@@ -2,27 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDataSource } from "@/lib/database";
 import { User } from "@/entities/User";
 import { hashPassword, signToken } from "@/lib/auth";
+import { validate, registerSchema, ValidationError } from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
-  const { username, email, password } = await request.json();
-
-  if (!username || !email || !password) {
-    return NextResponse.json({ error: "所有字段必填" }, { status: 400 });
+  let body: { username: string; email: string; password: string };
+  try {
+    body = validate(registerSchema, await request.json());
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return NextResponse.json({ error: e.message }, { status: 400 });
+    }
+    throw e;
   }
 
   try {
     const ds = await getDataSource();
     const repo = ds.getRepository(User);
 
-    const existing = await repo.findOne({ where: [{ username }, { email }] });
+    const existing = await repo.findOne({ where: [{ username: body.username }, { email: body.email }] });
     if (existing) {
       return NextResponse.json({ error: "用户名或邮箱已被注册" }, { status: 409 });
     }
 
     const user = repo.create({
-      username,
-      email,
-      passwordHash: await hashPassword(password),
+      username: body.username,
+      email: body.email,
+      passwordHash: await hashPassword(body.password),
     });
     await repo.save(user);
 
