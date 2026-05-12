@@ -47,7 +47,7 @@ export function buildEvaluationPrompt(conversationHistory: string, resumeText: s
   ],
   "questionReviews": [
     {
-      "questionNumber": 1,
+      "questionNumber": "<对话中的 Q 编号>",
       "question": "<面试官的提问原文摘要>",
       "score": <0-100>,
       "comment": "<针对该题回答的简短点评，50字以内>"
@@ -57,7 +57,7 @@ export function buildEvaluationPrompt(conversationHistory: string, resumeText: s
 
 注意：
 - questionReviews 数组中每道面试官提问对应一条记录
-- questionNumber 从 1 开始递增
+- questionNumber 必须与面试记录中的 Q 编号一致，不要自己重新编号
 - score 为该题回答质量的独立评分
 - comment 要简短精炼，点出关键问题或亮点
 - practiceSuggestions 针对候选人的薄弱环节给出 2-4 条结构化练习建议

@@ -27,7 +27,12 @@ export async function POST(
 
   // Fire-and-forget: run evaluation in background, do not block the response
   const conversationHistory = interview.messages
-    .map((m: { role: string; content: string }) => `${m.role === "interviewer" ? "面试官" : "候选人"}：${m.content}`)
+    .map((m: { role: string; content: string; questionNumber: number | null }) => {
+      if (m.role === "interviewer" && m.questionNumber != null) {
+        return `Q${m.questionNumber} 面试官：${m.content}`;
+      }
+      return `候选人：${m.content}`;
+    })
     .join("\n\n");
 
   getEvaluation(buildEvaluationPrompt(conversationHistory, interview.resumeText))
