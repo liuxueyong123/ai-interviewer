@@ -1,0 +1,50 @@
+services:
+  app:
+    image: ${ACR_REGISTRY}/${ACR_NAMESPACE}/interview-ai:latest
+    container_name: interview-ai
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:3000:3000"
+
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+
+      # 数据库
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_SSL=${DB_SSL:-false}
+
+      # JWT
+      - JWT_SECRET=${JWT_SECRET}
+
+      # DeepSeek AI
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL}
+
+      # 语音识别
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+
+      # 前端 URL
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
+
+      # Cookie
+      - COOKIE_SECURE=${COOKIE_SECURE:-true}
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"

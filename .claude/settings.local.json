@@ -29,7 +29,11 @@
       "WebSearch",
       "Bash(npx next *)",
       "Bash(npx tsc *)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "mcp__plugin_everything-claude-code_exa__web_search_exa",
+      "Bash(npm audit *)",
+      "Bash(npx eslint *)",
+      "Bash(echo \"---TSC EXIT: $?---\")"
     ]
   }
 }
