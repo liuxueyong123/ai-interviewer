@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 
-export function useSpeechRecognition(onResult: (text: string) => void) {
+export function useSpeechRecognition(onResult: (text: string) => void, onError?: (error: string) => void) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -22,13 +22,10 @@ export function useSpeechRecognition(onResult: (text: string) => void) {
     let finalTranscript = "";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
           finalTranscript += result[0].transcript;
-        } else {
-          interim += result[0].transcript;
         }
       }
     };
@@ -42,15 +39,19 @@ export function useSpeechRecognition(onResult: (text: string) => void) {
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       setIsListening(false);
-      if (event.error !== "aborted" && event.error !== "no-speech") {
-        console.warn("Speech recognition error:", event.error);
+      if (event.error === "network") {
+        onError?.("语音服务不可用，请检查网络连接");
+      } else if (event.error === "not-allowed") {
+        onError?.("请允许麦克风权限后重试");
+      } else if (event.error !== "aborted" && event.error !== "no-speech") {
+        onError?.(`语音识别失败: ${event.error}`);
       }
     };
 
     recognitionRef.current = recognition;
     setIsListening(true);
     recognition.start();
-  }, [isSupported, onResult]);
+  }, [isSupported, onResult, onError]);
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();

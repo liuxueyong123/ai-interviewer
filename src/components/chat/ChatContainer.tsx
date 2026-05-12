@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Bubble, Sender } from "@ant-design/x";
 import { message } from "antd";
+import { toast } from "@/components/ui/Toast";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import { roleConfig } from "./roleConfig";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
@@ -44,7 +45,10 @@ export default function ChatContainer() {
   const handleVoiceResult = useCallback((text: string) => {
     setSenderValue((prev) => prev + text);
   }, []);
-  const { isListening, isSupported: micSupported, startListening, stopListening } = useSpeechRecognition(handleVoiceResult);
+  const handleVoiceError = useCallback((err: string) => {
+    toast.warning(err);
+  }, []);
+  const { isListening, isSupported: micSupported, startListening, stopListening } = useSpeechRecognition(handleVoiceResult, handleVoiceError);
 
   const sendMessage = useCallback(
     async function sendMessageFn(userMsg: string, isHint = false) {
