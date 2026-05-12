@@ -41,7 +41,10 @@ export default function ChatContainer() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   // Voice
-  const { isListening, isSupported: micSupported, startListening, stopListening, transcriptRef } = useSpeechRecognition();
+  const handleVoiceResult = useCallback((text: string) => {
+    setSenderValue((prev) => prev + text);
+  }, []);
+  const { isListening, isSupported: micSupported, startListening, stopListening } = useSpeechRecognition(handleVoiceResult);
 
   const sendMessage = useCallback(
     async function sendMessageFn(userMsg: string, isHint = false) {
@@ -148,18 +151,6 @@ export default function ChatContainer() {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [finished]);
-
-  // Voice transcript → input
-  useEffect(() => {
-    const ref = transcriptRef;
-    const check = setInterval(() => {
-      if (ref.current && !isListening) {
-        setSenderValue((prev) => prev + ref.current);
-        ref.current = "";
-      }
-    }, 200);
-    return () => clearInterval(check);
-  }, [isListening, transcriptRef]);
 
   const cancelRequest = useCallback(() => {
     abortRef.current?.abort();
