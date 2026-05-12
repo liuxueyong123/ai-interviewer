@@ -1,62 +1,89 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
+
+type RecState = "idle" | "recording" | "processing";
+
+function checkSupport() {
+  return typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+}
 
 export function useSpeechRecognition(onResult: (text: string) => void, onError?: (error: string) => void) {
-  const [isListening, setIsListening] = useState(false);
-  const [isSupported, setIsSupported] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [recState, setRecState] = useState<RecState>("idle");
+  const [isSupported] = useState(checkSupport);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
-  useEffect(() => {
-    setIsSupported("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
-  }, []);
+  const startListening = useCallback(async () => {
+    if (!isSupported) {
+      onError?.("当前浏览器不支持录音");
+      return;
+    }
 
-  const startListening = useCallback(() => {
-    if (!isSupported) return;
-    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognitionCtor();
-    recognition.lang = "zh-CN";
-    recognition.interimResults = true;
-    recognition.continuous = false;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+          ? "audio/webm"
+          : "audio/mp4";
 
-    let finalTranscript = "";
+      chunksRef.current = [];
+      const recorder = new MediaRecorder(stream, { mimeType });
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalTranscript += result[0].transcript;
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        chunksRef.current = [];
+
+        if (blob.size < 100) {
+          setRecState("idle");
+          return;
         }
-      }
-    };
 
-    recognition.onend = () => {
-      setIsListening(false);
-      if (finalTranscript) {
-        onResult(finalTranscript);
-      }
-    };
+        setRecState("processing");
+        try {
+          const formData = new FormData();
+          formData.append("audio", blob, "recording.webm");
 
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      setIsListening(false);
-      if (event.error === "network") {
-        onError?.("语音服务不可用，请检查网络连接");
-      } else if (event.error === "not-allowed") {
-        onError?.("请允许麦克风权限后重试");
-      } else if (event.error !== "aborted" && event.error !== "no-speech") {
-        onError?.(`语音识别失败: ${event.error}`);
-      }
-    };
+          const res = await fetch("/api/speech", { method: "POST", body: formData });
+          const data = await res.json();
 
-    recognitionRef.current = recognition;
-    setIsListening(true);
-    recognition.start();
+          if (!res.ok) {
+            onError?.(data.error || "语音识别失败");
+          } else if (data.text) {
+            onResult(data.text);
+          }
+        } catch {
+          onError?.("语音识别请求失败");
+        } finally {
+          setRecState("idle");
+        }
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecState("recording");
+    } catch {
+      onError?.("无法访问麦克风");
+    }
   }, [isSupported, onResult, onError]);
 
   const stopListening = useCallback(() => {
-    recognitionRef.current?.stop();
-    setIsListening(false);
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
+    }
   }, []);
 
-  return { isListening, isSupported, startListening, stopListening };
+  return {
+    recState,
+    isSupported,
+    startListening,
+    stopListening,
+    isListening: recState === "recording",
+  };
 }

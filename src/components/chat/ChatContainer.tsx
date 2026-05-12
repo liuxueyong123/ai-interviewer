@@ -48,7 +48,7 @@ export default function ChatContainer() {
   const handleVoiceError = useCallback((err: string) => {
     toast.warning(err);
   }, []);
-  const { isListening, isSupported: micSupported, startListening, stopListening } = useSpeechRecognition(handleVoiceResult, handleVoiceError);
+  const { recState, isSupported: micSupported, startListening, stopListening } = useSpeechRecognition(handleVoiceResult, handleVoiceError);
 
   const sendMessage = useCallback(
     async function sendMessageFn(userMsg: string, isHint = false) {
@@ -186,15 +186,40 @@ export default function ChatContainer() {
   const micButton = micSupported ? (
     <button
       type="button"
-      onClick={isListening ? stopListening : startListening}
-      className={`inline-flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 ${
-        isListening ? "bg-danger text-white animate-pulse" : "text-text-muted hover:text-accent hover:bg-accent-muted"
-      }`}
-      title={isListening ? "停止录音" : "语音输入"}
+      onClick={recState === "recording" ? stopListening : startListening}
+      disabled={recState === "processing" || loading}
+      className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
+        recState === "recording"
+          ? "bg-danger text-white shadow-[0_0_0_3px_rgba(239,68,68,0.2)]"
+          : recState === "processing"
+            ? "bg-surface-2 text-text-muted"
+            : "text-text-muted hover:text-accent hover:bg-accent-muted"
+      } disabled:opacity-50`}
+      title={recState === "recording" ? "点击停止录音" : "语音输入"}
     >
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-      </svg>
+      {recState === "processing" ? (
+        <>
+          <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+          </svg>
+          识别中...
+        </>
+      ) : recState === "recording" ? (
+        <>
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
+          </span>
+          聆听中
+        </>
+      ) : (
+        <>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+          </svg>
+          语音输入
+        </>
+      )}
     </button>
   ) : null;
 
