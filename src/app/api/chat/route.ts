@@ -29,19 +29,14 @@ export async function POST(request: NextRequest) {
 
   const msgRepo = ds.getRepository(Message);
 
-  const questionCount = await msgRepo.count({
-    where: { interview: { id: interviewId }, role: "interviewer" },
-  });
+  const [questionCount, history] = await Promise.all([
+    msgRepo.count({ where: { interview: { id: interviewId }, role: "interviewer" } }),
+    msgRepo.find({ where: { interview: { id: interviewId } }, order: { createdAt: "ASC" } }),
+  ]);
 
-  // Build messages: system prompt + conversation history + current user message
   const chatMessages: Array<{ role: string; content: string }> = [
     { role: "system", content: buildInterviewSystemPrompt(interview.position, interview.resumeText, interview.questionCount, interview.difficulty) },
   ];
-
-  const history = await msgRepo.find({
-    where: { interview: { id: interviewId } },
-    order: { createdAt: "ASC" },
-  });
 
   for (const m of history) {
     chatMessages.push({

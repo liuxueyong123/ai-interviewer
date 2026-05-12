@@ -1,15 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
+import { getUserId } from "@/lib/utils";
 
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY || "";
 const DASHSCOPE_BASE_URL = process.env.DASHSCOPE_BASE_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const MAX_AUDIO_BYTES = 10 * 1024 * 1024; // covers ~4m30s of WebM/Opus audio
 
 export async function POST(request: NextRequest) {
+  const userId = getUserId(request);
+  if (!userId) return NextResponse.json({ error: "未登录" }, { status: 401 });
+
   const formData = await request.formData();
   const audioFile = formData.get("audio") as File | null;
 
   if (!audioFile) {
     return NextResponse.json({ error: "缺少音频文件" }, { status: 400 });
+  }
+
+  if (audioFile.size > MAX_AUDIO_BYTES) {
+    return NextResponse.json({ error: "音频过长，请控制在4分30秒以内" }, { status: 413 });
   }
 
   const arrayBuffer = await audioFile.arrayBuffer();

@@ -21,7 +21,11 @@ export async function POST(request: NextRequest) {
 
     const existing = await repo.findOne({ where: [{ username: body.username }, { email: body.email }] });
     if (existing) {
-      return NextResponse.json({ error: "用户名或邮箱已被注册" }, { status: 409 });
+      if (existing.username === body.username && existing.email === body.email) {
+        return NextResponse.json({ error: "用户名和邮箱均已被注册" }, { status: 409 });
+      }
+      // Don't reveal which field is taken — prevents enumeration
+      return NextResponse.json({ error: "注册失败，请更换用户名或邮箱后重试" }, { status: 409 });
     }
 
     const user = repo.create({
