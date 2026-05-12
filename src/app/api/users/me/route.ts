@@ -55,8 +55,11 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
-  await repo.update(userId, { username: body.username, email: body.email });
-  const updated = await repo.findOne({ where: { id: userId }, select: ["id", "username", "email"] });
+  const updateData: Record<string, string> = {};
+  if (body.username !== undefined) updateData.username = body.username;
+  if (body.email !== undefined) updateData.email = body.email;
+  await repo.update(userId, updateData);
 
+  const updated = await repo.findOne({ where: { id: userId }, select: ["id", "username", "email"] });
   return NextResponse.json(updated);
 }
