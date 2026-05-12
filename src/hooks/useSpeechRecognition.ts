@@ -1,21 +1,26 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 type RecState = "idle" | "recording" | "processing";
 
-function checkSupport() {
-  return typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
-}
-
 export function useSpeechRecognition(onResult: (text: string) => void, onError?: (error: string) => void) {
   const [recState, setRecState] = useState<RecState>("idle");
-  const [isSupported] = useState(checkSupport);
+  const [isSupported, setIsSupported] = useState(false);
+  const didInitRef = useRef(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
+  useEffect(() => {
+    // Runs only on client after hydration — safe to check window
+    if (!didInitRef.current) {
+      didInitRef.current = true;
+      setIsSupported(!!navigator.mediaDevices?.getUserMedia);
+    }
+  }, []);
+
   const startListening = useCallback(async () => {
-    if (!isSupported) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       onError?.("当前浏览器不支持录音");
       return;
     }
@@ -71,7 +76,7 @@ export function useSpeechRecognition(onResult: (text: string) => void, onError?:
     } catch {
       onError?.("无法访问麦克风");
     }
-  }, [isSupported, onResult, onError]);
+  }, [onResult, onError]);
 
   const stopListening = useCallback(() => {
     if (mediaRecorderRef.current?.state === "recording") {
