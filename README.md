@@ -1,48 +1,79 @@
 # InterviewAI
 
-AI 模拟面试练习平台。用户上传 PDF 简历，选择岗位，AI 面试官进行专业提问并生成评分报告。
+AI 模拟面试练习平台。上传 PDF 简历 → 选择岗位 → AI 面试官提问 → 评分报告。
 
 站点地址：[https://interview.lxycode.cn](https://interview.lxycode.cn)
+
+## 功能
+
+- **AI 模拟面试**：选择岗位和难度，AI 面试官进行专业提问（支持语音输入和文字提示）
+- **智能评分**：AI 从技术基础、项目经验、软技能三个维度评分，逐题点评
+- **练习建议**：AI 分析薄弱环节，给出针对性练习方案
+- **成长追踪**：跨多次面试的能力分数变化折线图
+- **简历管理**：上传 PDF 简历，自动解析内容作为面试上下文
+- **个人设置**：修改个人信息和密码（强度校验）
 
 ## 技术栈
 
 - **Next.js 16** App Router + Turbopack
 - **Tailwind CSS v4**（`@theme inline` 定义设计 token）
-- **TypeORM** + MySQL（`synchronize: true`，实体变更自动同步）
+- **TypeORM** + MySQL（`synchronize: true`，实体变更自动同步；`connectTimeout` 10s）
 - **JWT** 认证（proxy 层统一鉴权，`x-user-id` header 传递给 API）
-- **DeepSeek API**（`deepseek-v4-pro`，SSE 流式响应）
-- **eventsource-parser**（`EventSourceParserStream` 解析 SSE）
-- **pdf-parse v2**（`PDFParse` 类，需配置 worker 路径）
+- **DeepSeek API**（`deepseek-v4-pro`，SSE 流式对话）
+- **DashScope Qwen3-ASR-Flash**（语音转文字，OpenAI 兼容接口）
+- **Zod**（全部 API 输入校验）
+- **Recharts**（成长轨迹折线图）
 - **antd + @ant-design/x**（Bubble.List + Sender 聊天 UI）
+- **eventsource-parser**（SSE 流解析）
+- **bcryptjs + jsonwebtoken**（密码哈希 + JWT）
+
+## 本地开发
+
+```bash
+pnpm install
+cp .env.example .env.local   # 编辑填入数据库和 API Key
+pnpm dev                      # http://localhost:3000
+```
 
 ## 项目结构
 
 ```
 src/
 ├── proxy.ts                  # 全局鉴权（放行 /login, /register, /api/auth/*）
-├── app/api/
-│   ├── auth/                 # register/login（Set-Cookie HttpOnly token）
-│   ├── chat/                 # SSE 流式聊天
-│   ├── interviews/           # CRUD + finish 评估
-│   ├── pdf/                  # PDF 解析（5MB 限制）
-│   └── resumes/              # 简历 CRUD（GET/POST/PATCH/DELETE）
+├── app/
+│   ├── error.tsx             # 全局错误边界
+│   ├── login/ register/      # 登录注册（密码强度+显示隐藏）
+│   ├── dashboard/            # 仪表盘（统计+成长轨迹图）+ loading.tsx
+│   ├── resumes/              # 简历管理（上传/编辑/删除）
+│   ├── settings/             # 个人设置（信息修改+密码修改）
+│   ├── interview/setup/      # 面试设置（岗位搜索+简历选择）
+│   ├── interview/chat/       # 面试对话（语音输入+计时器+离开提醒）
+│   ├── results/[id]/         # 评分报告（分数环+分类条+逐题回顾+练习建议）
+│   └── api/
+│       ├── auth/             # register/login/logout/password
+│       ├── chat/             # SSE 流式聊天
+│       ├── speech/           # 语音识别（Qwen3-ASR-Flash）
+│       ├── users/me/         # 用户信息 GET/PATCH
+│       ├── interviews/       # CRUD + finish 评估
+│       └── resumes/          # 简历 CRUD
 ├── components/
-│   ├── ui/                   # Spinner, Icons
-│   ├── layout/               # NavBar, AppShell
-│   ├── chat/                 # ChatContainer
-│   └── interview/            # SetupForm, ScoreCard
+│   ├── ui/                   # Spinner, Icons, ErrorBoundary, Toast
+│   ├── layout/               # NavBar（用户下拉菜单）, AppShell
+│   ├── chat/                 # ChatContainer（面试主界面）
+│   └── interview/            # SetupForm, ScoreCard, ProgressPanel, RetryButton
 ├── entities/                 # User, Interview, Message, Evaluation, Resume
+├── hooks/                    # useSpeechRecognition（MediaRecorder 录音）
 └── lib/
     ├── database.ts           # TypeORM DataSource
     ├── auth.ts               # bcrypt + JWT
-    ├── deepseek.ts           # Prompt 构建 + getEvaluation
-    ├── pdf.ts                # PDFParse（worker 指向 public/pdf.worker.min.mjs）
+    ├── deepseek.ts           # Prompt 构建 + 评估 + 练习建议
+    ├── validations.ts        # Zod schemas + validate()
+    ├── logger.ts             # 结构化 JSON 日志
+    ├── pdf.ts                # PDF 解析
     └── utils.ts              # getUserId(request)
 ```
 
 ## 设计 Token
-
-全局 CSS 变量，直接作为 Tailwind 类使用：
 
 | Token          | 值            | 用途   |
 | -------------- | ------------- | ------ |
@@ -54,22 +85,22 @@ src/
 | `text-primary` | #0f172a       | 正文色 |
 | `border`       | #e2e8f0       | 边框   |
 
-用法：`bg-surface-0` `text-accent` `border-border` `font-display`
+## 环境变量
 
-## 关键约定
+| 变量 | 说明 |
+|------|------|
+| `DB_HOST/PORT/USER/PASSWORD/NAME` | MySQL 连接 |
+| `DB_SSL` | 设为 `true` 开启 SSL |
+| `JWT_SECRET` | JWT 签名密钥 |
+| `DEEPSEEK_API_KEY` | DeepSeek API Key |
+| `DASHSCOPE_API_KEY` | 阿里云百炼 API Key（语音识别） |
+| `NEXT_PUBLIC_BASE_URL` | 站点地址 |
+| `COOKIE_SECURE` | Cookie Secure 属性 |
 
-- **认证**：proxy.ts → `x-user-id` header → `getUserId(request)` 读取
-- **Cookie**：HttpOnly `token`，7 天，SameSite=Lax。API 通过 `Set-Cookie` 设置
-- **SSE**：`ReadableStream` `start` + IIFE，输出 `{ type: "chunk"|"done" }`。客户端 `EventSourceParserStream` 消费
-- **简历**：管理页自动上传；面试设置页传 `resumeId`，服务端取内容
-- **面试创建**：`POST /api/interviews` 接受 `{ position, resumeId }`
-- **错误格式**：`{ error: string }` + HTTP 状态码。UI 样式 `bg-red-50 border-red-200 text-red-600`
-- **NavBar**：`/login` `/register` `/interview` 路径下隐藏
+## 数据库变更
 
-## 注意事项
+执行过的 SQL（`synchronize: true` 自动同步，以下仅记录）：
 
-- `.env.local` 含 API Key 和数据库密码，勿提交
-- `public/pdf.worker.min.mjs` 需手动维护（从 pdfjs-dist 复制）
-- 新 TypeORM 实体需在 `lib/database.ts` 的 `entities[]` 注册
-- Tailwind v4 使用 `@theme inline`，不使用 v3 的 `tailwind.config`
-- `globals.css` 的设计 token 均可作为 Tailwind 类使用
+```sql
+ALTER TABLE evaluation ADD COLUMN practice_suggestions JSON NULL AFTER question_reviews;
+```
