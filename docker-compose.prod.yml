@@ -33,6 +33,9 @@ services:
       # 前端 URL
       - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
 
+      # 时区
+      - TZ=Asia/Shanghai
+
       # Cookie
       - COOKIE_SECURE=${COOKIE_SECURE:-true}
 

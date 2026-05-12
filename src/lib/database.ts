@@ -8,9 +8,6 @@ import { Resume } from "@/entities/Resume";
 
 const isProduction = process.env.NODE_ENV === "production";
 const useSSL = process.env.DB_SSL === "true";
-const dbTimezone = process.env.DB_TIMEZONE || "+00:00";
-
-let timezoneSet = false;
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -25,29 +22,14 @@ export const AppDataSource = new DataSource({
   connectTimeout: 10000,
   extra: {
     connectTimeout: 10000,
-    timezone: dbTimezone,
     ...(useSSL ? { ssl: { rejectUnauthorized: false } } : {}),
   },
   ...(useSSL ? { ssl: { rejectUnauthorized: false } } : {}),
 });
 
-async function ensureTimezone(ds: DataSource): Promise<void> {
-  if (timezoneSet) return;
-
-  try {
-    await ds.query(`SET GLOBAL time_zone = '${dbTimezone}'`);
-  } catch {
-    // GLOBAL requires SUPER privilege; fall back to session-level only
-  }
-
-  await ds.query(`SET time_zone = '${dbTimezone}'`);
-  timezoneSet = true;
-}
-
 export async function getDataSource(): Promise<DataSource> {
   if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
-    await ensureTimezone(AppDataSource);
   }
   return AppDataSource;
 }

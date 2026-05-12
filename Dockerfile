@@ -22,6 +22,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
+ENV TZ=Asia/Shanghai
+
+RUN apk add --no-cache tzdata
 
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 
