@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  APP_DIR: /opt/interview-ai
+  APP_DIR: ~/app/ai-interviewer
 
 jobs:
   build-and-deploy:
