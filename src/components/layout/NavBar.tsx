@@ -22,6 +22,7 @@ export default function NavBar() {
   const links = [
     { href: "/dashboard", label: "面试记录" },
     { href: "/resumes", label: "简历管理" },
+    { href: "/settings", label: "设置" },
   ];
 
   return (
