@@ -9,7 +9,17 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
   username: z.string().min(2, "用户名至少2个字符").max(50, "用户名最多50个字符"),
   email: z.string().email("邮箱格式不正确"),
-  password: z.string().min(6, "密码至少6个字符"),
+  password: z
+    .string()
+    .min(8, "密码至少8位")
+    .refine((pw) => {
+      let kinds = 0;
+      if (/[0-9]/.test(pw)) kinds++;
+      if (/[a-z]/.test(pw)) kinds++;
+      if (/[A-Z]/.test(pw)) kinds++;
+      if (/[^0-9a-zA-Z]/.test(pw)) kinds++;
+      return kinds >= 2;
+    }, "密码需包含数字、小写字母、大写字母、符号中的至少两种"),
 });
 
 // ── Chat ──

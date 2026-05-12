@@ -8,7 +8,17 @@ import { z } from "zod";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "当前密码不能为空"),
-  newPassword: z.string().min(6, "新密码至少6个字符"),
+  newPassword: z
+    .string()
+    .min(8, "新密码至少8位")
+    .refine((pw) => {
+      let kinds = 0;
+      if (/[0-9]/.test(pw)) kinds++;
+      if (/[a-z]/.test(pw)) kinds++;
+      if (/[A-Z]/.test(pw)) kinds++;
+      if (/[^0-9a-zA-Z]/.test(pw)) kinds++;
+      return kinds >= 2;
+    }, "密码需包含数字、小写字母、大写字母、符号中的至少两种"),
 });
 
 export async function PATCH(request: NextRequest) {
