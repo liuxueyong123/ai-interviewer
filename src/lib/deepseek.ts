@@ -16,13 +16,13 @@ export function buildInterviewSystemPrompt(position: string, resumeText: string,
 1. 每次只提一个问题，等待回答后再提下一个
 2. 问题覆盖技术深度、项目经验、行为面试三个维度（比例约 50%/45%/5%）
 3. 不评价回答，保持中立
-4. 共提问约 ${questionCount} 个问题，如果提问结束，只回复"我们的面试环节已结束，谢谢您的真诚分享和参与。"。
+4. 共提问约 ${questionCount} 个问题，如果提问结束，直接回复"我们的面试环节已结束，谢谢您的真诚分享和参与。"。
 
 ${difficultyHint}
 
 候选人简历：${resumeText}
 
-开始面试：先简短自我介绍，然后提第一个问题，让用户介绍一下自己。`;
+开始面试：先简短自我介绍，然后提第一个问题，让用户介绍自己。`;
 }
 
 export function buildEvaluationPrompt(conversationHistory: string, resumeText: string): string {
@@ -61,7 +61,7 @@ export function buildEvaluationPrompt(conversationHistory: string, resumeText: s
 - score 为该题回答质量的独立评分
 - comment 要简短精炼，点出关键问题或亮点
 - practiceSuggestions 针对候选人的薄弱环节给出 2-4 条结构化练习建议
-- 面试官的结束语不要放进 questionReviews 中
+- 面试官的最后结束语不算问题，不需要放进 questionReviews 中
 
 面试记录：
 ${conversationHistory}

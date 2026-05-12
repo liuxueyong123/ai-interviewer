@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
       messages: chatMessages,
       temperature: 0.7,
       stream: true,
+      thinking: { type: "disabled" },
     }),
   });
 
