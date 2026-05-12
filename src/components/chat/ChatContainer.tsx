@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Bubble, Sender } from "@ant-design/x";
-import { message } from "antd";
 import { toast } from "@/components/ui/Toast";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import { roleConfig } from "./roleConfig";
@@ -124,7 +123,7 @@ export default function ChatContainer() {
           );
           setQuestionCount(data.messages.filter((m: { role: string }) => m.role === "interviewer").length);
         }
-        if (data.interview?.status === "done") setFinished(true);
+        if (data.interview?.status === "done" || data.interview?.status === "evaluating") setFinished(true);
         if (data.interview?.createdAt) setStartTime(new Date(data.interview.createdAt));
       })
       .catch(() => {});
@@ -155,9 +154,7 @@ export default function ChatContainer() {
   async function finishInterview() {
     if (!interviewId || finished || finishing) return;
     setFinishing(true);
-    const hide = message.loading("正在评估中，请稍候...", 0);
     const res = await fetch(`/api/interviews/${interviewId}/finish`, { method: "POST" });
-    hide();
     if (res.ok) {
       router.push(`/results/${interviewId}`);
     } else {

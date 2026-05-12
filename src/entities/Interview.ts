@@ -22,8 +22,8 @@ export class Interview {
   @Column({ type: "text", name: "resume_text" })
   resumeText: string;
 
-  @Column({ type: "enum", enum: ["ongoing", "done"], default: "ongoing" })
-  status: "ongoing" | "done";
+  @Column({ type: "enum", enum: ["ongoing", "evaluating", "done"], default: "ongoing" })
+  status: "ongoing" | "evaluating" | "done";
 
   @Column({ type: "int", name: "question_count", default: 12 })
   questionCount: number;

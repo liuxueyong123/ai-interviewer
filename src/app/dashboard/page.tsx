@@ -129,7 +129,7 @@ export default async function DashboardPage() {
           {interviews.map((iv, i) => (
             <Link
               key={iv.id}
-              href={iv.status === "done" ? `/results/${iv.id}` : `/interview/chat?id=${iv.id}`}
+              href={iv.status === "ongoing" ? `/interview/chat?id=${iv.id}` : `/results/${iv.id}`}
               className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 hover:border-accent/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group animate-fade-in-up"
               style={{ animationDelay: `${i * 60}ms` }}
             >
@@ -142,6 +142,11 @@ export default async function DashboardPage() {
               <div className="flex items-center gap-4">
                 {iv.overallScore !== null ? (
                   <span className={`font-display text-xl font-bold ${iv.overallScore >= 80 ? "text-accent" : iv.overallScore >= 60 ? "text-amber-500" : "text-danger"}`}>{iv.overallScore}</span>
+                ) : iv.status === "evaluating" ? (
+                  <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 bg-amber-50 text-amber-600 rounded-full font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse-dot" />
+                    评估中
+                  </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse-dot" />

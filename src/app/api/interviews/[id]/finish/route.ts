@@ -4,6 +4,7 @@ import { Interview } from "@/entities/Interview";
 import { Evaluation } from "@/entities/Evaluation";
 import { buildEvaluationPrompt, getEvaluation } from "@/lib/deepseek";
 import { getUserId } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 export async function POST(
   request: NextRequest,
@@ -20,31 +21,36 @@ export async function POST(
 
   if (!interview) return NextResponse.json({ error: "面试不存在" }, { status: 404 });
   if (interview.status === "done") return NextResponse.json({ error: "面试已结束" }, { status: 400 });
+  if (interview.status === "evaluating") return NextResponse.json({ error: "面试评估中" }, { status: 400 });
 
-  // Build conversation history text
+  await ds.getRepository(Interview).update(interview.id, { status: "evaluating" });
+
+  // Fire-and-forget: run evaluation in background, do not block the response
   const conversationHistory = interview.messages
-    .map((m) => `${m.role === "interviewer" ? "面试官" : "候选人"}：${m.content}`)
+    .map((m: { role: string; content: string }) => `${m.role === "interviewer" ? "面试官" : "候选人"}：${m.content}`)
     .join("\n\n");
 
-  const evalResult = await getEvaluation(buildEvaluationPrompt(conversationHistory, interview.resumeText));
+  getEvaluation(buildEvaluationPrompt(conversationHistory, interview.resumeText))
+    .then(async (evalResult) => {
+      const jsonStr = evalResult.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const parsed = JSON.parse(jsonStr);
 
-  // Parse the JSON response — strip potential markdown code fences
-  const jsonStr = evalResult.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-  const parsed = JSON.parse(jsonStr);
+      const evaluation = ds.getRepository(Evaluation).create({
+        interview: { id: interview.id },
+        overallScore: parsed.overallScore,
+        categories: parsed.categories,
+        strengths: parsed.strengths,
+        weaknesses: parsed.weaknesses,
+        resumeSuggestions: parsed.resumeSuggestions,
+        questionReviews: parsed.questionReviews || null,
+        practiceSuggestions: parsed.practiceSuggestions || null,
+      });
+      await ds.getRepository(Evaluation).save(evaluation);
+      await ds.getRepository(Interview).update(interview.id, { status: "done" });
+    })
+    .catch((err) => {
+      logger.error("Background evaluation failed", { interviewId: interview.id, error: String(err) });
+    });
 
-  const evaluation = ds.getRepository(Evaluation).create({
-    interview: { id: interview.id },
-    overallScore: parsed.overallScore,
-    categories: parsed.categories,
-    strengths: parsed.strengths,
-    weaknesses: parsed.weaknesses,
-    resumeSuggestions: parsed.resumeSuggestions,
-    questionReviews: parsed.questionReviews || null,
-    practiceSuggestions: parsed.practiceSuggestions || null,
-  });
-  await ds.getRepository(Evaluation).save(evaluation);
-
-  await ds.getRepository(Interview).update(interview.id, { status: "done" });
-
-  return NextResponse.json({ evaluation: parsed });
+  return NextResponse.json({ status: "evaluating" });
 }
