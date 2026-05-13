@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ScoreRing, CategoryBars, EvaluationText, InterviewReview, PracticePanel } from "@/components/interview/ScoreCard";
+import { CategoryBars, EvaluationText, InterviewReview, PracticePanel } from "@/components/interview/ScoreCard";
+import Steps, { type StepInfo } from "@/components/interview/Steps";
 import RetryButton from "@/components/interview/RetryButton";
 import { toast } from "@/components/ui/Toast";
 
@@ -39,6 +40,38 @@ interface InterviewData {
   }>;
 }
 
+function deriveSteps(maxRounds: number, currentRound: number, status: string, evaluations: Array<{ round: number; overallScore: number }>): StepInfo[] {
+  const evalMap = new Map(evaluations.map((e) => [e.round, e]));
+  const steps: StepInfo[] = [];
+  for (let r = 1; r <= maxRounds; r++) {
+    const ev = evalMap.get(r);
+    if (ev) {
+      steps.push({
+        round: r,
+        state: "completed",
+        score: ev.overallScore,
+        isCurrentPassed: false,
+      });
+    } else if (r === currentRound && status === "evaluating") {
+      steps.push({ round: r, state: "evaluating", isCurrentPassed: false });
+    } else {
+      const isNextAvailable = r === currentRound + 1 && status === "passed";
+      steps.push({ round: r, state: "locked", isCurrentPassed: isNextAvailable });
+    }
+  }
+  return steps;
+}
+
+function deriveStatusMessage(status: string, currentRound: number, maxRounds: number, evaluationsLength: number): string | undefined {
+  if (status === "evaluating") return `第 ${currentRound} 轮评估中，AI 正在分析面试表现...`;
+  if (status === "passed") return `已通过第 ${currentRound} 轮，可进入第 ${currentRound + 1} 轮面试`;
+  if (status === "done") {
+    if (evaluationsLength < maxRounds) return `未达到第 ${currentRound} 轮通过分数，面试结束`;
+    if (evaluationsLength === maxRounds) return "恭喜！已通过全部轮次";
+  }
+  return undefined;
+}
+
 const POLL_INTERVAL = 5000;
 const TIMEOUT_MS = 300_000;
 
@@ -66,9 +99,7 @@ export default function ResultsPage() {
       const json: InterviewData = await res.json();
       setData(json);
 
-      const currentRoundHasEval = json.evaluations?.some(
-        (e: { round: number }) => e.round === json.interview.currentRound
-      );
+      const currentRoundHasEval = json.evaluations?.some((e: { round: number }) => e.round === json.interview.currentRound);
       if (currentRoundHasEval || (json.evaluations?.length && json.interview.status !== "evaluating")) {
         setTimedOut(false);
         if (!initialRoundSet.current && json.evaluations.length > 0) {
@@ -188,57 +219,23 @@ export default function ResultsPage() {
     );
   }
 
-  const partialEval = selectedRound === interview.currentRound
-    ? null
-    : evaluations.find((e) => e.round === selectedRound) || evaluations[evaluations.length - 1];
+  const partialEval = selectedRound === interview.currentRound ? null : evaluations.find((e) => e.round === selectedRound) || evaluations[evaluations.length - 1];
   const partialMessages = messages.filter((m) => m.round === selectedRound);
 
   // Evaluating state — previous rounds done, current round being evaluated
   if (!currentRoundHasEval && evaluations.length > 0 && interview.status === "evaluating") {
+    const steps = deriveSteps(interview.maxRounds, interview.currentRound, interview.status, evaluations);
+    const statusMsg = deriveStatusMessage(interview.status, interview.currentRound, interview.maxRounds, evaluations.length);
+
     return (
       <div className="min-h-screen pt-8 pb-16 px-4">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="text-center">
-            <h1 className="font-display text-xl font-bold text-text-primary mb-2">
-              {interview.title} — 第 {interview.currentRound}/{interview.maxRounds} 轮评估中
-            </h1>
-            <p className="text-text-muted text-sm mb-6">AI 正在分析本轮面试表现，预计需要 3 分钟左右</p>
-
-            <div className="flex justify-center mb-6">
-              <div className="inline-flex bg-surface-2 rounded-xl p-1 gap-1">
-                {evaluations.map((e) => (
-                  <button
-                    key={e.round}
-                    onClick={() => setSelectedRound(e.round)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      e.round === selectedRound
-                        ? "bg-surface-1 text-text-primary shadow-sm"
-                        : "text-text-muted hover:text-text-secondary"
-                    }`}
-                  >
-                    <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                    </svg>
-                    第{e.round}轮
-                    <span className="font-display font-bold">{e.overallScore}</span>
-                  </button>
-                ))}
-                <button
-                  onClick={() => setSelectedRound(interview.currentRound)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    interview.currentRound === selectedRound
-                      ? "bg-surface-1 text-text-primary shadow-sm"
-                      : "text-text-muted hover:text-text-secondary"
-                  }`}
-                >
-                  <EvaluatingSpinner small />
-                  第{interview.currentRound}轮评估中
-                </button>
-              </div>
-            </div>
+            <h1 className="font-display text-xl font-bold text-text-primary mb-4">{interview.title}</h1>
+            <Steps steps={steps} selectedRound={selectedRound} onSelectRound={setSelectedRound} statusMessage={statusMsg} />
 
             {timedOut && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-md mx-auto">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-md mx-auto mt-6">
                 <p className="text-amber-700 text-sm mb-3">评估时间超过预期，可能是网络波动导致</p>
                 <button
                   onClick={handleRetry}
@@ -259,7 +256,7 @@ export default function ResultsPage() {
               </div>
               <div className="min-w-0 mt-8 lg:mt-0">
                 <div className="lg:top-20">
-                  <InterviewReview messages={partialMessages} reviews={partialEval.questionReviews} />
+                  <InterviewReview messages={partialMessages} reviews={partialEval.questionReviews} round={selectedRound} />
                 </div>
               </div>
             </div>
@@ -288,71 +285,44 @@ export default function ResultsPage() {
     minute: "2-digit",
   });
 
+  const steps = deriveSteps(interview.maxRounds, interview.currentRound, interview.status, evaluations);
+  const isFailed = isDone && evaluations.length < interview.maxRounds;
+
   return (
     <div className="min-h-screen pt-8 pb-16 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="text-center">
           <p className="text-text-muted text-xs mb-2">{dateStr}</p>
-          <h1 className="font-display text-xl font-bold text-text-primary mb-2">
-            {interview.title} {isPassed ? `— 第 ${interview.currentRound}/${interview.maxRounds} 轮通过` : "面试评分"}
-          </h1>
-          {interview.maxRounds > 1 && isDone && (
-            <p className="text-text-muted text-xs mb-4">
-              {evaluations.length === interview.maxRounds ? "全部轮次已完成" : `完成 ${evaluations.length}/${interview.maxRounds} 轮`}
-            </p>
-          )}
-          <div className="flex justify-center gap-3 mb-8">
-            {isPassed && (
-              <button
-                onClick={handleNextRound}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm"
-              >
-                进入下一轮
-              </button>
-            )}
-            {isDone && (
-              <RetryButton position={interview.position} resumeText={interview.resumeText} questionCount={interview.questionCount} difficulty={interview.difficulty} />
-            )}
-            <a
-              href="/dashboard"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface-1 border border-border text-text-secondary font-medium rounded-xl hover:border-text-muted active:scale-[0.98] transition-all duration-200 font-display text-sm shadow-sm"
-            >
-              返回列表
-            </a>
-          </div>
-          <div className="flex justify-center">
-            <ScoreRing score={selectedEval.overallScore} />
-          </div>
-        </div>
+          <h1 className="font-display text-xl font-bold text-text-primary mb-4">{interview.title}</h1>
 
-        {evaluations.length > 1 && (
-          <div className="flex justify-center">
-            <div className="inline-flex bg-surface-2 rounded-xl p-1 gap-1">
-              {evaluations.map((e) => {
-                const active = e.round === selectedRound;
-                return (
-                  <button
-                    key={e.round}
-                    onClick={() => setSelectedRound(e.round)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      active
-                        ? "bg-surface-1 text-text-primary shadow-sm"
-                        : "text-text-muted hover:text-text-secondary"
-                    }`}
-                  >
-                    {e.round <= interview.currentRound || isDone ? (
-                      <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                      </svg>
-                    ) : null}
-                    第{e.round}轮
-                    <span className={`font-display font-bold ${active ? "text-text-primary" : ""}`}>{e.overallScore}</span>
-                  </button>
-                );
-              })}
+          {isFailed && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-md mx-auto mb-4">
+              <p className="text-amber-800 text-sm font-semibold mb-1">😔&nbsp;很遗憾，面试已结束</p>
+              <p className="text-amber-700 text-sm">您在第{interview.currentRound}轮面试中未达到通过分数，感谢您的参与～</p>
+              <div className="mt-2 flex justify-center">
+                <RetryButton position={interview.position} resumeText={interview.resumeText} questionCount={interview.questionCount} difficulty={interview.difficulty} />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {isDone && !isFailed && (
+            <div className="bg-accent-muted border border-accent/20 rounded-xl p-4 max-w-md mx-auto mb-4">
+              <p className="text-accent text-sm font-semibold mb-2">🎉&nbsp;恭喜您完成了全部 {interview.maxRounds} 轮面试！</p>
+              <p className="text-text-secondary text-sm leading-relaxed">每次练习都是成长，已生成评估报告和改进建议，继续加油吧！</p>
+              <div className="mt-2 flex justify-center">
+                <RetryButton position={interview.position} resumeText={interview.resumeText} questionCount={interview.questionCount} difficulty={interview.difficulty} />
+              </div>
+            </div>
+          )}
+
+          <Steps
+            steps={steps}
+            selectedRound={selectedRound}
+            onSelectRound={setSelectedRound}
+            onNextRound={isPassed ? handleNextRound : undefined}
+            statusMessage={isDone ? undefined : deriveStatusMessage(interview.status, interview.currentRound, interview.maxRounds, evaluations.length)}
+          />
+        </div>
 
         <div className="lg:grid lg:grid-cols-2 lg:gap-8">
           <div className="space-y-6 min-w-0">
@@ -363,7 +333,7 @@ export default function ResultsPage() {
 
           <div className="min-w-0 mt-8 lg:mt-0">
             <div className="lg:top-20">
-              <InterviewReview messages={selectedMessages} reviews={selectedEval.questionReviews} />
+              <InterviewReview messages={selectedMessages} reviews={selectedEval.questionReviews} round={selectedRound} />
             </div>
           </div>
         </div>
