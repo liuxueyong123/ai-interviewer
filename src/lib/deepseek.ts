@@ -47,7 +47,7 @@ export function buildEvaluationPrompt(conversationHistory: string, resumeText: s
   ],
   "questionReviews": [
     {
-      "questionNumber": "<对话中的 Q 编号>",
+      "questionNumber": "<对话中的 Q 编号，只返回数字部分，如：Q1 只返回 1>",
       "question": "<面试官的提问原文摘要>",
       "score": <0-100>,
       "comment": "<针对该题回答的简短点评，50字以内>"
