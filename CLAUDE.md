@@ -88,5 +88,8 @@ src/
 | `DEEPSEEK_API_KEY` | DeepSeek API Key |
 | `DEEPSEEK_BASE_URL` | DeepSeek API 地址 |
 | `DASHSCOPE_API_KEY` | 阿里云百炼 API Key（语音识别） |
+| `LANGSMITH_TRACING` | 设为 `true` 开启 LangSmith 追踪 |
+| `LANGSMITH_API_KEY` | LangSmith API Key（需在 smith.langchain.com 创建） |
+| `LANGSMITH_PROJECT` | LangSmith 项目名 |
 | `NEXT_PUBLIC_BASE_URL` | 前端 API 基地址 |
 | `COOKIE_SECURE` | Cookie Secure 属性 |

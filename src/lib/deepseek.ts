@@ -1,8 +1,50 @@
+import { ChatDeepSeek } from "@langchain/deepseek";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { logger } from "@/lib/logger";
 
-const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
+let _evaluationModel: ChatDeepSeek | null = null;
+let _chatModel: ChatDeepSeek | null = null;
 
-export function buildInterviewSystemPrompt(position: string, resumeText: string, questionCount: number = 12, difficulty: string = "mid"): string {
+function getBaseConfig() {
+  return {
+    apiKey: process.env.DEEPSEEK_API_KEY,
+    configuration: {
+      baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com",
+    },
+  };
+}
+
+export function getEvaluationModel(): ChatDeepSeek {
+  if (!_evaluationModel) {
+    _evaluationModel = new ChatDeepSeek({
+      ...getBaseConfig(),
+      model: "deepseek-v4-pro",
+      temperature: 0,
+    });
+  }
+  return _evaluationModel;
+}
+
+export function getChatModel(): ChatDeepSeek {
+  if (!_chatModel) {
+    _chatModel = new ChatDeepSeek({
+      ...getBaseConfig(),
+      model: "deepseek-v4-pro",
+      temperature: 0.7,
+      modelKwargs: {
+        thinking: { type: "disabled" },
+      },
+    });
+  }
+  return _chatModel;
+}
+
+export function buildInterviewSystemMessage(
+  position: string,
+  resumeText: string,
+  questionCount: number = 12,
+  difficulty: string = "mid"
+): SystemMessage {
   const difficultyHint =
     difficulty === "junior"
       ? "面试者处于初级水平，问题应偏重基础概念和常见场景，适当给予引导和鼓励。"
@@ -10,7 +52,8 @@ export function buildInterviewSystemPrompt(position: string, resumeText: string,
         ? "面试者处于高级水平，问题应偏重架构设计、系统优化、技术决策和深度原理，可适当追问和挑战。"
         : "面试者处于中级水平，问题应兼顾基础深度和实际项目经验，保持适度挑战。";
 
-  return `你是 ${position} 的技术面试官。请严格遵守以下规则：
+  return new SystemMessage(
+    `你是 ${position} 的技术面试官。请严格遵守以下规则：
 
 规则：
 1. 每次只提一个问题，等待回答后再提下一个
@@ -22,11 +65,13 @@ ${difficultyHint}
 
 候选人简历：${resumeText}
 
-开始面试：先简短自我介绍，然后提第一个问题，让用户介绍自己。`;
+开始面试：先简短自我介绍，然后提第一个问题，让用户介绍自己。`
+  );
 }
 
-export function buildEvaluationPrompt(conversationHistory: string, resumeText: string): string {
-  return `请根据以下面试对话，对候选人进行评分。输出纯 JSON 格式（不要 markdown 代码块）：
+export function buildEvaluationMessage(conversationHistory: string, resumeText: string): HumanMessage {
+  return new HumanMessage(
+    `请根据以下面试对话，对候选人进行评分。输出纯 JSON 格式（不要 markdown 代码块）：
 
 {
   "overallScore": <0-100>,
@@ -66,21 +111,17 @@ export function buildEvaluationPrompt(conversationHistory: string, resumeText: s
 面试记录：
 ${conversationHistory}
 
-候选人简历：${resumeText}`;
+候选人简历：${resumeText}`
+  );
 }
 
-export async function getEvaluation(promptText: string): Promise<string> {
-  const API_KEY = process.env.DEEPSEEK_API_KEY || "";
-  const res = await fetch(`${BASE_URL}/v1/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${API_KEY}` },
-    body: JSON.stringify({ model: "deepseek-v4-pro", messages: [{ role: "user", content: promptText }], temperature: 0 }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    logger.error("DeepSeek evaluation error", { status: res.status, body });
-    throw new Error(`DeepSeek API error ${res.status}: ${body}`);
+export async function getEvaluation(message: HumanMessage): Promise<string> {
+  const model = getEvaluationModel();
+  const response = await model.invoke([message]);
+  const content = response.content;
+  if (typeof content !== "string") {
+    logger.error("Unexpected evaluation response type", { contentType: typeof content });
+    throw new Error("Evaluation returned non-string response");
   }
-  const data = await res.json();
-  return data.choices[0].message.content;
+  return content;
 }

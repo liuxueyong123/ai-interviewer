@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage } from "@langchain/core/messages";
 import { logger } from "@/lib/logger";
 import { getUserId } from "@/lib/utils";
 
-const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY || "";
 const DASHSCOPE_BASE_URL = process.env.DASHSCOPE_BASE_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1";
 const MAX_AUDIO_BYTES = 10 * 1024 * 1024; // covers ~4m30s of WebM/Opus audio
 
@@ -28,42 +29,37 @@ export async function POST(request: NextRequest) {
 
   logger.info("ASR request", { size: arrayBuffer.byteLength, mimeType });
 
-  const res = await fetch(`${DASHSCOPE_BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${DASHSCOPE_API_KEY}`,
+  const model = new ChatOpenAI({
+    model: "qwen3-asr-flash",
+    apiKey: process.env.DASHSCOPE_API_KEY,
+    configuration: {
+      baseURL: DASHSCOPE_BASE_URL,
     },
-    body: JSON.stringify({
-      model: "qwen3-asr-flash",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_audio",
-              input_audio: { data: dataUri },
-            },
-          ],
-        },
-      ],
+    modelKwargs: {
       extra_body: {
         asr_options: {
           language: "zh",
           enable_itn: false,
         },
       },
-    }),
+    },
   });
 
-  if (!res.ok) {
-    const errText = await res.text();
-    logger.error("DashScope ASR error", { status: res.status, body: errText });
+  try {
+    const response = await model.invoke([
+      new HumanMessage({
+        content: [
+          {
+            type: "input_audio",
+            input_audio: { data: dataUri },
+          },
+        ],
+      }),
+    ]);
+    const text = typeof response.content === "string" ? response.content : "";
+    return NextResponse.json({ text });
+  } catch (err) {
+    logger.error("DashScope ASR error", { error: String(err) });
     return NextResponse.json({ error: "语音识别失败" }, { status: 502 });
   }
-
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content || "";
-
-  return NextResponse.json({ text });
 }

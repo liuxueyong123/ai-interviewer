@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Evaluation } from "@/entities/Evaluation";
-import { buildEvaluationPrompt, getEvaluation } from "@/lib/deepseek";
+import { buildEvaluationMessage, getEvaluation } from "@/lib/deepseek";
 import { getUserId } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
     .join("\n\n");
 
-  getEvaluation(buildEvaluationPrompt(conversationHistory, interview.resumeText))
+  getEvaluation(buildEvaluationMessage(conversationHistory, interview.resumeText))
     .then(async (evalResult) => {
       const jsonStr = evalResult
         .replace(/```json\n?/g, "")
