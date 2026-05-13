@@ -12,15 +12,7 @@ interface SelectOption<T extends string | number> {
   label: string;
 }
 
-function SelectPopover<T extends string | number>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T;
-  options: SelectOption<T>[];
-  onChange: (v: T) => void;
-}) {
+function SelectPopover<T extends string | number>({ value, options, onChange }: { value: T; options: SelectOption<T>[]; onChange: (v: T) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -124,6 +116,7 @@ export default function SetupForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [questionCount, setQuestionCount] = useState(12);
+  const [maxRounds, setMaxRounds] = useState(2);
   const [difficulty, setDifficulty] = useState<string>("mid");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -165,7 +158,7 @@ export default function SetupForm() {
     const res = await fetch("/api/interviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ position, resumeId: selectedResumeId, questionCount, difficulty }),
+      body: JSON.stringify({ position, resumeId: selectedResumeId, questionCount, maxRounds, difficulty }),
     });
     const data = await res.json();
     setLoading(false);
@@ -262,20 +255,32 @@ export default function SetupForm() {
       </div>
 
       {/* Interview parameters */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">面试长度</label>
           <SelectPopover
             value={questionCount}
             options={[
-              { value: 6, label: "快速面试（6 题）" },
               { value: 12, label: "标准面试（12 题）" },
-              { value: 20, label: "深度面试（20 题）" },
+              { value: 20, label: "全面面试（20 题）" },
+              { value: 28, label: "深度面试（28 题）" },
             ]}
             onChange={setQuestionCount}
           />
         </div>
         <div>
+          <label className="block text-sm font-medium text-text-secondary mb-2">面试轮次</label>
+          <SelectPopover
+            value={maxRounds}
+            options={[
+              { value: 1, label: "1 轮" },
+              { value: 2, label: "2 轮" },
+              { value: 3, label: "3 轮" },
+            ]}
+            onChange={setMaxRounds}
+          />
+        </div>
+        <div className="col-span-2">
           <label className="block text-sm font-medium text-text-secondary mb-2">目标难度</label>
           <SelectPopover
             value={difficulty}

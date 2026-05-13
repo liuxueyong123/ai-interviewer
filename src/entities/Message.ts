@@ -17,6 +17,9 @@ export class Message {
   @Column({ type: "text" })
   content: string;
 
+  @Column({ type: "int", default: 1 })
+  round: number;
+
   @Column({ type: "int", name: "question_number", nullable: true })
   questionNumber: number | null;
 

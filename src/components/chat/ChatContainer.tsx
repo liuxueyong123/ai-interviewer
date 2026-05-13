@@ -35,6 +35,8 @@ export default function ChatContainer() {
   const [finished, setFinished] = useState(false);
   const [error, setError] = useState("");
   const [questionCount, setQuestionCount] = useState(0);
+  const [currentRound, setCurrentRound] = useState(1);
+  const [maxRounds, setMaxRounds] = useState(1);
   const [senderValue, setSenderValue] = useState("");
   const abortRef = useRef<AbortController | null>(null);
 
@@ -115,15 +117,22 @@ export default function ChatContainer() {
     fetch(`/api/interviews/${interviewId}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.messages?.length) {
+        const round = data.interview?.currentRound ?? 1;
+        setCurrentRound(round);
+        setMaxRounds(data.interview?.maxRounds ?? 1);
+
+        const roundMessages = (data.messages || []).filter(
+          (m: { round: number }) => m.round === round
+        );
+        if (roundMessages.length) {
           setMessages(
-            data.messages.map((m: { id: number; role: string; content: string }) => ({
+            roundMessages.map((m: { id: number; role: string; content: string }) => ({
               key: String(m.id),
               role: m.role as "interviewer" | "user",
               content: m.content,
             })),
           );
-          setQuestionCount(data.messages.filter((m: { role: string }) => m.role === "interviewer").length);
+          setQuestionCount(roundMessages.filter((m: { role: string }) => m.role === "interviewer").length);
         }
         if (data.interview?.status === "done" || data.interview?.status === "evaluating") setFinished(true);
         if (data.interview?.createdAt) setStartTime(new Date(data.interview.createdAt));
@@ -226,6 +235,9 @@ export default function ChatContainer() {
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <div className="flex items-center gap-3">
           <h1 className="font-semibold text-sm text-gray-800">AI 面试进行中</h1>
+          {maxRounds > 1 && (
+            <span className="text-xs text-accent font-medium bg-accent-muted px-2 py-0.5 rounded-full">第 {currentRound}/{maxRounds} 轮</span>
+          )}
           <span className="text-xs text-text-muted tabular-nums font-mono">{formatElapsed(elapsedSeconds)}</span>
         </div>
         <div className="flex items-center gap-3">

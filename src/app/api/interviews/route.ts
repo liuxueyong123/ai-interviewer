@@ -13,25 +13,30 @@ export async function GET(request: NextRequest) {
   const interviews = await ds.getRepository(Interview).find({
     where: { user: { id: userId } },
     order: { createdAt: "DESC" },
-    relations: ["evaluation"],
+    relations: ["evaluations"],
   });
 
   return NextResponse.json(
-    interviews.map((i) => ({
-      id: i.id,
-      title: i.title || i.position,
-      position: i.position,
-      status: i.status,
-      overallScore: i.evaluation?.overallScore ?? null,
-      categories: i.evaluation?.categories ?? null,
-      createdAt: i.createdAt,
-    })),
+    interviews.map((i) => {
+      const latestEval = i.evaluations?.[i.evaluations.length - 1];
+      return {
+        id: i.id,
+        title: i.title || i.position,
+        position: i.position,
+        status: i.status,
+        currentRound: i.currentRound,
+        maxRounds: i.maxRounds,
+        overallScore: latestEval?.overallScore ?? null,
+        categories: latestEval?.categories ?? null,
+        createdAt: i.createdAt,
+      };
+    }),
   );
 }
 
 export async function POST(request: NextRequest) {
   const userId = getUserId(request);
-  let body: { position: string; resumeText?: string; resumeId?: number; questionCount?: number; difficulty?: "junior" | "mid" | "senior" };
+  let body: { position: string; resumeText?: string; resumeId?: number; questionCount?: number; difficulty?: "junior" | "mid" | "senior"; maxRounds?: number };
   try {
     body = validate(createInterviewSchema, await request.json());
   } catch (e) {
@@ -41,10 +46,9 @@ export async function POST(request: NextRequest) {
     throw e;
   }
 
-  const { position, resumeText, resumeId, questionCount = 12, difficulty = "mid" } = body;
+  const { position, resumeText, resumeId, questionCount = 12, difficulty = "mid", maxRounds = 2 } = body;
   let finalResumeText = resumeText || "";
 
-  // If resumeId is provided, fetch the saved resume content
   if (resumeId) {
     const ds = await getDataSource();
     const resume = await ds.getRepository(Resume).findOne({
@@ -74,6 +78,8 @@ export async function POST(request: NextRequest) {
     status: "ongoing",
     questionCount,
     difficulty,
+    currentRound: 1,
+    maxRounds,
   });
   await ds.getRepository(Interview).save(interview);
 
@@ -82,6 +88,7 @@ export async function POST(request: NextRequest) {
     interview: { id: interview.id },
     role: "interviewer",
     content: `同学你好，很高兴见到你。我是今天${interview.position}岗位的面试官，要不咱们先聊聊你的基本情况？请简单介绍一下自己。`,
+    round: 1,
     questionNumber: 1,
   });
   await msgRepo.save(interviewerMsg);

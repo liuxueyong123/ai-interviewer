@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany, OneToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany, JoinColumn } from "typeorm";
 import type { User } from "./User";
 import type { Message } from "./Message";
 import type { Evaluation } from "./Evaluation";
@@ -22,8 +22,8 @@ export class Interview {
   @Column({ type: "text", name: "resume_text" })
   resumeText: string;
 
-  @Column({ type: "enum", enum: ["ongoing", "evaluating", "done"], default: "ongoing" })
-  status: "ongoing" | "evaluating" | "done";
+  @Column({ type: "enum", enum: ["ongoing", "evaluating", "passed", "done"], default: "ongoing" })
+  status: "ongoing" | "evaluating" | "passed" | "done";
 
   @Column({ type: "int", name: "question_count", default: 12 })
   questionCount: number;
@@ -31,12 +31,18 @@ export class Interview {
   @Column({ type: "varchar", length: 20, name: "difficulty", default: "mid" })
   difficulty: "junior" | "mid" | "senior";
 
+  @Column({ type: "int", name: "current_round", default: 1 })
+  currentRound: number;
+
+  @Column({ type: "int", name: "max_rounds", default: 2 })
+  maxRounds: number;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
   @OneToMany("Message", "interview")
   messages: Message[];
 
-  @OneToOne("Evaluation", "interview")
-  evaluation: Evaluation;
+  @OneToMany("Evaluation", "interview")
+  evaluations: Evaluation[];
 }

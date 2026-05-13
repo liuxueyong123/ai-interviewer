@@ -3,7 +3,7 @@ import { AIMessage, HumanMessage, type BaseMessage } from "@langchain/core/messa
 import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Message } from "@/entities/Message";
-import { buildInterviewSystemMessage, getChatModel } from "@/lib/deepseek";
+import { buildInterviewSystemMessage, getChatModel, distributeQuestions } from "@/lib/deepseek";
 import { getUserId } from "@/lib/utils";
 import { validate, chatSchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
@@ -18,25 +18,48 @@ export async function POST(request: NextRequest) {
   const ds = await getDataSource();
   const interview = await ds.getRepository(Interview).findOne({
     where: { id: interviewId, user: { id: userId } },
-    relations: ["messages"],
+    relations: ["messages", "evaluations"],
   });
 
   if (!interview) return new Response("Interview not found", { status: 404 });
-  if (interview.status === "done") return new Response("Interview ended", { status: 400 });
+  if (interview.status === "done" || interview.status === "passed") return new Response("Interview ended", { status: 400 });
 
   const msgRepo = ds.getRepository(Message);
 
+  const currentRound = interview.currentRound;
+
   const [questionCount, history] = await Promise.all([
-    msgRepo.count({ where: { interview: { id: interviewId }, role: "interviewer" } }),
-    msgRepo.find({ where: { interview: { id: interviewId } }, order: { createdAt: "ASC" } }),
+    msgRepo.count({ where: { interview: { id: interviewId }, role: "interviewer", round: currentRound } }),
+    msgRepo.find({ where: { interview: { id: interviewId }, round: currentRound }, order: { createdAt: "ASC" } }),
   ]);
+
+  const roundQuestions = distributeQuestions(interview.questionCount, interview.maxRounds);
+  const currentRoundQuestions = roundQuestions[currentRound - 1];
+
+  let prevRoundContext: string | undefined;
+  if (currentRound > 1) {
+    const prevEvals = (interview.evaluations || [])
+      .filter((e) => e.round < currentRound)
+      .sort((a, b) => a.round - b.round);
+    if (prevEvals.length > 0) {
+      prevRoundContext = prevEvals
+        .map((e) => {
+          const summary = e.roundSummary || `${e.strengths}。${e.weaknesses}`;
+          return `第 ${e.round} 轮（得分 ${e.overallScore}/100）总结：${summary}`;
+        })
+        .join("\n");
+    }
+  }
 
   const chatMessages: BaseMessage[] = [
     buildInterviewSystemMessage(
       interview.position,
       interview.resumeText,
-      interview.questionCount,
-      interview.difficulty
+      currentRoundQuestions,
+      interview.difficulty,
+      currentRound,
+      interview.maxRounds,
+      prevRoundContext
     ),
   ];
 
@@ -73,6 +96,7 @@ export async function POST(request: NextRequest) {
           interview: { id: interviewId },
           role: "user",
           content: message,
+          round: currentRound,
           questionNumber: null,
         });
         await msgRepo.save(userMsg);
@@ -82,6 +106,7 @@ export async function POST(request: NextRequest) {
           interview: { id: interviewId },
           role: "interviewer",
           content: fullContent,
+          round: currentRound,
           questionNumber: newCount,
         });
         await msgRepo.save(interviewerMsg);
@@ -89,6 +114,7 @@ export async function POST(request: NextRequest) {
         const doneEvent = JSON.stringify({
           type: "done",
           questionNumber: newCount,
+          round: currentRound,
         });
         controller.enqueue(encoder.encode(`data: ${doneEvent}\n\n`));
         controller.close();

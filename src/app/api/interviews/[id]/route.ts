@@ -13,7 +13,7 @@ export async function GET(
   const { id } = await params;
   const interview = await ds.getRepository(Interview).findOne({
     where: { id: parseInt(id, 10), user: { id: userId } },
-    relations: ["messages", "evaluation"],
+    relations: ["messages", "evaluations"],
   });
 
   if (!interview) {
@@ -29,25 +29,27 @@ export async function GET(
       resumeText: interview.resumeText,
       questionCount: interview.questionCount,
       difficulty: interview.difficulty,
+      currentRound: interview.currentRound,
+      maxRounds: interview.maxRounds,
       createdAt: interview.createdAt,
     },
     messages: interview.messages.map((m) => ({
       id: m.id,
       role: m.role,
       content: m.content,
+      round: m.round,
       questionNumber: m.questionNumber,
       createdAt: m.createdAt,
     })),
-    evaluation: interview.evaluation
-      ? {
-          overallScore: interview.evaluation.overallScore,
-          categories: interview.evaluation.categories,
-          strengths: interview.evaluation.strengths,
-          weaknesses: interview.evaluation.weaknesses,
-          resumeSuggestions: interview.evaluation.resumeSuggestions,
-          questionReviews: interview.evaluation.questionReviews,
-          practiceSuggestions: interview.evaluation.practiceSuggestions,
-        }
-      : null,
+    evaluations: interview.evaluations.map((e) => ({
+      round: e.round,
+      overallScore: e.overallScore,
+      categories: e.categories,
+      strengths: e.strengths,
+      weaknesses: e.weaknesses,
+      resumeSuggestions: e.resumeSuggestions,
+      questionReviews: e.questionReviews,
+      practiceSuggestions: e.practiceSuggestions,
+    })),
   });
 }

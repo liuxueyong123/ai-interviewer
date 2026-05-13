@@ -36,6 +36,7 @@ export const createInterviewSchema = z.object({
   resumeId: z.number().int().positive().optional(),
   questionCount: z.number().int().min(1).max(50).optional(),
   difficulty: z.enum(["junior", "mid", "senior"]).optional(),
+  maxRounds: z.number().int().min(1).max(3).optional(),
 });
 
 // ── Resumes ──

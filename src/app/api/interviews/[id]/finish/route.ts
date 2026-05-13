@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Evaluation } from "@/entities/Evaluation";
-import { buildEvaluationMessage, getEvaluation } from "@/lib/deepseek";
+import { buildEvaluationMessage, getEvaluation, buildRoundSummaryMessage, getRoundSummary, getPassThreshold } from "@/lib/deepseek";
 import { getUserId } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
@@ -17,15 +17,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   });
 
   if (!interview) return NextResponse.json({ error: "面试不存在" }, { status: 404 });
-  if (interview.status === "done") return NextResponse.json({ error: "面试已结束" }, { status: 400 });
+  if (interview.status === "done" || interview.status === "passed") return NextResponse.json({ error: "面试已结束" }, { status: 400 });
+  if (interview.status === "evaluating") return NextResponse.json({ status: "evaluating" });
+
+  const currentRound = interview.currentRound;
 
   await ds.getRepository(Interview).update(interview.id, { status: "evaluating" });
 
-  // Delete any stale evaluation from a previous attempt (e.g. server restarted mid-evaluation)
-  await ds.getRepository(Evaluation).delete({ interview: { id: interview.id } });
+  // Delete stale evaluation for current round (e.g. server restarted mid-evaluation)
+  await ds.getRepository(Evaluation).delete({ interview: { id: interview.id }, round: currentRound });
 
-  // Fire-and-forget: run evaluation in background, do not block the response
-  const conversationHistory = interview.messages
+  // Only include messages from the current round
+  const roundMessages = interview.messages.filter((m) => m.round === currentRound);
+  const conversationHistory = roundMessages
     .map((m: { role: string; content: string; questionNumber: number | null }) => {
       if (m.role === "interviewer" && m.questionNumber != null) {
         return `Q${m.questionNumber} 面试官：${m.content}`;
@@ -34,8 +38,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
     .join("\n\n");
 
-  getEvaluation(buildEvaluationMessage(conversationHistory, interview.resumeText))
-    .then(async (evalResult) => {
+  Promise.all([
+    getEvaluation(buildEvaluationMessage(conversationHistory, interview.resumeText)),
+    getRoundSummary(buildRoundSummaryMessage(conversationHistory)),
+  ])
+    .then(async ([evalResult, roundSummary]) => {
       const jsonStr = evalResult
         .replace(/```json\n?/g, "")
         .replace(/```\n?/g, "")
@@ -44,6 +51,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
       const evaluation = ds.getRepository(Evaluation).create({
         interview: { id: interview.id },
+        round: currentRound,
         overallScore: parsed.overallScore,
         categories: parsed.categories,
         strengths: parsed.strengths,
@@ -51,9 +59,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         resumeSuggestions: parsed.resumeSuggestions,
         questionReviews: parsed.questionReviews || null,
         practiceSuggestions: parsed.practiceSuggestions || null,
+        roundSummary,
       });
       await ds.getRepository(Evaluation).save(evaluation);
-      await ds.getRepository(Interview).update(interview.id, { status: "done" });
+
+      const threshold = getPassThreshold(interview.difficulty, currentRound);
+      const passed = parsed.overallScore >= threshold;
+      const hasMoreRounds = currentRound < interview.maxRounds;
+
+      const newStatus = passed && hasMoreRounds ? "passed" : "done";
+      await ds.getRepository(Interview).update(interview.id, { status: newStatus });
     })
     .catch((err) => {
       logger.error("Background evaluation failed", { interviewId: interview.id, error: String(err) });

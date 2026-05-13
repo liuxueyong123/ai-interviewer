@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 import type { Interview } from "./Interview";
 
 @Entity("Evaluation", { name: "evaluation" })
@@ -7,9 +7,15 @@ export class Evaluation {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne("Interview", "evaluation", { nullable: false })
+  @ManyToOne("Interview", "evaluations", { nullable: false })
   @JoinColumn({ name: "interview_id" })
   interview: Interview;
+
+  @Column({ type: "int", default: 1 })
+  round: number;
+
+  @Column({ type: "text", name: "round_summary", nullable: true })
+  roundSummary: string | null;
 
   @Column({ type: "int", name: "overall_score" })
   overallScore: number;

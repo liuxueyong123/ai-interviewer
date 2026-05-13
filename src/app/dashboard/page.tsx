@@ -17,6 +17,8 @@ interface InterviewSummary {
   status: string;
   overallScore: number | null;
   categories: Categories | null;
+  currentRound: number;
+  maxRounds: number;
   createdAt: string;
 }
 
@@ -140,8 +142,13 @@ export default async function DashboardPage() {
                 </p>
               </div>
               <div className="flex items-center gap-4">
-                {iv.overallScore !== null ? (
-                  <span className={`font-display text-xl font-bold ${iv.overallScore >= 80 ? "text-accent" : iv.overallScore >= 60 ? "text-amber-500" : "text-danger"}`}>{iv.overallScore}</span>
+                {iv.status === "passed" ? (
+                  <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 bg-green-50 text-green-700 rounded-full font-medium">
+                    <span className="font-display text-base font-bold">{iv.overallScore}</span>
+                    第{iv.currentRound}/{iv.maxRounds}轮通过
+                  </span>
+                ) : iv.status === "done" ? (
+                  <span className={`font-display text-xl font-bold ${iv.overallScore != null && iv.overallScore >= 80 ? "text-accent" : iv.overallScore != null && iv.overallScore >= 60 ? "text-amber-500" : "text-danger"}`}>{iv.overallScore ?? "--"}</span>
                 ) : iv.status === "evaluating" ? (
                   <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 bg-amber-50 text-amber-600 rounded-full font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse-dot" />
@@ -150,7 +157,7 @@ export default async function DashboardPage() {
                 ) : (
                   <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse-dot" />
-                    进行中
+                    {iv.maxRounds > 1 ? `第${iv.currentRound}/${iv.maxRounds}轮进行中` : "进行中"}
                   </span>
                 )}
                 <svg className="w-5 h-5 text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
