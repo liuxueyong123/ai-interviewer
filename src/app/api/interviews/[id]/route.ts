@@ -41,7 +41,9 @@ export async function GET(
       questionNumber: m.questionNumber,
       createdAt: m.createdAt,
     })),
-    evaluations: interview.evaluations.map((e) => ({
+    evaluations: interview.evaluations
+      .sort((a, b) => a.round - b.round)
+      .map((e) => ({
       round: e.round,
       overallScore: e.overallScore,
       categories: e.categories,

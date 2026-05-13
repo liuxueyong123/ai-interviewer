@@ -49,7 +49,6 @@ export default function ResultsPage() {
   const [error, setError] = useState("");
   const [timedOut, setTimedOut] = useState(false);
   const [selectedRound, setSelectedRound] = useState(1);
-  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
   const initialRoundSet = useRef(false);
 
@@ -71,10 +70,7 @@ export default function ResultsPage() {
         (e: { round: number }) => e.round === json.interview.currentRound
       );
       if (currentRoundHasEval || (json.evaluations?.length && json.interview.status !== "evaluating")) {
-        if (pollTimerRef.current) {
-          clearInterval(pollTimerRef.current);
-          pollTimerRef.current = null;
-        }
+        setTimedOut(false);
         if (!initialRoundSet.current && json.evaluations.length > 0) {
           setSelectedRound(json.evaluations[json.evaluations.length - 1].round);
           initialRoundSet.current = true;
@@ -89,10 +85,6 @@ export default function ResultsPage() {
 
       const elapsed = Date.now() - startTimeRef.current;
       if (elapsed >= TIMEOUT_MS) {
-        if (pollTimerRef.current) {
-          clearInterval(pollTimerRef.current);
-          pollTimerRef.current = null;
-        }
         setTimedOut(true);
       }
     } catch {
@@ -100,28 +92,20 @@ export default function ResultsPage() {
     }
   }, [id, router]);
 
-  // Initial fetch and cleanup
+  // Initial fetch
   useEffect(() => {
     startTimeRef.current = Date.now();
     fetchData();
-    return () => {
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    };
   }, [fetchData]);
 
-  // Start polling when data indicates evaluating
+  // Polling via setTimeout chain — reschedules after each response for precise intervals
   useEffect(() => {
-    if (!data || pollTimerRef.current) return;
+    if (!data) return;
     const curRoundHasEval = data.evaluations.some((e) => e.round === data.interview.currentRound);
-    if (data.interview.status === "evaluating" && !curRoundHasEval) {
-      pollTimerRef.current = setInterval(fetchData, POLL_INTERVAL);
-    }
-    return () => {
-      if (pollTimerRef.current) {
-        clearInterval(pollTimerRef.current);
-        pollTimerRef.current = null;
-      }
-    };
+    if (data.interview.status !== "evaluating" || curRoundHasEval) return;
+
+    const timer = setTimeout(fetchData, POLL_INTERVAL);
+    return () => clearTimeout(timer);
   }, [data, fetchData]);
 
   const handleRetry = useCallback(async () => {
@@ -356,7 +340,7 @@ export default function ResultsPage() {
                         : "text-text-muted hover:text-text-secondary"
                     }`}
                   >
-                    {e.round < interview.currentRound || isDone ? (
+                    {e.round <= interview.currentRound || isDone ? (
                       <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                       </svg>
