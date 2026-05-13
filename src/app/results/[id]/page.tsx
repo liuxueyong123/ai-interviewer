@@ -36,7 +36,7 @@ interface InterviewData {
 }
 
 const POLL_INTERVAL = 5000;
-const TIMEOUT_MS = 600_000;
+const TIMEOUT_MS = 300_000;
 
 export default function ResultsPage() {
   const { id } = useParams<{ id: string }>();

@@ -30,6 +30,11 @@ services:
       # 语音识别
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
 
+      # LangSmith 可观测性（LangChain 自动追踪）
+      - LANGSMITH_TRACING=${LANGSMITH_TRACING:-false}
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+      - LANGSMITH_API_URL=${LANGSMITH_API_URL}
+
       # 前端 URL
       - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
 
