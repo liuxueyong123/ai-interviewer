@@ -18,7 +18,13 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(
     interviews.map((i) => {
-      const latestEval = i.evaluations?.[i.evaluations.length - 1];
+      const evals = i.evaluations ?? [];
+      const avg = (arr: number[]) => Math.round(arr.reduce((s, v) => s + v, 0) / arr.length);
+      const overallScore = evals.length > 0 ? avg(evals.map((e) => e.overallScore)) : null;
+      const categories =
+        evals.length > 0
+          ? { tech: avg(evals.map((e) => e.categories?.tech ?? 0)), project: avg(evals.map((e) => e.categories?.project ?? 0)), softSkills: avg(evals.map((e) => e.categories?.softSkills ?? 0)) }
+          : null;
       return {
         id: i.id,
         title: i.title || i.position,
@@ -26,8 +32,8 @@ export async function GET(request: NextRequest) {
         status: i.status,
         currentRound: i.currentRound,
         maxRounds: i.maxRounds,
-        overallScore: latestEval?.overallScore ?? null,
-        categories: latestEval?.categories ?? null,
+        overallScore,
+        categories,
         createdAt: i.createdAt,
       };
     }),
@@ -58,11 +64,11 @@ export async function POST(request: NextRequest) {
     if (!prev) {
       return NextResponse.json({ error: "面试记录不存在" }, { status: 404 });
     }
-    position = position || prev.position;
-    finalResumeText = finalResumeText || prev.resumeText;
-    questionCount = questionCount ?? prev.questionCount;
-    difficulty = difficulty ?? prev.difficulty;
-    maxRounds = maxRounds ?? prev.maxRounds;
+    position = prev.position;
+    finalResumeText = prev.resumeText;
+    questionCount = prev.questionCount;
+    difficulty = prev.difficulty;
+    maxRounds = prev.maxRounds;
   }
 
   if (!position) {

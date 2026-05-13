@@ -49,14 +49,12 @@ export default async function DashboardPage() {
   const bestScore = completed.length > 0 ? Math.max(...completed.map((i) => i.overallScore!)) : null;
 
   const chartData = completed
-    .filter((i) => i.categories)
     .reverse()
-    .map((i) => ({
+    .map((i, idx) => ({
+      label: `#${idx + 1}`,
       title: i.title,
       date: i.createdAt,
-      tech: i.categories!.tech,
-      project: i.categories!.project,
-      softSkills: i.categories!.softSkills,
+      score: i.overallScore!,
     }));
 
   return (
