@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const userId = getUserId(request);
-  let body: { position: string; resumeText?: string; resumeId?: number; questionCount?: number; difficulty?: "junior" | "mid" | "senior"; maxRounds?: number };
+  let body: { position?: string; resumeText?: string; resumeId?: number; questionCount?: number; difficulty?: "junior" | "mid" | "senior"; maxRounds?: number; prevInterviewId?: number };
   try {
     body = validate(createInterviewSchema, await request.json());
   } catch (e) {
@@ -46,11 +46,30 @@ export async function POST(request: NextRequest) {
     throw e;
   }
 
-  const { position, resumeText, resumeId, questionCount = 12, difficulty = "mid", maxRounds = 2 } = body;
+  const ds = await getDataSource();
+
+  let { position, resumeText, resumeId, questionCount = 12, difficulty = "mid", maxRounds = 2 } = body;
   let finalResumeText = resumeText || "";
 
+  if (body.prevInterviewId) {
+    const prev = await ds.getRepository(Interview).findOne({
+      where: { id: body.prevInterviewId, user: { id: userId } },
+    });
+    if (!prev) {
+      return NextResponse.json({ error: "面试记录不存在" }, { status: 404 });
+    }
+    position = position || prev.position;
+    finalResumeText = finalResumeText || prev.resumeText;
+    questionCount = questionCount ?? prev.questionCount;
+    difficulty = difficulty ?? prev.difficulty;
+    maxRounds = maxRounds ?? prev.maxRounds;
+  }
+
+  if (!position) {
+    return NextResponse.json({ error: "请选择目标岗位" }, { status: 400 });
+  }
+
   if (resumeId) {
-    const ds = await getDataSource();
     const resume = await ds.getRepository(Resume).findOne({
       where: { id: parseInt(String(resumeId), 10), user: { id: userId } },
     });
@@ -64,7 +83,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "简历内容不能为空" }, { status: 400 });
   }
 
-  const ds = await getDataSource();
   const count = await ds.getRepository(Interview).count({
     where: { user: { id: userId } },
   });

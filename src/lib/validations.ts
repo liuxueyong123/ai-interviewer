@@ -31,13 +31,17 @@ export const chatSchema = z.object({
 
 // ── Interviews ──
 export const createInterviewSchema = z.object({
-  position: z.string().min(1, "请选择目标岗位"),
+  position: z.string().min(1, "请选择目标岗位").optional(),
   resumeText: z.string().optional(),
   resumeId: z.number().int().positive().optional(),
   questionCount: z.number().int().min(1).max(50).optional(),
   difficulty: z.enum(["junior", "mid", "senior"]).optional(),
   maxRounds: z.number().int().min(1).max(3).optional(),
-});
+  prevInterviewId: z.number().int().positive().optional(),
+}).refine(
+  (data) => !!(data.position || data.prevInterviewId),
+  { message: "请选择目标岗位", path: ["position"] },
+);
 
 // ── Resumes ──
 export const updateResumeSchema = z.object({

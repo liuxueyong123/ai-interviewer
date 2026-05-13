@@ -300,7 +300,7 @@ export default function ResultsPage() {
               <p className="text-amber-800 text-sm font-semibold mb-1">😔&nbsp;很遗憾，面试已结束</p>
               <p className="text-amber-700 text-sm">您在第{interview.currentRound}轮面试中未达到通过分数，感谢您的参与～</p>
               <div className="mt-2 flex justify-center">
-                <RetryButton position={interview.position} resumeText={interview.resumeText} questionCount={interview.questionCount} difficulty={interview.difficulty} />
+                <RetryButton interviewId={interview.id} />
               </div>
             </div>
           )}
@@ -310,7 +310,7 @@ export default function ResultsPage() {
               <p className="text-accent text-sm font-semibold mb-2">🎉&nbsp;恭喜您完成了全部 {interview.maxRounds} 轮面试！</p>
               <p className="text-text-secondary text-sm leading-relaxed">每次练习都是成长，已生成评估报告和改进建议，继续加油吧！</p>
               <div className="mt-2 flex justify-center">
-                <RetryButton position={interview.position} resumeText={interview.resumeText} questionCount={interview.questionCount} difficulty={interview.difficulty} />
+                <RetryButton interviewId={interview.id} />
               </div>
             </div>
           )}
