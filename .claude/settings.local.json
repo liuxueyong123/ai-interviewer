@@ -33,7 +33,8 @@
       "mcp__plugin_everything-claude-code_exa__web_search_exa",
       "Bash(npm audit *)",
       "Bash(npx eslint *)",
-      "Bash(echo \"---TSC EXIT: $?---\")"
+      "Bash(echo \"---TSC EXIT: $?---\")",
+      "Bash(npx vitest *)"
     ]
   }
 }

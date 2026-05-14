@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # InterviewAI
 
 AI 模拟面试练习平台。上传 PDF 简历 → 选择岗位 → AI 面试官提问 → 评分报告。
@@ -51,14 +53,14 @@ src/
 
 ## 设计 Token
 
-| Token | 用途 |
-|-------|------|
-| `font-display` / `font-sans` | Space Grotesk 标题 / DM Sans 正文 |
-| `surface-0`(#f8fafc) / `surface-1`(#fff) / `surface-2`(#f1f5f9) / `surface-3`(#e2e8f0) | 背景层级 |
-| `text-primary`(#0f172a) / `text-secondary`(#475569) / `text-muted`(#94a3b8) | 文字层级 |
-| `accent`(#22c55e) / `accent-hover`(#16a34a) / `accent-muted`(rgba) | 主色系 |
-| `border`(#e2e8f0) / `border-light`(#f1f5f9) | 边框 |
-| `danger`(#ef4444) / `danger-muted`(rgba) | 危险/错误 |
+| Token                                                                                  | 用途                              |
+| -------------------------------------------------------------------------------------- | --------------------------------- |
+| `font-display` / `font-sans`                                                           | Space Grotesk 标题 / DM Sans 正文 |
+| `surface-0`(#f8fafc) / `surface-1`(#fff) / `surface-2`(#f1f5f9) / `surface-3`(#e2e8f0) | 背景层级                          |
+| `text-primary`(#0f172a) / `text-secondary`(#475569) / `text-muted`(#94a3b8)            | 文字层级                          |
+| `accent`(#22c55e) / `accent-hover`(#16a34a) / `accent-muted`(rgba)                     | 主色系                            |
+| `border`(#e2e8f0) / `border-light`(#f1f5f9)                                            | 边框                              |
+| `danger`(#ef4444) / `danger-muted`(rgba)                                               | 危险/错误                         |
 
 用法：`bg-surface-0` `text-accent` `border-border` `font-display`
 
@@ -80,16 +82,16 @@ src/
 
 ## 环境变量
 
-| 变量 | 说明 |
-|------|------|
-| `DB_HOST/PORT/USER/PASSWORD/NAME` | MySQL 连接 |
-| `DB_SSL` | 设为 `true` 开启 SSL |
-| `JWT_SECRET` | JWT 签名密钥（生产环境必填） |
-| `DEEPSEEK_API_KEY` | DeepSeek API Key |
-| `DEEPSEEK_BASE_URL` | DeepSeek API 地址 |
-| `DASHSCOPE_API_KEY` | 阿里云百炼 API Key（语音识别） |
-| `LANGSMITH_TRACING` | 设为 `true` 开启 LangSmith 追踪 |
-| `LANGSMITH_API_KEY` | LangSmith API Key（需在 smith.langchain.com 创建） |
-| `LANGSMITH_PROJECT` | LangSmith 项目名 |
-| `NEXT_PUBLIC_BASE_URL` | 前端 API 基地址 |
-| `COOKIE_SECURE` | Cookie Secure 属性 |
+| 变量                              | 说明                                               |
+| --------------------------------- | -------------------------------------------------- |
+| `DB_HOST/PORT/USER/PASSWORD/NAME` | MySQL 连接                                         |
+| `DB_SSL`                          | 设为 `true` 开启 SSL                               |
+| `JWT_SECRET`                      | JWT 签名密钥（生产环境必填）                       |
+| `DEEPSEEK_API_KEY`                | DeepSeek API Key                                   |
+| `DEEPSEEK_BASE_URL`               | DeepSeek API 地址                                  |
+| `DASHSCOPE_API_KEY`               | 阿里云百炼 API Key（语音识别）                     |
+| `LANGSMITH_TRACING`               | 设为 `true` 开启 LangSmith 追踪                    |
+| `LANGSMITH_API_KEY`               | LangSmith API Key（需在 smith.langchain.com 创建） |
+| `LANGSMITH_PROJECT`               | LangSmith 项目名                                   |
+| `NEXT_PUBLIC_BASE_URL`            | 前端 API 基地址                                    |
+| `COOKIE_SECURE`                   | Cookie Secure 属性                                 |
