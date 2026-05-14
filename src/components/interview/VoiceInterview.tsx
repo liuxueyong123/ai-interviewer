@@ -26,6 +26,7 @@ export default function VoiceInterview() {
 
   const [appState, setAppState] = useState<AppState>("idle");
   const [subtitle, setSubtitle] = useState("");
+  const [loaded, setLoaded] = useState(false);
   const [position, setPosition] = useState("");
   const [currentRound, setCurrentRound] = useState(1);
   const [maxRounds, setMaxRounds] = useState(1);
@@ -202,12 +203,15 @@ export default function VoiceInterview() {
         if (interviewerMessages.length > 0) {
           const lastMsg = interviewerMessages[interviewerMessages.length - 1];
           pendingSubtitleRef.current = lastMsg.content;
+          setLoaded(true);
           setAppState("ai_speaking");
           speak(lastMsg.content).then(() => {
             setAppState("waiting_for_user");
           }).catch(() => {
             setAppState("waiting_for_user");
           });
+        } else {
+          setLoaded(true);
         }
 
         const storageKey = `interview_timer_${interviewId}_round_${data.interview?.currentRound ?? 1}`;
@@ -226,8 +230,9 @@ export default function VoiceInterview() {
     finishInterview();
   }
 
-  const avatarState =
-    ttsState === "playing" ? "speaking" :
+  const avatarState = !loaded
+    ? "thinking"
+    : ttsState === "playing" ? "speaking" :
     appState === "ai_speaking" ? "thinking" :
     appState === "user_speaking" ? "listening" :
     appState === "processing" ? "thinking" : "idle";
