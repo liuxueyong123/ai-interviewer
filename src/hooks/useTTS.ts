@@ -25,67 +25,71 @@ export function useTTS() {
     setState("idle");
   }, []);
 
-  const speak = useCallback(async (text: string): Promise<void> => {
-    stop();
+  const speak = useCallback(
+    async (text: string): Promise<void> => {
+      stop();
 
-    const abort = new AbortController();
-    abortRef.current = abort;
-    setState("loading");
+      const abort = new AbortController();
+      abortRef.current = abort;
+      setState("loading");
 
-    try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-        signal: abort.signal,
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "TTS 请求失败");
-      }
-
-      const data = await res.json();
-      if (!data.audio) throw new Error("TTS 响应缺少音频");
-
-      return new Promise<void>((resolve, reject) => {
-        const audio = new Audio(data.audio);
-        audioRef.current = audio;
-        let settled = false;
-
-        audio.onplay = () => setState("playing");
-        audio.onended = () => {
-          if (settled) return;
-          settled = true;
-          setState("idle");
-          audioRef.current = null;
-          resolve();
-        };
-        audio.onerror = () => {
-          if (settled) return;
-          settled = true;
-          setState("error");
-          audioRef.current = null;
-          reject(new Error("音频播放失败"));
-        };
-
-        audio.play().catch((e) => {
-          if (settled) return;
-          settled = true;
-          setState("error");
-          audioRef.current = null;
-          reject(e);
+      try {
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+          signal: abort.signal,
         });
-      });
-    } catch (err) {
-      if ((err as Error).name === "AbortError") return;
-      setState("error");
-    } finally {
-      if (abortRef.current === abort) {
-        abortRef.current = null;
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || "TTS 请求失败");
+        }
+
+        const data = await res.json();
+        if (!data.audio) throw new Error("TTS 响应缺少音频");
+
+        return new Promise<void>((resolve, reject) => {
+          const audio = new Audio(data.audio);
+          audioRef.current = audio;
+          let settled = false;
+
+          audio.playbackRate = 1.3;
+          audio.onplay = () => setState("playing");
+          audio.onended = () => {
+            if (settled) return;
+            settled = true;
+            setState("idle");
+            audioRef.current = null;
+            resolve();
+          };
+          audio.onerror = () => {
+            if (settled) return;
+            settled = true;
+            setState("error");
+            audioRef.current = null;
+            reject(new Error("音频播放失败"));
+          };
+
+          audio.play().catch((e) => {
+            if (settled) return;
+            settled = true;
+            setState("error");
+            audioRef.current = null;
+            reject(e);
+          });
+        });
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+        setState("error");
+      } finally {
+        if (abortRef.current === abort) {
+          abortRef.current = null;
+        }
       }
-    }
-  }, [stop]);
+    },
+    [stop],
+  );
 
   useEffect(() => {
     return () => stop();

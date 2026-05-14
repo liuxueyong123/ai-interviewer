@@ -28,18 +28,15 @@ export async function POST(request: NextRequest) {
     const res = await fetch(`${DASHSCOPE_BASE_URL}/services/aigc/multimodal-generation/generation`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.DASHSCOPE_API_KEY}`,
+        Authorization: `Bearer ${process.env.DASHSCOPE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "qwen3-tts-vd-2026-01-26",
+        model: "qwen-tts-latest",
         input: {
           text: body.text,
           voice: TTS_VOICE_ID,
           language_type: "Chinese",
-        },
-        parameters: {
-          speech_rate: 1.2,
         },
       }),
     });

@@ -29,6 +29,7 @@ services:
 
       # 语音识别
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+      - DASHSCOPE_TTS_VOICE_ID=${DASHSCOPE_TTS_VOICE_ID}
 
       # LangSmith 可观测性（LangChain 自动追踪）
       - LANGSMITH_TRACING=${LANGSMITH_TRACING}
