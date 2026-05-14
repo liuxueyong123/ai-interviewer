@@ -38,6 +38,11 @@ export const chatSchema = z.object({
   hint: z.boolean().optional(),
 });
 
+// ── TTS ──
+export const ttsSchema = z.object({
+  text: z.string().min(1, "文本不能为空").max(600, "文本过长"),
+});
+
 // ── Interviews ──
 export const createInterviewSchema = z.object({
   position: z.string().min(1, "请选择目标岗位").optional(),
@@ -46,6 +51,7 @@ export const createInterviewSchema = z.object({
   questionCount: z.number().int().min(1).max(50).optional(),
   difficulty: z.enum(["junior", "mid", "senior"]).optional(),
   maxRounds: z.number().int().min(1).max(3).optional(),
+  mode: z.enum(["text", "voice"]).optional(),
   prevInterviewId: z.number().int().positive().optional(),
 }).refine(
   (data) => !!(data.position || data.prevInterviewId),

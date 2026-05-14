@@ -90,6 +90,7 @@ src/
 | `DEEPSEEK_API_KEY`                | DeepSeek API Key                                   |
 | `DEEPSEEK_BASE_URL`               | DeepSeek API 地址                                  |
 | `DASHSCOPE_API_KEY`               | 阿里云百炼 API Key（语音识别）                     |
+| `DASHSCOPE_TTS_VOICE_ID`           | TTS 音色 ID（通过 voice design 创建）           |
 | `LANGSMITH_TRACING`               | 设为 `true` 开启 LangSmith 追踪                    |
 | `LANGSMITH_API_KEY`               | LangSmith API Key（需在 smith.langchain.com 创建） |
 | `LANGSMITH_PROJECT`               | LangSmith 项目名                                   |
