@@ -26,18 +26,15 @@ export default function VoiceInterview() {
 
   const [appState, setAppState] = useState<AppState>("idle");
   const [subtitle, setSubtitle] = useState("");
-  const [showSubtitle, setShowSubtitle] = useState(false);
-  const [muted, setMuted] = useState(false);
   const [position, setPosition] = useState("");
   const [currentRound, setCurrentRound] = useState(1);
   const [maxRounds, setMaxRounds] = useState(1);
-  const [questionCount, setQuestionCount] = useState(0);
   const [finishing, setFinishing] = useState(false);
 
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  const { speak } = useTTS();
+  const { speak, state: ttsState } = useTTS();
   const abortRef = useRef<AbortController | null>(null);
   const lastRecognizedRef = useRef("");
 
@@ -61,66 +58,28 @@ export default function VoiceInterview() {
     if (appState === "finished") return;
     function handleBeforeUnload(e: BeforeUnloadEvent) {
       e.preventDefault();
-      e.returnValue = "";
     }
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [appState]);
 
-  // Load interview history
-  useEffect(() => {
-    if (!interviewId) return;
-    fetch(`/api/interviews/${interviewId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setPosition(data.interview?.position ?? "");
-        setCurrentRound(data.interview?.currentRound ?? 1);
-        setMaxRounds(data.interview?.maxRounds ?? 1);
-
-        const roundMessages = (data.messages || []).filter(
-          (m: { round: number }) => m.round === (data.interview?.currentRound ?? 1)
-        );
-        const interviewerMessages = roundMessages.filter((m: { role: string }) => m.role === "interviewer");
-        setQuestionCount(interviewerMessages.length);
-
-        if (data.interview?.status === "done" || data.interview?.status === "evaluating") {
-          setAppState("finished");
-          return;
-        }
-
-        if (data.interview?.mode === "text") {
-          router.replace(`/interview/chat?id=${interviewId}`);
-          return;
-        }
-
-        if (interviewerMessages.length > 0) {
-          const lastMsg = interviewerMessages[interviewerMessages.length - 1];
-          setSubtitle(lastMsg.content);
-          setShowSubtitle(true);
-          setAppState("ai_speaking");
-          speak(lastMsg.content).then(() => {
-            setAppState("waiting_for_user");
-          }).catch(() => {
-            setAppState("waiting_for_user");
-          });
-        }
-
-        const storageKey = `interview_timer_${interviewId}_round_${data.interview?.currentRound ?? 1}`;
-        let roundStart = localStorage.getItem(storageKey);
-        if (!roundStart) {
-          roundStart = String(Date.now());
-          localStorage.setItem(storageKey, roundStart);
-        }
-        setStartTime(new Date(parseInt(roundStart, 10)));
-      })
-      .catch(() => {});
-  }, [interviewId, speak]);
+  const finishInterview = useCallback(async () => {
+    if (!interviewId || finishing) return;
+    setFinishing(true);
+    setAppState("finished");
+    const res = await fetch(`/api/interviews/${interviewId}/finish`, { method: "POST" });
+    if (res.ok) {
+      router.push(`/results/${interviewId}`);
+    } else {
+      toast.error("结束面试失败");
+      setFinishing(false);
+    }
+  }, [interviewId, finishing, router]);
 
   // Send user message to chat and get AI response
   const sendToChat = useCallback(async (userMsg: string) => {
     if (!interviewId) return;
     setAppState("processing");
-    setShowSubtitle(false);
 
     const abort = new AbortController();
     abortRef.current = abort;
@@ -147,10 +106,7 @@ export default function VoiceInterview() {
           const event = JSON.parse(value.data);
           if (event.type === "chunk") {
             fullContent += event.content;
-            setSubtitle(fullContent);
-            setShowSubtitle(true);
           } else if (event.type === "done") {
-            setQuestionCount(event.questionNumber);
             if (fullContent.includes("面试环节已结束")) {
               finishInterview();
               return;
@@ -159,6 +115,7 @@ export default function VoiceInterview() {
         } catch { /* skip malformed events */ }
       }
 
+      setSubtitle(fullContent);
       setAppState("ai_speaking");
       try {
         await speak(fullContent);
@@ -174,7 +131,7 @@ export default function VoiceInterview() {
     } finally {
       abortRef.current = null;
     }
-  }, [interviewId, speak]);
+  }, [interviewId, speak, finishInterview]);
 
   // Manual recording controls
   const handleStartRecording = useCallback(() => {
@@ -187,7 +144,6 @@ export default function VoiceInterview() {
     stopListening();
     setAppState("processing");
 
-    // Wait for ASR result
     for (let i = 0; i < 50; i++) {
       await new Promise((r) => setTimeout(r, 200));
       if (lastRecognizedRef.current) break;
@@ -203,18 +159,52 @@ export default function VoiceInterview() {
     await sendToChat(recognized);
   }, [stopListening, sendToChat]);
 
-  async function finishInterview() {
-    if (!interviewId || finishing) return;
-    setFinishing(true);
-    setAppState("finished");
-    const res = await fetch(`/api/interviews/${interviewId}/finish`, { method: "POST" });
-    if (res.ok) {
-      router.push(`/results/${interviewId}`);
-    } else {
-      toast.error("结束面试失败");
-      setFinishing(false);
-    }
-  }
+  // Load interview history
+  useEffect(() => {
+    if (!interviewId) return;
+    fetch(`/api/interviews/${interviewId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setPosition(data.interview?.position ?? "");
+        setCurrentRound(data.interview?.currentRound ?? 1);
+        setMaxRounds(data.interview?.maxRounds ?? 1);
+
+        if (data.interview?.status === "done" || data.interview?.status === "evaluating") {
+          setAppState("finished");
+          return;
+        }
+
+        if (data.interview?.mode === "text") {
+          router.replace(`/interview/chat?id=${interviewId}`);
+          return;
+        }
+
+        const roundMessages = (data.messages || []).filter(
+          (m: { round: number }) => m.round === (data.interview?.currentRound ?? 1)
+        );
+        const interviewerMessages = roundMessages.filter((m: { role: string }) => m.role === "interviewer");
+
+        if (interviewerMessages.length > 0) {
+          const lastMsg = interviewerMessages[interviewerMessages.length - 1];
+          setSubtitle(lastMsg.content);
+          setAppState("ai_speaking");
+          speak(lastMsg.content).then(() => {
+            setAppState("waiting_for_user");
+          }).catch(() => {
+            setAppState("waiting_for_user");
+          });
+        }
+
+        const storageKey = `interview_timer_${interviewId}_round_${data.interview?.currentRound ?? 1}`;
+        let roundStart = localStorage.getItem(storageKey);
+        if (!roundStart) {
+          roundStart = String(Date.now());
+          localStorage.setItem(storageKey, roundStart);
+        }
+        setStartTime(new Date(parseInt(roundStart, 10)));
+      })
+      .catch(() => {});
+  }, [interviewId, speak, router]);
 
   function handleEndClick() {
     if (!window.confirm("确定要结束当前面试吗？")) return;
@@ -247,7 +237,7 @@ export default function VoiceInterview() {
           <button
             onClick={handleEndClick}
             disabled={finishing}
-            className="text-[10px] px-2.5 py-1 bg-red-500/10 text-red-400 rounded-md hover:bg-red-500/20 transition-colors"
+            className="text-[10px] px-2.5 py-1 bg-red-500/10 text-red-400 rounded-md hover:bg-red-500/20 transition-colors disabled:opacity-30"
           >
             结束面试
           </button>
@@ -263,15 +253,14 @@ export default function VoiceInterview() {
           </div>
         </div>
         <div className="flex-1 bg-black/40 rounded-2xl flex flex-col border border-white/5 overflow-hidden">
-          <div className="px-3 py-2 text-xs text-slate-500 font-medium shrink-0">你</div>
           <div className="flex-1">
             <CameraPreview />
           </div>
         </div>
       </div>
 
-      {/* Subtitle */}
-      <SubtitleBar text={subtitle} visible={showSubtitle} />
+      {/* Subtitle — only visible when TTS audio is actively playing */}
+      <SubtitleBar text={subtitle} visible={ttsState === "playing"} />
 
       {/* Voice Controls */}
       {appState !== "finished" && (
@@ -279,8 +268,7 @@ export default function VoiceInterview() {
           state={controlsState}
           onStart={handleStartRecording}
           onStop={handleStopRecording}
-          muted={muted}
-          onToggleMute={() => setMuted(!muted)}
+          disabled={finishing}
         />
       )}
 

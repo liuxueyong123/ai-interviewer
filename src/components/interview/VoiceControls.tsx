@@ -4,35 +4,17 @@ interface VoiceControlsProps {
   state: "idle" | "waiting" | "recording" | "processing";
   onStart: () => void;
   onStop: () => void;
-  muted: boolean;
-  onToggleMute: () => void;
+  disabled?: boolean;
 }
 
-export default function VoiceControls({ state, onStart, onStop, muted, onToggleMute }: VoiceControlsProps) {
+export default function VoiceControls({ state, onStart, onStop, disabled: externalDisabled }: VoiceControlsProps) {
   const isRecording = state === "recording";
   const isProcessing = state === "processing";
   const isWaiting = state === "waiting";
-  const disabled = state === "idle" || isProcessing;
+  const disabled = externalDisabled || state === "idle" || isProcessing;
 
   return (
-    <div className="flex items-center justify-center gap-8 py-3 shrink-0">
-      <button
-        type="button"
-        onClick={onToggleMute}
-        className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
-        title={muted ? "取消静音" : "静音"}
-      >
-        {muted ? (
-          <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6l2.5-2.25a.75.75 0 011.25.56v13.88a.75.75 0 01-1.25.56l-2.5-2.25H5.25a1.5 1.5 0 01-1.5-1.5v-7.5a1.5 1.5 0 011.5-1.5H9z" />
-          </svg>
-        ) : (
-          <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.5-4.5a.75.75 0 011.25.56v15.38a.75.75 0 01-1.25.56l-4.5-4.5H4.5a1.5 1.5 0 01-1.5-1.5v-4.5A1.5 1.5 0 014.5 8.25h2.25z" />
-          </svg>
-        )}
-      </button>
-
+    <div className="flex items-center justify-center py-3 shrink-0">
       <div className="flex flex-col items-center gap-2">
         <button
           type="button"
@@ -65,8 +47,6 @@ export default function VoiceControls({ state, onStart, onStop, muted, onToggleM
           {isRecording ? "点击结束回答" : isProcessing ? "思考中..." : isWaiting ? "点击开始回答" : ""}
         </span>
       </div>
-
-      <div className="w-10" />
     </div>
   );
 }

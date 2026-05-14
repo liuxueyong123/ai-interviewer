@@ -38,6 +38,9 @@ export async function POST(request: NextRequest) {
           voice: TTS_VOICE_ID,
           language_type: "Chinese",
         },
+        parameters: {
+          speech_rate: 1.2,
+        },
       }),
     });
 

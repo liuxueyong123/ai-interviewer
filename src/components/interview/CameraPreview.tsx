@@ -36,7 +36,7 @@ export default function CameraPreview() {
   }
 
   return (
-    <div className="relative h-full">
+    <div className="h-full">
       <video
         ref={videoRef}
         autoPlay
@@ -45,9 +45,6 @@ export default function CameraPreview() {
         className="w-full h-full object-cover rounded-xl"
         style={{ transform: "scaleX(-1)" }}
       />
-      <div className="absolute bottom-2 left-2 text-[10px] text-white/40 bg-black/30 px-2 py-0.5 rounded">
-        仅本地，不传输
-      </div>
     </div>
   );
 }
