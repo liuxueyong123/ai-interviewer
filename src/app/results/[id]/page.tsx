@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CategoryBars, EvaluationText, InterviewReview, PracticePanel } from "@/components/interview/ScoreCard";
+import { CategoryBars, EvaluationText, InterviewReview, PracticePanel, ScoreRing } from "@/components/interview/ScoreCard";
 import Steps, { type StepInfo } from "@/components/interview/Steps";
 import RetryButton from "@/components/interview/RetryButton";
 import { toast } from "@/components/ui/Toast";
@@ -306,7 +306,7 @@ export default function ResultsPage() {
             </div>
           )}
 
-          {isDone && !isFailed && (
+          {isDone && !isFailed && interview.maxRounds > 1 && (
             <div className="bg-accent-muted border border-accent/20 rounded-xl p-4 max-w-md mx-auto mb-4">
               <p className="text-accent text-sm font-semibold mb-2">🎉&nbsp;恭喜您完成了全部 {interview.maxRounds} 轮面试！</p>
               <p className="text-text-secondary text-sm leading-relaxed">每次练习都是成长，已生成评估报告和改进建议，继续加油吧！</p>
@@ -316,19 +316,25 @@ export default function ResultsPage() {
             </div>
           )}
 
-          <Steps
-            steps={steps}
-            selectedRound={selectedRound}
-            onSelectRound={setSelectedRound}
-            onNextRound={isPassed ? handleNextRound : undefined}
-            statusMessage={isDone ? undefined : deriveStatusMessage(interview.status, interview.currentRound, interview.maxRounds, evaluations.length)}
-          />
+          {interview.maxRounds > 1 ? (
+            <Steps
+              steps={steps}
+              selectedRound={selectedRound}
+              onSelectRound={setSelectedRound}
+              onNextRound={isPassed ? handleNextRound : undefined}
+              statusMessage={isDone ? undefined : deriveStatusMessage(interview.status, interview.currentRound, interview.maxRounds, evaluations.length)}
+            />
+          ) : (
+            <div className="flex justify-center mt-4">
+              <ScoreRing score={selectedEval.overallScore} />
+            </div>
+          )}
         </div>
 
         <div className="lg:grid lg:grid-cols-2 lg:gap-8">
           <div className="space-y-6 min-w-0">
             <CategoryBars categories={selectedEval.categories} />
-            <EvaluationText strengths={selectedEval.strengths} weaknesses={selectedEval.weaknesses} resumeSuggestions={selectedEval.resumeSuggestions} />
+            <EvaluationText strengths={selectedEval.strengths} weaknesses={selectedEval.weaknesses} resumeSuggestions={selectedEval.resumeSuggestions} roundSummary={selectedEval.roundSummary} />
             <PracticePanel suggestions={selectedEval.practiceSuggestions} />
           </div>
 
