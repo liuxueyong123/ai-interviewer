@@ -54,6 +54,11 @@ export default function ChatContainer() {
   }, []);
   const { recState, isSupported: micSupported, startListening, stopListening } = useSpeechRecognition(handleVoiceResult, handleVoiceError);
   const { speak: speakTTS, state: ttsState } = useTTS();
+  const [speakingKey, setSpeakingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (ttsState === "idle" || ttsState === "error") setSpeakingKey(null);
+  }, [ttsState]);
 
   const sendMessage = useCallback(
     async function sendMessageFn(userMsg: string, isHint = false) {
@@ -292,12 +297,12 @@ export default function ChatContainer() {
                       {!m.streaming && (
                         <button
                           type="button"
-                          onClick={(e) => { e.stopPropagation(); speakTTS(content); }}
-                          disabled={ttsState === "loading"}
+                          onClick={(e) => { e.stopPropagation(); setSpeakingKey(m.key); speakTTS(content); }}
+                          disabled={ttsState === "loading" && speakingKey === m.key}
                           className="inline-flex items-center gap-1 mt-2 text-xs text-text-muted hover:text-accent transition-colors"
                           title="播放语音"
                         >
-                          {ttsState === "loading" ? (
+                          {ttsState === "loading" && speakingKey === m.key ? (
                             <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
