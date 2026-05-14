@@ -66,12 +66,18 @@ export default function VoiceInterview() {
   const finishInterview = useCallback(async () => {
     if (!interviewId || finishing) return;
     setFinishing(true);
-    setAppState("finished");
-    const res = await fetch(`/api/interviews/${interviewId}/finish`, { method: "POST" });
-    if (res.ok) {
-      router.push(`/results/${interviewId}`);
-    } else {
-      toast.error("结束面试失败");
+    try {
+      const res = await fetch(`/api/interviews/${interviewId}/finish`, { method: "POST" });
+      if (res.ok) {
+        setAppState("finished");
+        router.push(`/results/${interviewId}`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || `结束面试失败 (${res.status})`);
+        setFinishing(false);
+      }
+    } catch {
+      toast.error("网络错误，请重试");
       setFinishing(false);
     }
   }, [interviewId, finishing, router]);
@@ -212,7 +218,8 @@ export default function VoiceInterview() {
   }
 
   const avatarState =
-    appState === "ai_speaking" ? "speaking" :
+    ttsState === "playing" ? "speaking" :
+    appState === "ai_speaking" ? "thinking" :
     appState === "user_speaking" ? "listening" :
     appState === "processing" ? "thinking" : "idle";
 
