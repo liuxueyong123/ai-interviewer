@@ -13,6 +13,9 @@ export function useTTS() {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current.onplay = null;
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
       audioRef.current = null;
     }
     if (abortRef.current) {
@@ -48,20 +51,27 @@ export function useTTS() {
       return new Promise<void>((resolve, reject) => {
         const audio = new Audio(data.audio);
         audioRef.current = audio;
+        let settled = false;
 
         audio.onplay = () => setState("playing");
         audio.onended = () => {
+          if (settled) return;
+          settled = true;
           setState("idle");
           audioRef.current = null;
           resolve();
         };
         audio.onerror = () => {
+          if (settled) return;
+          settled = true;
           setState("error");
           audioRef.current = null;
           reject(new Error("音频播放失败"));
         };
 
         audio.play().catch((e) => {
+          if (settled) return;
+          settled = true;
           setState("error");
           audioRef.current = null;
           reject(e);
@@ -70,9 +80,10 @@ export function useTTS() {
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       setState("error");
-      throw err;
     } finally {
-      abortRef.current = null;
+      if (abortRef.current === abort) {
+        abortRef.current = null;
+      }
     }
   }, [stop]);
 
