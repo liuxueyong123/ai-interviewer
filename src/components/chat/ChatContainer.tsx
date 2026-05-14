@@ -9,6 +9,7 @@ import { toast } from "@/components/ui/Toast";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import { roleConfig } from "./roleConfig";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { useTTS } from "@/hooks/useTTS";
 
 interface BubbleItem {
   key: string;
@@ -52,6 +53,7 @@ export default function ChatContainer() {
     toast.warning(err);
   }, []);
   const { recState, isSupported: micSupported, startListening, stopListening } = useSpeechRecognition(handleVoiceResult, handleVoiceError);
+  const { speak: speakTTS, state: ttsState } = useTTS();
 
   const sendMessage = useCallback(
     async function sendMessageFn(userMsg: string, isHint = false) {
@@ -285,7 +287,30 @@ export default function ChatContainer() {
             ...(m.role === "interviewer" && !m.loading
               ? {
                   contentRender: (content: string) => (
-                    <XMarkdown content={content} streaming={{ hasNextChunk: m.streaming ?? false, enableAnimation: true }} />
+                    <div>
+                      <XMarkdown content={content} streaming={{ hasNextChunk: m.streaming ?? false, enableAnimation: true }} />
+                      {!m.streaming && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); speakTTS(content); }}
+                          disabled={ttsState === "loading"}
+                          className="inline-flex items-center gap-1 mt-2 text-xs text-text-muted hover:text-accent transition-colors"
+                          title="播放语音"
+                        >
+                          {ttsState === "loading" ? (
+                            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.5-4.5a.75.75 0 011.25.56v15.38a.75.75 0 01-1.25.56l-4.5-4.5H4.5a1.5 1.5 0 01-1.5-1.5v-4.5A1.5 1.5 0 014.5 8.25h2.25z" />
+                            </svg>
+                          )}
+                          <span>播放</span>
+                        </button>
+                      )}
+                    </div>
                   ),
                 }
               : {}),
