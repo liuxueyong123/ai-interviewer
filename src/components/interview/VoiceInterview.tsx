@@ -267,9 +267,12 @@ export default function VoiceInterview() {
 
       {/* Split View */}
       <div className="flex-1 flex gap-3 p-3 min-h-0">
-        <div className="flex-1 bg-slate-900/50 rounded-2xl flex flex-col border border-white/5">
-          <div className="px-3 py-2 text-xs text-indigo-400 font-medium shrink-0">AI 面试官</div>
-          <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 bg-slate-900/50 rounded-2xl flex flex-col border border-white/5 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
+            background: "radial-gradient(ellipse at center, rgba(99,102,241,0.08) 0%, transparent 60%)",
+          }} />
+          <div className="px-3 py-2 text-xs text-indigo-400 font-medium shrink-0 relative">AI 面试官</div>
+          <div className="flex-1 flex items-center justify-center relative">
             <AIAvatar state={avatarState} />
           </div>
         </div>
