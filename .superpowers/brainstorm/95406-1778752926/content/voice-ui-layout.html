@@ -1,0 +1,114 @@
+<h2>语音面试页面整体布局</h2>
+<p class="subtitle">综合已确认的设计决策：SVG动画AI形象 · 手动录音 · 底部字幕</p>
+
+<div class="mockup">
+  <div class="mockup-header">语音面试 - "视频通话"风格全屏布局</div>
+  <div class="mockup-body">
+    <div style="background:#0f172a;padding:6px 16px;border-radius:0;color:white;">
+
+      <!-- Top bar -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px;">
+        <span style="color:#94a3b8;font-size:12px;">AI 面试 · 前端开发工程师</span>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <span style="color:#22c55e;font-size:11px;background:rgba(34,197,94,0.15);padding:2px 8px;border-radius:10px;">第 1/2 轮</span>
+          <span style="color:#94a3b8;font-size:12px;font-family:monospace;">03:25</span>
+          <span style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:11px;padding:3px 10px;border-radius:6px;">结束面试</span>
+        </div>
+      </div>
+
+      <!-- Main split -->
+      <div style="display:flex;gap:12px;min-height:280px;margin-bottom:8px;">
+
+        <!-- Left: AI Avatar -->
+        <div style="flex:1;background:#1e293b;border-radius:12px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;">
+          <div style="position:absolute;top:10px;left:12px;color:#6366f1;font-size:11px;font-weight:600;">AI 面试官</div>
+
+          <!-- SVG Abstract Avatar -->
+          <div style="width:100px;height:100px;position:relative;">
+            <!-- Outer pulse ring -->
+            <div style="position:absolute;inset:-12px;border-radius:50%;border:2px solid rgba(99,102,241,0.3);"></div>
+            <!-- Face circle -->
+            <svg viewBox="0 0 100 100" style="width:100px;height:100px;">
+              <circle cx="50" cy="42" r="24" fill="none" stroke="#6366f1" stroke-width="2" opacity="0.9"/>
+              <circle cx="40" cy="38" r="3" fill="#818cf8"/>
+              <circle cx="60" cy="38" r="3" fill="#818cf8"/>
+              <path d="M38 52 Q50 62 62 52" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round"/>
+              <rect x="36" y="68" width="28" height="8" rx="4" fill="none" stroke="#6366f1" stroke-width="1.5" opacity="0.5"/>
+            </svg>
+          </div>
+
+          <!-- Sound wave bars when speaking -->
+          <div style="display:flex;gap:3px;align-items:flex-end;height:24px;margin-top:12px;">
+            <div style="width:3px;height:8px;background:#6366f1;border-radius:2px;"></div>
+            <div style="width:3px;height:16px;background:#818cf8;border-radius:2px;"></div>
+            <div style="width:3px;height:24px;background:#a5b4fc;border-radius:2px;"></div>
+            <div style="width:3px;height:16px;background:#818cf8;border-radius:2px;"></div>
+            <div style="width:3px;height:8px;background:#6366f1;border-radius:2px;"></div>
+          </div>
+
+          <!-- Status: AI Speaking -->
+          <div style="position:absolute;bottom:10px;display:flex;align-items:center;gap:6px;">
+            <span style="width:6px;height:6px;background:#22c55e;border-radius:50%;display:inline-block;"></span>
+            <span style="color:#22c55e;font-size:11px;">正在说话</span>
+          </div>
+        </div>
+
+        <!-- Right: User Camera -->
+        <div style="flex:1;background:#0a0f1a;border-radius:12px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(255,255,255,0.05);">
+          <div style="position:absolute;top:10px;left:12px;color:#94a3b8;font-size:11px;">你</div>
+          <!-- Simulated camera feed -->
+          <div style="text-align:center;">
+            <svg viewBox="0 0 60 60" style="width:60px;height:60px;opacity:0.3;">
+              <circle cx="30" cy="22" r="12" fill="#475569"/>
+              <ellipse cx="30" cy="50" rx="20" ry="14" fill="#334155"/>
+            </svg>
+            <div style="color:#475569;font-size:11px;margin-top:6px;">摄像头预览</div>
+            <div style="color:#64748b;font-size:10px;margin-top:2px;">仅本地，不传输</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subtitle bar -->
+      <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.15);border-radius:8px;padding:8px 14px;margin-bottom:8px;text-align:center;color:#cbd5e1;font-size:13px;min-height:36px;">
+        "请介绍一下你最近参与的前端项目中，最有挑战性的技术难点是什么？"
+      </div>
+
+      <!-- Bottom controls -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;padding:4px 0;">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;">
+          <span style="color:#94a3b8;font-size:18px;">M</span>
+        </div>
+
+        <!-- Record button (center) -->
+        <div style="width:56px;height:56px;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px rgba(239,68,68,0.2);">
+          <div style="width:22px;height:22px;background:white;border-radius:4px;"></div>
+        </div>
+        <div style="color:#94a3b8;font-size:11px;text-align:center;">点击开始<br/>回答</div>
+
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;">
+          <span style="color:#94a3b8;font-size:18px;">S</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>布局说明</h3>
+  <div class="pros-cons">
+    <div class="pros"><h4>包含元素</h4><ul>
+      <li>顶部栏：面试信息 + 轮次 + 计时器 + 结束按钮</li>
+      <li>左面板：SVG 抽象 AI 形象 + 声波动画 + 状态指示</li>
+      <li>右面板：本地摄像头画面（不传输）</li>
+      <li>字幕栏：AI 当前说话的文字内容</li>
+      <li>底部控制：静音、录音按钮、设置</li>
+    </ul></div>
+    <div class="cons"><h4>状态变化</h4><ul>
+      <li>AI 说话时：声波跳动 + 绿色"正在说话" + 字幕显示</li>
+      <li>等待回答时：录音按钮红色脉冲 + "点击开始回答"</li>
+      <li>录音中：按钮变方形停止 + "点击结束回答"</li>
+      <li>处理中：加载动画 + "思考中..."</li>
+    </ul></div>
+  </div>
+</div>

@@ -13,7 +13,7 @@ export function AntdThemeProvider({ children }: { children: React.ReactNode }) {
           colorPrimaryActive: "#6d28d9",
           borderRadius: 10,
           colorBgContainer: "rgba(255, 255, 255, 0.05)",
-          colorBgElevated: "rgba(255, 255, 255, 0.09)",
+          colorBgElevated: "#13172a",
           colorBorder: "rgba(255, 255, 255, 0.14)",
           colorBorderSecondary: "rgba(255, 255, 255, 0.08)",
           colorText: "#f1f5f9",

@@ -34,7 +34,14 @@
       "Bash(npm audit *)",
       "Bash(npx eslint *)",
       "Bash(echo \"---TSC EXIT: $?---\")",
-      "Bash(npx vitest *)"
+      "Bash(npx vitest *)",
+      "WebFetch(domain:www.alibabacloud.com)",
+      "Skill(superpowers:brainstorming)",
+      "Skill(superpowers:writing-plans)",
+      "Bash(/Users/lxy/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/stop-server.sh *)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(bash *)"
     ]
   }
 }

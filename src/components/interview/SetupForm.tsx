@@ -31,13 +31,13 @@ function SelectPopover<T extends string | number>({ value, options, onChange }: 
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-surface-0 border border-border rounded-xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200"
+        className="w-full flex items-center justify-between px-4 py-3 bg-surface-2 border border-border rounded-xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200"
       >
         <span className="text-text-primary">{selectedLabel}</span>
         <ChevronDownIcon className={`w-4 h-4 text-text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-surface-1 backdrop-blur-xl border border-white/8 rounded-xl shadow-2xl overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full bg-[#13172a] border border-border rounded-xl shadow-2xl overflow-hidden">
           {options.map((opt) => (
             <button
               key={String(opt.value)}
@@ -185,10 +185,10 @@ export default function SetupForm() {
           }}
           onFocus={() => setOpen(true)}
           placeholder="搜索岗位（例如：前端、产品经理、金融分析师...）"
-          className="w-full px-4 py-3 bg-surface-0 border border-border rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200"
+          className="w-full px-4 py-3 bg-surface-2 border border-border rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200"
         />
         {open && (
-          <div className="absolute z-50 mt-1 w-full bg-surface-1 backdrop-blur-xl border border-white/8 rounded-xl shadow-2xl max-h-72 overflow-y-auto">
+          <div className="absolute z-50 mt-1 w-full bg-[#13172a] border border-border rounded-xl shadow-2xl max-h-72 overflow-y-auto">
             {filteredGroups.length === 0 ? (
               <div className="px-4 py-6 text-center text-text-muted text-sm">无匹配岗位</div>
             ) : (

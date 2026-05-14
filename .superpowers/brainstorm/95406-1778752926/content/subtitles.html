@@ -1,0 +1,50 @@
+<h2>语音面试页面需要字幕吗？</h2>
+<p class="subtitle">你说过"没有文字的界面"，但字幕不同于聊天气泡，它是底部叠加的一行实时文字</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">方案 A：有字幕</div>
+    <div class="mockup-body">
+      <div style="background:#0f172a;padding:20px;border-radius:12px;text-align:center;">
+        <div style="display:flex;gap:12px;min-height:200px;">
+          <div style="flex:1;background:#1e293b;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#6366f1;font-size:14px;">AI 面试官</div>
+          <div style="flex:1;background:#1e293b;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;">你的画面</div>
+        </div>
+        <div style="background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:8px 14px;margin-top:12px;color:#e2e8f0;font-size:13px;text-align:center;">
+          "同学你好，请简单介绍一下你自己"
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">方案 B：纯语音无字幕</div>
+    <div class="mockup-body">
+      <div style="background:#0f172a;padding:20px;border-radius:12px;text-align:center;">
+        <div style="display:flex;gap:12px;min-height:200px;">
+          <div style="flex:1;background:#1e293b;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#6366f1;font-size:14px;">AI 面试官</div>
+          <div style="flex:1;background:#1e293b;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;">你的画面</div>
+        </div>
+        <div style="padding:12px;margin-top:8px;color:#64748b;font-size:13px;text-align:center;">
+          （底部无文字，仅状态指示器）
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>有字幕（推荐）</h3>
+      <p>底部浮动字幕显示 AI 当前说的话，对非母语者或嘈杂环境友好，降低听力压力</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>纯语音无字幕</h3>
+      <p>完全模拟真实面试对话，只靠听觉，沉浸感最强但可能漏听</p>
+    </div>
+  </div>
+</div>
