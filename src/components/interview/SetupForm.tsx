@@ -118,6 +118,7 @@ export default function SetupForm() {
   const [questionCount, setQuestionCount] = useState(12);
   const [maxRounds, setMaxRounds] = useState(2);
   const [difficulty, setDifficulty] = useState<string>("mid");
+  const [mode, setMode] = useState<"text" | "voice">("text");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -158,7 +159,7 @@ export default function SetupForm() {
     const res = await fetch("/api/interviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ position, resumeId: selectedResumeId, questionCount, maxRounds, difficulty }),
+      body: JSON.stringify({ position, resumeId: selectedResumeId, questionCount, maxRounds, difficulty, mode }),
     });
     const data = await res.json();
     setLoading(false);
@@ -166,7 +167,8 @@ export default function SetupForm() {
       setError(data.error);
       return;
     }
-    router.push(`/interview/chat?id=${data.interviewId}`);
+    const targetPath = mode === "voice" ? `/interview/voice?id=${data.interviewId}` : `/interview/chat?id=${data.interviewId}`;
+    router.push(targetPath);
   }
 
   return (
@@ -292,6 +294,37 @@ export default function SetupForm() {
             ]}
             onChange={setDifficulty}
           />
+        </div>
+      </div>
+
+      {/* Mode selector */}
+      <div className="col-span-2">
+        <label className="block text-sm font-medium text-text-secondary mb-2">面试模式</label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setMode("text")}
+            className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+              mode === "text" ? "border-accent bg-accent-muted" : "border-border bg-surface-1 hover:border-text-muted"
+            }`}
+          >
+            <div className={`text-sm font-semibold mb-1 ${mode === "text" ? "text-accent" : "text-text-primary"}`}>
+              文字面试
+            </div>
+            <div className="text-xs text-text-muted">聊天对话 · 键盘输入</div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("voice")}
+            className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+              mode === "voice" ? "border-accent bg-accent-muted" : "border-border bg-surface-1 hover:border-text-muted"
+            }`}
+          >
+            <div className={`text-sm font-semibold mb-1 ${mode === "voice" ? "text-accent" : "text-text-primary"}`}>
+              语音面试
+            </div>
+            <div className="text-xs text-text-muted">视频通话 · 语音对话</div>
+          </button>
         </div>
       </div>
 
