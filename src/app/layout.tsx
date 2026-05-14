@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className="min-h-screen bg-surface-0 text-text-primary font-sans">
+      <body className="min-h-screen text-text-primary font-sans">
         <ErrorBoundary>
           <AppShell>{children}</AppShell>
         </ErrorBoundary>

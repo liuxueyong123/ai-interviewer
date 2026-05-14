@@ -48,7 +48,7 @@ export default function NavBar() {
   const initials = username ? username.slice(0, 2).toUpperCase() : "?";
 
   return (
-    <nav className="border-b border-border bg-surface-1">
+    <nav className="border-b border-white/5 bg-surface-1 backdrop-blur-md">
       <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
         <div className="flex items-center gap-6">
           <Link href="/dashboard" className="font-display font-bold text-text-primary tracking-tight">
@@ -60,7 +60,7 @@ export default function NavBar() {
                 key={l.href}
                 href={l.href}
                 className={`relative px-3 py-1.5 text-sm rounded-lg transition-all duration-200 font-medium ${
-                  pathname.startsWith(l.href) ? "text-accent bg-accent-muted" : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+                  pathname.startsWith(l.href) ? "text-accent bg-accent-muted shadow-[0_0_12px_rgba(139,92,246,0.1)]" : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
                 }`}
               >
                 {l.label}
@@ -82,8 +82,8 @@ export default function NavBar() {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 w-48 bg-surface-1 border border-border rounded-xl shadow-lg overflow-hidden z-50">
-              <div className="px-4 py-3 border-b border-border">
+            <div className="absolute right-0 top-full mt-1 w-48 bg-surface-1 backdrop-blur-xl border border-white/8 rounded-xl shadow-2xl overflow-hidden z-50">
+              <div className="px-4 py-3 border-b border-white/5">
                 <p className="text-sm font-medium text-text-primary truncate">{username || "未登录"}</p>
               </div>
               <div className="py-1">
@@ -101,7 +101,7 @@ export default function NavBar() {
                 <button
                   onClick={handleLogout}
                   disabled={loggingOut}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-text-secondary hover:bg-red-50 hover:text-danger transition-colors duration-150 cursor-pointer disabled:opacity-50"
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-text-secondary hover:bg-red-500/10 hover:text-danger transition-colors duration-150 cursor-pointer disabled:opacity-50"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />

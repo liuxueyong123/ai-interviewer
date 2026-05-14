@@ -48,7 +48,7 @@ export default function LoginPage() {
           <p className="text-text-muted text-sm mt-2">专业 AI 模拟面试练习平台</p>
         </div>
 
-        <div className="bg-surface-1 border border-border rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-surface-1 backdrop-blur-xl border border-white/8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-accent via-accent to-emerald-400" />
           <div className="p-8">
           <h2 className="font-display text-lg font-semibold text-text-primary mb-6">登录</h2>
@@ -83,7 +83,7 @@ export default function LoginPage() {
               </div>
             </div>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 font-medium">{error}</div>
+              <div className="bg-red-500/5 border border-red-500/20 text-red-400 text-sm rounded-lg px-4 py-3 font-medium">{error}</div>
             )}
             <button type="submit" disabled={loading}
               className="w-full py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] disabled:opacity-50 transition-all duration-200 font-display cursor-pointer">
