@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
     questionCount = prev.questionCount;
     difficulty = prev.difficulty;
     maxRounds = prev.maxRounds;
+    mode = prev.mode;
   }
 
   if (!position) {

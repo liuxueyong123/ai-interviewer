@@ -21,7 +21,8 @@ export default function RetryButton({ interviewId }: RetryButtonProps) {
     const data = await res.json();
     setLoading(false);
     if (res.ok) {
-      router.push(`/interview/chat?id=${data.interviewId}`);
+      const targetPath = data.mode === "voice" ? `/interview/voice?id=${data.interviewId}` : `/interview/chat?id=${data.interviewId}`;
+      router.push(targetPath);
     }
   }
 
