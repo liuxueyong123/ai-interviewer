@@ -86,8 +86,8 @@ export default function ResultsPage() {
             <p className="text-text-muted text-xs mt-2">预计需要 3 分钟左右</p>
           </div>
           {timedOut && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <p className="text-amber-700 text-sm mb-3">评估时间超过预期，可能是网络波动导致</p>
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
+              <p className="text-amber-400 text-sm mb-3">评估时间超过预期，可能是网络波动导致</p>
               <button
                 onClick={wrappedHandleRetry}
                 className="px-4 py-2 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display text-sm"
@@ -117,8 +117,8 @@ export default function ResultsPage() {
             <Steps steps={steps} selectedRound={selectedRound} onSelectRound={setSelectedRound} statusMessage={statusMsg} />
 
             {timedOut && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-md mx-auto mt-6">
-                <p className="text-amber-700 text-sm mb-3">评估时间超过预期，可能是网络波动导致</p>
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 max-w-md mx-auto mt-6">
+                <p className="text-amber-400 text-sm mb-3">评估时间超过预期，可能是网络波动导致</p>
                 <button
                   onClick={wrappedHandleRetry}
                   className="px-4 py-2 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 font-display text-sm"
@@ -178,9 +178,9 @@ export default function ResultsPage() {
           <h1 className="font-display text-xl font-bold text-text-primary mb-4">{interview.title}</h1>
 
           {isFailed && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-md mx-auto mb-4">
-              <p className="text-amber-800 text-sm font-semibold mb-1">😔&nbsp;很遗憾，面试已结束</p>
-              <p className="text-amber-700 text-sm">您在第{interview.currentRound}轮面试中未达到通过分数，感谢您的参与～</p>
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 max-w-md mx-auto mb-4">
+              <p className="text-amber-300 text-sm font-semibold mb-1">😔&nbsp;很遗憾，面试已结束</p>
+              <p className="text-amber-400 text-sm">您在第{interview.currentRound}轮面试中未达到通过分数，感谢您的参与～</p>
               <div className="mt-2 flex justify-center">
                 <RetryButton interviewId={interview.id} />
               </div>

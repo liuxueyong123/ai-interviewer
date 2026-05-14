@@ -36,7 +36,7 @@ async function getInterviews(): Promise<InterviewSummary[]> {
 
 function StatCard({ label, value, color = "text-text-primary" }: { label: string; value: string | number; color?: string }) {
   return (
-    <div className="bg-surface-1 border border-border rounded-2xl p-4 text-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+    <div className="bg-surface-1 backdrop-blur-xl border border-white/6 rounded-2xl p-4 text-center shadow-[0_8px_30px_rgba(0,0,0,0.2)] hover:shadow-[0_12px_40px_rgba(139,92,246,0.08)] hover:-translate-y-0.5 transition-all duration-200">
       <p className={`font-display text-2xl font-bold ${color}`}>{value}</p>
       <p className="text-text-muted text-xs mt-1">{label}</p>
     </div>
@@ -85,12 +85,12 @@ export default async function DashboardPage() {
           <StatCard
             label="平均分"
             value={avgScore !== null ? avgScore : "--"}
-            color={avgScore !== null ? (avgScore >= 80 ? "text-accent" : avgScore >= 60 ? "text-amber-500" : "text-danger") : "text-text-muted"}
+            color={avgScore !== null ? (avgScore >= 80 ? "text-accent" : avgScore >= 60 ? "text-amber-400" : "text-danger") : "text-text-muted"}
           />
           <StatCard
             label="最高分"
             value={bestScore !== null ? bestScore : "--"}
-            color={bestScore !== null ? (bestScore >= 80 ? "text-accent" : bestScore >= 60 ? "text-amber-500" : "text-danger") : "text-text-muted"}
+            color={bestScore !== null ? (bestScore >= 80 ? "text-accent" : bestScore >= 60 ? "text-amber-400" : "text-danger") : "text-text-muted"}
           />
         </div>
       )}
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
 
       {interviews.length === 0 ? (
         <div className="text-center py-24">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent-muted to-transparent border border-accent/20 flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent-muted to-transparent border border-white/6 flex items-center justify-center">
             <svg className="w-10 h-10 text-accent/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
             <Link
               key={iv.id}
               href={iv.status === "ongoing" ? (iv.mode === "voice" ? `/interview/voice?id=${iv.id}` : `/interview/chat?id=${iv.id}`) : `/results/${iv.id}`}
-              className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 hover:border-accent/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group animate-fade-in-up"
+              className="flex items-center justify-between bg-surface-1 backdrop-blur-xl border border-white/6 rounded-2xl p-5 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(139,92,246,0.08)] hover:-translate-y-0.5 transition-all duration-200 group animate-fade-in-up"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <div>
@@ -142,20 +142,20 @@ export default async function DashboardPage() {
               </div>
               <div className="flex items-center gap-4">
                 {iv.status === "passed" ? (
-                  <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 bg-green-50 text-green-700 rounded-full font-medium">
+                  <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 bg-green-500/10 text-green-400 rounded-full font-medium">
                     <span className="font-display text-base font-bold">{iv.overallScore}</span>
                     第{iv.currentRound}/{iv.maxRounds}轮通过
                   </span>
                 ) : iv.status === "done" ? (
-                  <span className={`font-display text-xl font-bold ${iv.overallScore != null && iv.overallScore >= 80 ? "text-accent" : iv.overallScore != null && iv.overallScore >= 60 ? "text-amber-500" : "text-danger"}`}>{iv.overallScore ?? "--"}</span>
+                  <span className={`font-display text-xl font-bold ${iv.overallScore != null && iv.overallScore >= 80 ? "text-accent" : iv.overallScore != null && iv.overallScore >= 60 ? "text-amber-400" : "text-danger"}`}>{iv.overallScore ?? "--"}</span>
                 ) : iv.status === "evaluating" ? (
-                  <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 bg-amber-50 text-amber-600 rounded-full font-medium">
+                  <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 bg-amber-500/10 text-amber-400 rounded-full font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse-dot" />
                     评估中
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse-dot" />
+                  <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 bg-blue-500/10 text-blue-400 rounded-full font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse-dot" />
                     {iv.maxRounds > 1 ? `第${iv.currentRound}/${iv.maxRounds}轮进行中` : "进行中"}
                   </span>
                 )}

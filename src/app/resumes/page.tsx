@@ -115,7 +115,7 @@ export default function ResumesPage() {
       </div>
 
       {/* Upload area */}
-      <div className="bg-surface-1 border border-border rounded-2xl mb-6 shadow-sm overflow-hidden">
+      <div className="bg-surface-1 backdrop-blur-xl border border-white/8 rounded-2xl mb-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-accent via-accent to-emerald-400" />
         <div className="p-6">
           <div
@@ -139,7 +139,7 @@ export default function ResumesPage() {
               </>
             )}
           </div>
-          {error && <div className="mt-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2.5 font-medium">{error}</div>}
+          {error && <div className="mt-3 bg-red-500/5 border border-red-500/20 text-red-400 text-sm rounded-lg px-4 py-2.5 font-medium">{error}</div>}
         </div>
       </div>
 
@@ -148,7 +148,7 @@ export default function ResumesPage() {
         <Spinner className="py-16" />
       ) : resumes.length === 0 && !loading ? (
         <div className="text-center py-20">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-surface-2 border border-border flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-surface-2 border border-white/6 flex items-center justify-center">
             <svg className="w-8 h-8 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path
                 strokeLinecap="round"
@@ -166,7 +166,7 @@ export default function ResumesPage() {
             <div
               key={r.id}
               onClick={() => openEditModal(r)}
-              className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-accent/30 transition-all duration-200 cursor-pointer animate-fade-in-up"
+              className="flex items-center justify-between bg-surface-1 backdrop-blur-md border border-white/6 rounded-2xl p-5 shadow-sm hover:shadow-[0_8px_30px_rgba(139,92,246,0.06)] hover:border-accent/30 transition-all duration-200 cursor-pointer animate-fade-in-up"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <FileIcon />
@@ -192,7 +192,7 @@ export default function ResumesPage() {
                     e.stopPropagation();
                     setDeleteTarget(r);
                   }}
-                  className="text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all duration-200 font-medium cursor-pointer"
+                  className="text-xs px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-all duration-200 font-medium cursor-pointer"
                 >
                   删除
                 </button>
@@ -205,9 +205,9 @@ export default function ResumesPage() {
       {/* Edit modal */}
       {editModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeEditModal}>
-          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 bg-black/50" />
           <div
-            className="relative bg-surface-1 border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-fade-in-up"
+            className="relative bg-surface-1 backdrop-blur-xl border border-white/8 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-fade-in-up"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="h-1 bg-gradient-to-r from-accent via-accent to-emerald-400 shrink-0" />
@@ -243,7 +243,7 @@ export default function ResumesPage() {
                 )}
               </div>
 
-              {saveError && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2.5 font-medium">{saveError}</div>}
+              {saveError && <div className="bg-red-500/5 border border-red-500/20 text-red-400 text-sm rounded-lg px-4 py-2.5 font-medium">{saveError}</div>}
 
               <div className="flex items-center gap-3 pt-2">
                 <button
@@ -268,10 +268,10 @@ export default function ResumesPage() {
       {/* Delete confirm modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setDeleteTarget(null)}>
-          <div className="absolute inset-0 bg-black/30" />
-          <div className="relative bg-surface-1 border border-border rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="relative bg-surface-1 backdrop-blur-xl border border-white/8 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 text-center">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path
                     strokeLinecap="round"

@@ -105,7 +105,7 @@ export default function SettingsPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Profile card */}
-        <div className="bg-surface-1 border border-border rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-surface-1 backdrop-blur-xl border border-white/8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
           <div className="px-6 pt-6 pb-4 flex items-center gap-2.5">
             <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -136,7 +136,7 @@ export default function SettingsPage() {
             </div>
 
             {profileError && (
-              <div className="flex items-center gap-2 text-danger text-xs bg-red-50 rounded-lg px-3 py-2.5 font-medium">
+              <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2.5 font-medium">
                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                 </svg>
@@ -149,7 +149,7 @@ export default function SettingsPage() {
               disabled={profileLoading || profileDone}
               className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer font-display ${
                 profileDone
-                  ? "bg-green-50 text-green-600 pointer-events-none"
+                  ? "bg-green-500/10 text-green-400 pointer-events-none"
                   : "bg-accent text-white hover:bg-accent-hover active:scale-[0.98] disabled:opacity-50"
               }`}
             >
@@ -176,7 +176,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Password card */}
-        <div className="bg-surface-1 border border-border rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-surface-1 backdrop-blur-xl border border-white/8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
           <div className="px-6 pt-6 pb-4 flex items-center gap-2.5">
             <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -261,7 +261,7 @@ export default function SettingsPage() {
             </div>
 
             {passwordError && (
-              <div className="flex items-center gap-2 text-danger text-xs bg-red-50 rounded-lg px-3 py-2.5 font-medium">
+              <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2.5 font-medium">
                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                 </svg>
@@ -274,7 +274,7 @@ export default function SettingsPage() {
               disabled={passwordLoading || passwordDone}
               className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer font-display ${
                 passwordDone
-                  ? "bg-green-50 text-green-600 pointer-events-none"
+                  ? "bg-green-500/10 text-green-400 pointer-events-none"
                   : "bg-accent text-white hover:bg-accent-hover active:scale-[0.98] disabled:opacity-50"
               }`}
             >

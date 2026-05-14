@@ -244,10 +244,10 @@ export default function ChatContainer() {
   ) : null;
 
   return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto bg-white">
+    <div className="flex flex-col h-screen max-w-2xl mx-auto bg-surface-0">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <div className="flex items-center gap-3">
-          <h1 className="font-semibold text-sm text-gray-800">AI 面试进行中</h1>
+          <h1 className="font-semibold text-sm text-text-primary">AI 面试进行中</h1>
           {maxRounds > 1 && (
             <span className="text-xs text-accent font-medium bg-accent-muted px-2 py-0.5 rounded-full">第 {currentRound}/{maxRounds} 轮</span>
           )}
@@ -272,7 +272,7 @@ export default function ChatContainer() {
           <button
             onClick={handleFinishClick}
             disabled={loading || finished || finishing}
-            className="text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 disabled:opacity-40 transition-all duration-200 font-medium cursor-pointer"
+            className="text-xs px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 disabled:opacity-40 transition-all duration-200 font-medium cursor-pointer"
           >
             {finishing ? "评估中..." : "结束面试"}
           </button>

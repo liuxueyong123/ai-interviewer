@@ -92,7 +92,7 @@ function StepLabel({ step }: { step: StepInfo }) {
     return (
       <div className="mt-2 text-center">
         <p className="text-xs sm:text-sm text-text-secondary">{ROUND_LABELS[step.round] || `第${step.round}轮`}</p>
-        <p className="text-xs text-amber-500 font-medium">评估中</p>
+        <p className="text-xs text-amber-400 font-medium">评估中</p>
       </div>
     );
   }

@@ -37,7 +37,7 @@ function SelectPopover<T extends string | number>({ value, options, onChange }: 
         <ChevronDownIcon className={`w-4 h-4 text-text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-surface-1 border border-border rounded-xl shadow-lg overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full bg-surface-1 backdrop-blur-xl border border-white/8 rounded-xl shadow-2xl overflow-hidden">
           {options.map((opt) => (
             <button
               key={String(opt.value)}
@@ -188,7 +188,7 @@ export default function SetupForm() {
           className="w-full px-4 py-3 bg-surface-0 border border-border rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200"
         />
         {open && (
-          <div className="absolute z-50 mt-1 w-full bg-surface-1 border border-border rounded-xl shadow-lg max-h-72 overflow-y-auto">
+          <div className="absolute z-50 mt-1 w-full bg-surface-1 backdrop-blur-xl border border-white/8 rounded-xl shadow-2xl max-h-72 overflow-y-auto">
             {filteredGroups.length === 0 ? (
               <div className="px-4 py-6 text-center text-text-muted text-sm">无匹配岗位</div>
             ) : (
@@ -229,7 +229,7 @@ export default function SetupForm() {
         {loadingResumes ? (
           <Spinner className="py-10" />
         ) : savedResumes.length === 0 ? (
-          <div className="text-center py-8 border border-border rounded-xl">
+          <div className="text-center py-8 border border-white/8 rounded-xl">
             <p className="text-text-muted text-sm mb-3">暂无保存的简历</p>
             <Link href="/resumes" className="text-accent text-sm hover:underline font-medium">
               前往简历管理页上传
@@ -328,14 +328,14 @@ export default function SetupForm() {
         </div>
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 font-medium">{error}</div>}
+      {error && <div className="bg-red-500/5 border border-red-500/20 text-red-400 text-sm rounded-lg px-4 py-3 font-medium">{error}</div>}
 
       <Button onClick={handleStart} loading={loading} disabled={!selectedResumeId || !position}>
         开始面试
       </Button>
       <Link
         href="/dashboard"
-        className="block w-full text-center py-3 bg-surface-1 border border-border text-text-secondary rounded-xl hover:border-text-muted transition-all duration-200 font-display text-sm"
+        className="block w-full text-center py-3 bg-surface-1 backdrop-blur-md border border-white/8 text-text-secondary rounded-xl hover:border-white/15 transition-all duration-200 font-display text-sm"
       >
         返回列表
       </Link>

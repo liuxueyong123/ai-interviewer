@@ -21,11 +21,11 @@ export function PracticePanel({ suggestions }: { suggestions: PracticeSuggestion
       </h3>
       <div className="space-y-3">
         {suggestions.map((item, idx) => (
-          <div key={idx} className="bg-purple-50 rounded-xl p-4 border border-purple-200/60">
-            <h4 className="text-sm font-semibold text-purple-700 mb-1">{item.area}</h4>
+          <div key={idx} className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/20">
+            <h4 className="text-sm font-semibold text-purple-300 mb-1">{item.area}</h4>
             <p className="text-xs text-text-muted mb-2">{item.description}</p>
             <div className="flex gap-2">
-              <svg className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

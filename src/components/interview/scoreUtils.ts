@@ -1,14 +1,14 @@
 export function scoreColor(s: number) {
-  return s >= 80 ? "text-accent" : s >= 60 ? "text-amber-500" : "text-danger";
+  return s >= 80 ? "text-accent" : s >= 60 ? "text-amber-400" : "text-danger";
 }
 export function barColor(s: number) {
   return s >= 80 ? "bg-accent" : s >= 60 ? "bg-amber-400" : "bg-danger";
 }
 export function reviewBg(s: number) {
-  return s >= 80 ? "bg-accent-muted border-accent/20" : s >= 60 ? "bg-amber-50 border-amber-200" : "bg-danger-muted border-danger/20";
+  return s >= 80 ? "bg-accent-muted border-accent/20" : s >= 60 ? "bg-amber-500/5 border-amber-500/20" : "bg-danger-muted border-danger/20";
 }
 export function reviewText(s: number) {
-  return s >= 80 ? "text-accent" : s >= 60 ? "text-amber-600" : "text-danger";
+  return s >= 80 ? "text-accent" : s >= 60 ? "text-amber-400" : "text-danger";
 }
 
 export const dims = [

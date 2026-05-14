@@ -247,14 +247,14 @@ export default function VoiceInterview() {
     <div className="h-screen flex flex-col bg-[#0b1120] text-white">
       {/* Top Bar */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 shrink-0">
-        <span className="text-xs text-slate-400">AI 面试 · {position}</span>
+        <span className="text-xs text-text-muted">AI 面试 · {position}</span>
         <div className="flex items-center gap-3">
           {maxRounds > 1 && (
             <span className="text-[10px] text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full">
               第 {currentRound}/{maxRounds} 轮
             </span>
           )}
-          <span className="text-xs text-slate-500 tabular-nums font-mono">{formatElapsed(elapsedSeconds)}</span>
+          <span className="text-xs text-text-muted tabular-nums font-mono">{formatElapsed(elapsedSeconds)}</span>
           <button
             onClick={handleEndClick}
             disabled={finishing}
@@ -267,7 +267,7 @@ export default function VoiceInterview() {
 
       {/* Split View */}
       <div className="flex-1 flex gap-3 p-3 min-h-0">
-        <div className="flex-1 bg-slate-900/50 rounded-2xl flex flex-col border border-white/5 relative overflow-hidden">
+        <div className="flex-1 bg-surface-1 backdrop-blur-md rounded-2xl flex flex-col border border-white/5 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none" style={{
             backgroundImage: `
               linear-gradient(rgba(99,102,241,0.06) 1px, transparent 1px),
@@ -281,7 +281,7 @@ export default function VoiceInterview() {
             <AIAvatar state={avatarState} />
           </div>
         </div>
-        <div className="flex-1 bg-black/40 rounded-2xl flex flex-col border border-white/5 overflow-hidden">
+        <div className="flex-1 bg-surface-1 backdrop-blur-md rounded-2xl flex flex-col border border-white/5 overflow-hidden">
           <div className="flex-1">
             <CameraPreview />
           </div>
