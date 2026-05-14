@@ -69,11 +69,13 @@ const ROUND_FOCUS: Record<number, Record<number, string>> = {
 export function distributeQuestions(total: number, rounds: number): number[] {
   if (rounds === 1) return [total];
   if (rounds === 2) {
+    if (total === 8) return [5, 3];
     if (total === 12) return [7, 5];
     if (total === 20) return [11, 9];
     if (total === 28) return [16, 12];
   }
   if (rounds === 3) {
+    if (total === 8) return [3, 3, 2];
     if (total === 12) return [5, 4, 3];
     if (total === 20) return [8, 7, 5];
     if (total === 28) return [12, 9, 7];

@@ -261,8 +261,9 @@ export default function SetupForm() {
           <SelectPopover
             value={questionCount}
             options={[
+              { value: 8, label: "快速面试（8 题）" },
               { value: 12, label: "标准面试（12 题）" },
-              { value: 20, label: "全面面试（20 题）" },
+              { value: 20, label: "完整面试（20 题）" },
               { value: 28, label: "深度面试（28 题）" },
             ]}
             onChange={setQuestionCount}
