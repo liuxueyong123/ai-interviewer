@@ -72,8 +72,8 @@ function StepCircle({ step, isSelected, onClick }: { step: StepInfo; isSelected:
   );
 }
 
-function ConnectingLine({ fromState, toState }: { fromState: StepState; toState: StepState }) {
-  const color = fromState === "completed" && toState === "completed" ? "bg-accent" : fromState === "completed" ? "bg-gradient-to-r from-accent to-surface-3" : "bg-surface-3";
+function ConnectingLine({ fromState, toState, right = false }: { fromState: StepState; toState: StepState; right?: boolean }) {
+  const color = fromState === "completed" && toState === "completed" ? "bg-accent" : fromState === "completed" && right ? "bg-gradient-to-r from-accent to-surface-3" : "bg-surface-3";
 
   return <div className={`h-0.5 w-8 sm:w-12 lg:w-16 shrink-0 ${color}`} />;
 }
@@ -146,7 +146,7 @@ export default function Steps({ steps, selectedRound, onSelectRound, onNextRound
               <div className="flex items-center">
                 {i > 0 ? <ConnectingLine fromState={steps[i - 1].state} toState={step.state} /> : <div className="w-8 sm:w-12 lg:w-16 h-0.5 shrink-0 invisible" />}
                 <StepCircle step={step} isSelected={step.round === selectedRound} onClick={() => handleSelect(step)} />
-                {i < steps.length - 1 ? <ConnectingLine fromState={step.state} toState={steps[i + 1].state} /> : <div className="w-8 sm:w-12 lg:w-16 h-0.5 shrink-0 invisible" />}
+                {i < steps.length - 1 ? <ConnectingLine fromState={step.state} toState={steps[i + 1].state} right /> : <div className="w-8 sm:w-12 lg:w-16 h-0.5 shrink-0 invisible" />}
               </div>
             );
 

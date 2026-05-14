@@ -2,9 +2,93 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { Evaluation } from "@/entities/Evaluation";
-import { buildEvaluationMessage, getEvaluation, buildRoundSummaryMessage, getRoundSummary, getPassThreshold } from "@/lib/deepseek";
+import { Message } from "@/entities/Message";
+import { buildSingleQuestionEvaluationMessage, buildAggregationMessage, getEvaluation, buildRoundSummaryMessage, getRoundSummary, getPassThreshold } from "@/lib/deepseek";
 import { getUserId } from "@/lib/utils";
 import { logger } from "@/lib/logger";
+
+interface QAPair {
+  questionNumber: number;
+  question: string;
+  answer: string;
+}
+
+interface QuestionReview {
+  questionNumber: number;
+  question: string;
+  answer: string;
+  score: number;
+  comment: string;
+}
+
+function extractQAPairs(messages: Message[]): QAPair[] {
+  const pairs: QAPair[] = [];
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    if (i === messages.length - 1 && msg.role === "interviewer" && msg.content.includes("面试环节已结束")) continue;
+    if (msg.role === "interviewer" && msg.questionNumber != null) {
+      const nextMsg = i + 1 < messages.length ? messages[i + 1] : null;
+      const answer = nextMsg && nextMsg.role === "user" ? nextMsg.content : "";
+      pairs.push({
+        questionNumber: msg.questionNumber,
+        question: msg.content,
+        answer,
+      });
+    }
+  }
+  return pairs;
+}
+
+function buildConversationHistory(messages: Message[]): string {
+  return messages
+    .map((m) => {
+      if (m.role === "interviewer") {
+        const qLabel = m.questionNumber != null ? `（Q${m.questionNumber}）` : "";
+        return `**面试官**${qLabel}：${m.content}`;
+      }
+      return `**候选人**：${m.content}`;
+    })
+    .join("\n\n---\n\n");
+}
+
+async function evaluateSingleQuestion(qa: QAPair, position: string): Promise<QuestionReview> {
+  try {
+    const result = await getEvaluation(buildSingleQuestionEvaluationMessage(qa.question, qa.answer, position));
+    const jsonStr = result
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
+    const parsed = JSON.parse(jsonStr);
+    return {
+      questionNumber: qa.questionNumber,
+      question: qa.question,
+      answer: qa.answer,
+      score: typeof parsed.score === "number" ? parsed.score : 0,
+      comment: typeof parsed.comment === "string" ? parsed.comment : "",
+    };
+  } catch (err) {
+    logger.error("Per-question evaluation failed", { questionNumber: qa.questionNumber, error: String(err) });
+    return {
+      questionNumber: qa.questionNumber,
+      question: qa.question,
+      answer: qa.answer,
+      score: 0,
+      comment: "评分失败",
+    };
+  }
+}
+
+const PER_QUESTION_CONCURRENCY = 5;
+
+async function evaluateAllQuestions(qaPairs: QAPair[], position: string): Promise<QuestionReview[]> {
+  const reviews: QuestionReview[] = [];
+  for (let i = 0; i < qaPairs.length; i += PER_QUESTION_CONCURRENCY) {
+    const chunk = qaPairs.slice(i, i + PER_QUESTION_CONCURRENCY);
+    const results = await Promise.all(chunk.map((qa) => evaluateSingleQuestion(qa, position)));
+    reviews.push(...results);
+  }
+  return reviews;
+}
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const userId = getUserId(request);
@@ -24,26 +108,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   await ds.getRepository(Interview).update(interview.id, { status: "evaluating" });
 
-  // Delete stale evaluation for current round (e.g. server restarted mid-evaluation)
+  // Delete stale evaluation for current round
   await ds.getRepository(Evaluation).delete({ interview: { id: interview.id }, round: currentRound });
 
-  // Only include messages from the current round
   const roundMessages = interview.messages.filter((m) => m.round === currentRound);
-  const conversationHistory = roundMessages
-    .map((m: { role: string; content: string; questionNumber: number | null }) => {
-      if (m.role === "interviewer" && m.questionNumber != null) {
-        return `Q${m.questionNumber} 面试官：${m.content}`;
-      }
-      return `候选人：${m.content}`;
-    })
-    .join("\n\n");
+  const qaPairs = extractQAPairs(roundMessages);
+  const conversationHistory = buildConversationHistory(roundMessages);
 
-  Promise.all([
-    getEvaluation(buildEvaluationMessage(conversationHistory, interview.resumeText)),
-    getRoundSummary(buildRoundSummaryMessage(conversationHistory)),
-  ])
-    .then(async ([evalResult, roundSummary]) => {
-      const jsonStr = evalResult
+  // Background evaluation: per-question → aggregate → summary
+  evaluateAllQuestions(qaPairs, interview.position)
+    .then(async (questionReviews) => {
+      const [aggResult, roundSummary] = await Promise.all([
+        getEvaluation(buildAggregationMessage(questionReviews, interview.resumeText)),
+        getRoundSummary(buildRoundSummaryMessage(conversationHistory)),
+      ]);
+
+      const jsonStr = aggResult
         .replace(/```json\n?/g, "")
         .replace(/```\n?/g, "")
         .trim();
@@ -57,7 +137,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         strengths: parsed.strengths,
         weaknesses: parsed.weaknesses,
         resumeSuggestions: parsed.resumeSuggestions,
-        questionReviews: parsed.questionReviews || null,
+        questionReviews,
         practiceSuggestions: parsed.practiceSuggestions || null,
         roundSummary,
       });

@@ -112,22 +112,33 @@ export function buildInterviewSystemMessage(
   const endPhrase = round < maxRounds ? `如果本轮面试结束，直接回复"本轮面试环节已结束，稍后将通知面试结果。"` : '如果面试结束，直接回复"我们的面试环节已结束，谢谢您的真诚分享和参与。"';
   const startInstruction = round === 1 ? "先简短自我介绍，然后提第一个问题，让用户介绍自己。" : `这是第 ${round} 轮面试。请基于前一轮的评估反馈，继续深入提问。先简短开场，然后提第一个问题。`;
 
-  const prevContext = prevRoundContext ? `\n之前的面试评估总结：\n${prevRoundContext}\n` : "";
+  const prevBlock = prevRoundContext
+    ? `\n---
+## 前一轮评估总结
+
+${prevRoundContext}
+`
+    : "";
 
   return new SystemMessage(
-    `你是 ${position} 的技术面试官。${roundLabel} ${focus}。请严格遵守以下规则：
+    `你是 ${position} 的技术面试官。${roundLabel}${focus}。
 
-规则：
+---
+## 规则
+
 1. 每次只提一个问题，等待回答后再提下一个
-2. 本轮的侧重点：${focus}
-3. 不评价回答，保持中立
-4. 本轮只提问约 ${questionCount} 个问题，${endPhrase}
+2. 本轮侧重：${focus}
+3. 不评价候选人的回答，保持中立客观
+4. 本轮约 ${questionCount} 个问题，${endPhrase}
+5. ${difficultyHint}
+${prevBlock}
+---
+## 候选人简历
 
-${difficultyHint}
+${resumeText}
 
-${prevContext}
-
-候选人简历：${resumeText}
+---
+## 开场
 
 ${startInstruction}`,
   );
@@ -135,14 +146,20 @@ ${startInstruction}`,
 
 export function buildRoundSummaryMessage(conversationHistory: string): HumanMessage {
   return new HumanMessage(
-    `请根据以下面试对话，生成该轮面试的简要总结（100-200字）：
+    `请根据以下面试对话，生成本轮面试的200字左右简要总结。
 
-总结需包含：
-1. 本轮大概问了哪些方向的问题
-2. 候选人回答的整体表现（哪些答得好、哪些不足）
+## 总结要求
 
-对话记录：
+1. 本轮涉及的主要提问方向
+2. 候选人回答的整体表现（亮点与不足）
+
+---
+
+## 对话记录
+
 ${conversationHistory}
+
+---
 
 请直接输出总结文本，不要 markdown 格式。`,
   );
@@ -154,9 +171,43 @@ export async function getRoundSummary(message: HumanMessage): Promise<string> {
   return (response.content as string) || "";
 }
 
-export function buildEvaluationMessage(conversationHistory: string, resumeText: string): HumanMessage {
+export function buildSingleQuestionEvaluationMessage(questionText: string, answerText: string, position: string): HumanMessage {
   return new HumanMessage(
-    `请根据以下面试对话，对候选人进行评分。输出纯 JSON 格式（不要 markdown 代码块）：
+    `请对以下一道面试题的候选人回答进行独立评分。目标岗位：${position}。输出纯 JSON 格式（不要 markdown 代码块）：
+
+{
+  "score": <0-100>,
+  "comment": "<简短点评，50字以内>"
+}
+
+## 评分维度
+
+技术准确性、表达清晰度、理解深度
+
+---
+
+## 面试官提问
+
+${questionText}
+
+## 候选人回答
+
+${answerText}`,
+  );
+}
+
+export function buildAggregationMessage(questionReviews: Array<{ questionNumber: number; question: string; answer: string; score: number; comment: string }>, resumeText: string): HumanMessage {
+  const hasScore = (r: (typeof questionReviews)[number]) => r.comment && r.comment !== "评分失败";
+
+  const annotatedConversation = questionReviews
+    .map((r) => {
+      const scoreLine = hasScore(r) ? `\n**评分**：${r.score}分 | ${r.comment}\n` : "\n";
+      return `### Q${r.questionNumber}\n**面试官**：${r.question}\n**候选人**：${r.answer}${scoreLine}`;
+    })
+    .join("\n\n---\n\n");
+
+  return new HumanMessage(
+    `请根据以下面试对话记录（含逐题评分），对候选人进行综合评估。输出纯 JSON 格式（不要 markdown 代码块）：
 
 {
   "overallScore": <0-100>,
@@ -170,33 +221,31 @@ export function buildEvaluationMessage(conversationHistory: string, resumeText: 
   "resumeSuggestions": "<简历优化建议>",
   "practiceSuggestions": [
     {
-      "area": "<薄弱领域，如：系统设计、算法、沟通表达>",
+      "area": "<薄弱领域>",
       "description": "<具体问题表现，50字以内>",
       "suggestion": "<可执行的练习方案，100字以内>"
-    }
-  ],
-  "questionReviews": [
-    {
-      "questionNumber": <对话中的 Q 编号，只返回数字部分，如：Q1 只返回 1>,
-      "question": "<面试官的提问原文摘要>",
-      "score": <0-100>,
-      "comment": "<针对该题回答的简短点评，50字以内>"
     }
   ]
 }
 
-注意：
-- questionReviews 数组中每道面试官提问对应一条记录
-- questionNumber 必须与面试记录中的 Q 编号一致，不要自己重新编号
-- score 为该题回答质量的独立评分，仅根据问题与回答内容进行评估，不要受简历影响
-- comment 要简短精炼，点出关键问题或亮点
-- practiceSuggestions 针对候选人的薄弱环节给出 2-4 条结构化练习建议
-- 面试官的最后结束语不算问题，不需要放进 questionReviews 中
+## 注意事项
 
-面试记录：
-${conversationHistory}
+- overallScore 综合逐题得分和整体表现判断，不要简单取平均值
+- categories 三个维度各评分，参照逐题得分的分布
+- strengths/weaknesses 基于对话中的实际表现，避免空洞评价
+- practiceSuggestions 针对薄弱环节给出 2-4 条结构化练习建议
 
-候选人简历：${resumeText}`,
+---
+
+## 面试对话记录（含逐题评分）
+
+${annotatedConversation}
+
+---
+
+## 候选人简历
+
+${resumeText}`,
   );
 }
 
