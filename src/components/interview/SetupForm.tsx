@@ -218,7 +218,14 @@ export default function SetupForm() {
 
       {/* Resume selector */}
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-2">选择简历</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-sm font-medium text-text-secondary">选择简历</label>
+          {!loadingResumes && savedResumes.length !== 0 && (
+            <Link href="/resumes" className="text-xs text-text-muted hover:text-accent transition-all duration-200">
+              管理简历 →
+            </Link>
+          )}
+        </div>
         {loadingResumes ? (
           <Spinner className="py-10" />
         ) : savedResumes.length === 0 ? (
@@ -245,13 +252,6 @@ export default function SetupForm() {
                 </div>
               </button>
             ))}
-          </div>
-        )}
-        {!loadingResumes && savedResumes.length !== 0 && (
-          <div className="mt-2 text-right">
-            <Link href="/resumes" className="text-xs text-text-muted hover:text-accent transition-all duration-200">
-              管理简历 →
-            </Link>
           </div>
         )}
       </div>
