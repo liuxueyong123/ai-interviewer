@@ -3,10 +3,7 @@ import { getDataSource } from "@/lib/database";
 import { Interview } from "@/entities/Interview";
 import { getUserId } from "@/lib/utils";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const userId = getUserId(request);
 
   const ds = await getDataSource();
@@ -44,14 +41,15 @@ export async function GET(
     evaluations: interview.evaluations
       .sort((a, b) => a.round - b.round)
       .map((e) => ({
-      round: e.round,
-      overallScore: e.overallScore,
-      categories: e.categories,
-      strengths: e.strengths,
-      weaknesses: e.weaknesses,
-      resumeSuggestions: e.resumeSuggestions,
-      questionReviews: e.questionReviews,
-      practiceSuggestions: e.practiceSuggestions,
-    })),
+        round: e.round,
+        overallScore: e.overallScore,
+        categories: e.categories,
+        strengths: e.strengths,
+        weaknesses: e.weaknesses,
+        resumeSuggestions: e.resumeSuggestions,
+        questionReviews: e.questionReviews,
+        practiceSuggestions: e.practiceSuggestions,
+        roundSummary: e.roundSummary,
+      })),
   });
 }

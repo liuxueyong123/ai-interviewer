@@ -251,12 +251,12 @@ export default function ResultsPage() {
           {partialEval ? (
             <div className="lg:grid lg:grid-cols-2 lg:gap-8">
               <div className="space-y-6 min-w-0">
-                <CategoryBars categories={partialEval.categories} />
                 <EvaluationText strengths={partialEval.strengths} weaknesses={partialEval.weaknesses} resumeSuggestions={partialEval.resumeSuggestions} roundSummary={partialEval.roundSummary} />
                 <PracticePanel suggestions={partialEval.practiceSuggestions} />
               </div>
               <div className="min-w-0 mt-8 lg:mt-0">
-                <div className="lg:top-20">
+                <div className="lg:top-20 space-y-6">
+                  <CategoryBars categories={partialEval.categories} />
                   <InterviewReview messages={partialMessages} reviews={partialEval.questionReviews} round={selectedRound} />
                 </div>
               </div>
@@ -333,13 +333,13 @@ export default function ResultsPage() {
 
         <div className="lg:grid lg:grid-cols-2 lg:gap-8">
           <div className="space-y-6 min-w-0">
-            <CategoryBars categories={selectedEval.categories} />
             <EvaluationText strengths={selectedEval.strengths} weaknesses={selectedEval.weaknesses} resumeSuggestions={selectedEval.resumeSuggestions} roundSummary={selectedEval.roundSummary} />
             <PracticePanel suggestions={selectedEval.practiceSuggestions} />
           </div>
 
           <div className="min-w-0 mt-8 lg:mt-0">
-            <div className="lg:top-20">
+            <div className="lg:top-20 space-y-6">
+              <CategoryBars categories={selectedEval.categories} />
               <InterviewReview messages={selectedMessages} reviews={selectedEval.questionReviews} round={selectedRound} />
             </div>
           </div>
