@@ -109,7 +109,10 @@ export function buildInterviewSystemMessage(
 
   const focus = ROUND_FOCUS[round]?.[maxRounds] ?? ROUND_FOCUS[1]?.[1];
   const roundLabel = maxRounds > 1 ? `这是第 ${round}/${maxRounds} 轮面试。` : "";
-  const endPhrase = round < maxRounds ? `如果本轮面试结束，直接回复"本轮面试环节已结束，稍后将通知面试结果。"` : '如果面试结束，直接回复"我们的面试环节已结束，谢谢您的真诚分享和参与。"';
+  const endPhrase =
+    round < maxRounds
+      ? `如果本轮面试结束，直接回复"本轮面试环节已结束，稍后将通知面试结果。"，不要回复其他内容。`
+      : '如果面试结束，直接回复"我们的面试环节已结束，谢谢您的真诚分享和参与。"，不要回复其他内容。';
   const startInstruction = round === 1 ? "先简短自我介绍，然后提第一个问题，让用户介绍自己。" : `这是第 ${round} 轮面试。请基于前一轮的评估反馈，继续深入提问。先简短开场，然后提第一个问题。`;
 
   const prevBlock = prevRoundContext
