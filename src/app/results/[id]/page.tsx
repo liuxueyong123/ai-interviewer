@@ -37,6 +37,7 @@ interface InterviewData {
     resumeSuggestions: string;
     questionReviews: Array<{ questionNumber: number; question: string; score: number; comment: string }> | null;
     practiceSuggestions: Array<{ area: string; description: string; suggestion: string }> | null;
+    roundSummary: string | null;
   }>;
 }
 
@@ -251,7 +252,7 @@ export default function ResultsPage() {
             <div className="lg:grid lg:grid-cols-2 lg:gap-8">
               <div className="space-y-6 min-w-0">
                 <CategoryBars categories={partialEval.categories} />
-                <EvaluationText strengths={partialEval.strengths} weaknesses={partialEval.weaknesses} resumeSuggestions={partialEval.resumeSuggestions} />
+                <EvaluationText strengths={partialEval.strengths} weaknesses={partialEval.weaknesses} resumeSuggestions={partialEval.resumeSuggestions} roundSummary={partialEval.roundSummary} />
                 <PracticePanel suggestions={partialEval.practiceSuggestions} />
               </div>
               <div className="min-w-0 mt-8 lg:mt-0">

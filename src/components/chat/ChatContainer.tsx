@@ -250,7 +250,7 @@ export default function ChatContainer() {
           <span className="text-xs text-text-muted tabular-nums">问题 {questionCount}</span>
           <button
             onClick={sendHint}
-            disabled={loading || finished}
+            disabled={loading || finished || finishing}
             className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 text-text-secondary hover:text-accent hover:bg-accent-muted rounded-lg disabled:opacity-30 transition-all duration-200 font-medium"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
