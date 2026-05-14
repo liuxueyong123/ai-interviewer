@@ -135,7 +135,13 @@ export default function ChatContainer() {
           setQuestionCount(roundMessages.filter((m: { role: string }) => m.role === "interviewer").length);
         }
         if (data.interview?.status === "done" || data.interview?.status === "evaluating") setFinished(true);
-        if (data.interview?.createdAt) setStartTime(new Date(data.interview.createdAt));
+	        const storageKey = `interview_timer_${interviewId}_round_${round}`;
+	        let roundStart = localStorage.getItem(storageKey);
+	        if (!roundStart) {
+	          roundStart = String(Date.now());
+	          localStorage.setItem(storageKey, roundStart);
+	        }
+	        setStartTime(new Date(parseInt(roundStart, 10)));
       })
       .catch(() => {});
   }, [interviewId]);
