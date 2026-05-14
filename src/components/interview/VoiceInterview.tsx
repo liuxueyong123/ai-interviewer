@@ -244,13 +244,13 @@ export default function VoiceInterview() {
     appState === "processing" ? "processing" : "idle";
 
   return (
-    <div className="h-screen flex flex-col bg-[#0b1120] text-white">
+    <div className="h-screen flex flex-col text-white" style={{ background: "linear-gradient(135deg, #0a0e1a 0%, #1a1040 40%, #0a0e1a 100%)" }}>
       {/* Top Bar */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 shrink-0">
         <span className="text-xs text-text-muted">AI 面试 · {position}</span>
         <div className="flex items-center gap-3">
           {maxRounds > 1 && (
-            <span className="text-[10px] text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] text-accent bg-accent-muted px-2 py-0.5 rounded-full">
               第 {currentRound}/{maxRounds} 轮
             </span>
           )}
@@ -270,13 +270,13 @@ export default function VoiceInterview() {
         <div className="flex-1 bg-surface-1 backdrop-blur-md rounded-2xl flex flex-col border border-white/5 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none" style={{
             backgroundImage: `
-              linear-gradient(rgba(99,102,241,0.06) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(99,102,241,0.06) 1px, transparent 1px),
-              radial-gradient(ellipse at center, rgba(99,102,241,0.08) 0%, transparent 60%)
+              linear-gradient(rgba(139,92,246,0.06) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(139,92,246,0.06) 1px, transparent 1px),
+              radial-gradient(ellipse at center, rgba(139,92,246,0.08) 0%, transparent 60%)
             `,
             backgroundSize: "30px 30px, 30px 30px, 100% 100%",
           }} />
-          <div className="px-3 py-2 text-xs text-indigo-400 font-medium shrink-0 relative">AI 面试官</div>
+          <div className="px-3 py-2 text-xs text-accent font-medium shrink-0 relative">AI 面试官</div>
           <div className="flex-1 flex items-center justify-center relative">
             <AIAvatar state={avatarState} />
           </div>
