@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { checkPasswordStrength } from "@/lib/validations";
 
 export default function SettingsPage() {
   const [username, setUsername] = useState("");
@@ -55,18 +56,6 @@ export default function SettingsPage() {
     }
     setProfileDone(true);
     profileTimer.current = setTimeout(() => setProfileDone(false), 3000);
-  }
-
-  function checkPasswordStrength(pw: string): { ok: boolean; message: string; level: "weak" | "fair" | "strong" } {
-    if (pw.length < 8) return { ok: false, message: "密码至少需要8位", level: "weak" };
-    let kinds = 0;
-    if (/[0-9]/.test(pw)) kinds++;
-    if (/[a-z]/.test(pw)) kinds++;
-    if (/[A-Z]/.test(pw)) kinds++;
-    if (/[^0-9a-zA-Z]/.test(pw)) kinds++;
-    if (kinds < 2) return { ok: false, message: "需包含数字、小写字母、大写字母、符号中的至少两种", level: "weak" };
-    if (kinds >= 3) return { ok: true, message: "密码强度：强", level: "strong" };
-    return { ok: true, message: "密码强度：中", level: "fair" };
   }
 
   const pwStrength = newPassword ? checkPasswordStrength(newPassword) : null;

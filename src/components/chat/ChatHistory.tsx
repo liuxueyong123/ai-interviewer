@@ -5,7 +5,7 @@ import { roleConfig } from "./roleConfig";
 
 interface MessageItem {
   id: number;
-  role: string;
+  role: "interviewer" | "user";
   content: string;
 }
 

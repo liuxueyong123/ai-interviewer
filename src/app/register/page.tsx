@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { registerSchema } from "@/lib/validations";
+import { registerSchema, checkPasswordStrength } from "@/lib/validations";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,18 +14,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  let pwStrength: { ok: boolean; message: string; level: "weak" | "fair" | "strong" } | null = null;
-  if (password) {
-    let kinds = 0;
-    if (/[0-9]/.test(password)) kinds++;
-    if (/[a-z]/.test(password)) kinds++;
-    if (/[A-Z]/.test(password)) kinds++;
-    if (/[^0-9a-zA-Z]/.test(password)) kinds++;
-    if (password.length < 8) pwStrength = { ok: false, message: "至少需要8位", level: "weak" };
-    else if (kinds < 2) pwStrength = { ok: false, message: "需包含至少两种字符类型", level: "weak" };
-    else if (kinds >= 3) pwStrength = { ok: true, message: "密码强度：强", level: "strong" };
-    else pwStrength = { ok: true, message: "密码强度：中", level: "fair" };
-  }
+  const pwStrength = password ? checkPasswordStrength(password) : null;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

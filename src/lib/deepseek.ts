@@ -151,7 +151,7 @@ ${startInstruction}`,
 
 export function buildRoundSummaryMessage(conversationHistory: string): HumanMessage {
   return new HumanMessage(
-    `请根据以下面试对话，生成本轮面试的200字左右简要总结。
+    `请根据以下面试对话，生成关于本轮面试的 100-200 字的简要总结。
 
 ## 总结要求
 

@@ -6,20 +6,29 @@ export const loginSchema = z.object({
   password: z.string().min(1, "密码不能为空"),
 });
 
+export type PasswordStrength = { ok: boolean; message: string; level: "weak" | "fair" | "strong" };
+
+export function checkPasswordStrength(pw: string): PasswordStrength {
+  if (pw.length < 8) return { ok: false, message: "密码至少8位", level: "weak" };
+  let kinds = 0;
+  if (/[0-9]/.test(pw)) kinds++;
+  if (/[a-z]/.test(pw)) kinds++;
+  if (/[A-Z]/.test(pw)) kinds++;
+  if (/[^0-9a-zA-Z]/.test(pw)) kinds++;
+  if (kinds < 2) return { ok: false, message: "密码需包含数字、小写字母、大写字母、符号中的至少两种", level: "weak" };
+  if (kinds >= 3) return { ok: true, message: "密码强度：强", level: "strong" };
+  return { ok: true, message: "密码强度：中", level: "fair" };
+}
+
+export const passwordRefinement = (pw: string, ctx: z.RefinementCtx) => {
+  const result = checkPasswordStrength(pw);
+  if (!result.ok) ctx.addIssue({ code: z.ZodIssueCode.custom, message: result.message });
+};
+
 export const registerSchema = z.object({
   username: z.string().min(2, "用户名至少2个字符").max(50, "用户名最多50个字符"),
   email: z.string().email("邮箱格式不正确"),
-  password: z
-    .string()
-    .min(8, "密码至少8位")
-    .refine((pw) => {
-      let kinds = 0;
-      if (/[0-9]/.test(pw)) kinds++;
-      if (/[a-z]/.test(pw)) kinds++;
-      if (/[A-Z]/.test(pw)) kinds++;
-      if (/[^0-9a-zA-Z]/.test(pw)) kinds++;
-      return kinds >= 2;
-    }, "密码需包含数字、小写字母、大写字母、符号中的至少两种"),
+  password: z.string().min(8, "密码至少8位").superRefine(passwordRefinement),
 });
 
 // ── Chat ──

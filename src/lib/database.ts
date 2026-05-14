@@ -22,7 +22,6 @@ export const AppDataSource = new DataSource({
   connectTimeout: 10000,
   extra: {
     connectTimeout: 10000,
-    ...(useSSL ? { ssl: { rejectUnauthorized: false } } : {}),
   },
   ...(useSSL ? { ssl: { rejectUnauthorized: false } } : {}),
 });

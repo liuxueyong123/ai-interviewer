@@ -7,6 +7,29 @@ import { getUserId } from "@/lib/utils";
 const DASHSCOPE_BASE_URL = process.env.DASHSCOPE_BASE_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1";
 const MAX_AUDIO_BYTES = 10 * 1024 * 1024; // covers ~4m30s of WebM/Opus audio
 
+let _speechModel: ChatOpenAI | null = null;
+
+function getSpeechModel(): ChatOpenAI {
+  if (!_speechModel) {
+    _speechModel = new ChatOpenAI({
+      model: "qwen3-asr-flash",
+      apiKey: process.env.DASHSCOPE_API_KEY,
+      configuration: {
+        baseURL: DASHSCOPE_BASE_URL,
+      },
+      modelKwargs: {
+        extra_body: {
+          asr_options: {
+            language: "zh",
+            enable_itn: false,
+          },
+        },
+      },
+    });
+  }
+  return _speechModel;
+}
+
 export async function POST(request: NextRequest) {
   const userId = getUserId(request);
   if (!userId) return NextResponse.json({ error: "未登录" }, { status: 401 });
@@ -29,21 +52,7 @@ export async function POST(request: NextRequest) {
 
   logger.info("ASR request", { size: arrayBuffer.byteLength, mimeType });
 
-  const model = new ChatOpenAI({
-    model: "qwen3-asr-flash",
-    apiKey: process.env.DASHSCOPE_API_KEY,
-    configuration: {
-      baseURL: DASHSCOPE_BASE_URL,
-    },
-    modelKwargs: {
-      extra_body: {
-        asr_options: {
-          language: "zh",
-          enable_itn: false,
-        },
-      },
-    },
-  });
+  const model = getSpeechModel();
 
   try {
     const response = await model.invoke([
