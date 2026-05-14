@@ -267,7 +267,7 @@ export default function VoiceInterview() {
       </div>
 
       {/* Subtitle — visible while AI is speaking or waiting for user, hidden when user starts recording */}
-      <SubtitleBar text={subtitle} visible={appState === "ai_speaking" || appState === "waiting_for_user"} />
+      <SubtitleBar text={subtitle} visible={ttsState === "playing" || appState === "waiting_for_user"} />
 
       {/* Voice Controls */}
       {appState !== "finished" && (
