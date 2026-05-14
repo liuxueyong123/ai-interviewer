@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const userId = getUserId(request);
-  let body: { position?: string; resumeText?: string; resumeId?: number; questionCount?: number; difficulty?: "junior" | "mid" | "senior"; maxRounds?: number; prevInterviewId?: number };
+  let body: { position?: string; resumeText?: string; resumeId?: number; questionCount?: number; difficulty?: "junior" | "mid" | "senior"; maxRounds?: number; mode?: "text" | "voice"; prevInterviewId?: number };
   try {
     body = validate(createInterviewSchema, await request.json());
   } catch (e) {
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
   const ds = await getDataSource();
 
-  let { position, resumeText, resumeId, questionCount = 12, difficulty = "mid", maxRounds = 2 } = body;
+  let { position, resumeText, resumeId, questionCount = 12, difficulty = "mid", maxRounds = 2, mode } = body;
   let finalResumeText = resumeText || "";
 
   if (body.prevInterviewId) {
@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
     difficulty,
     currentRound: 1,
     maxRounds,
+    mode: mode || "text",
   });
   await ds.getRepository(Interview).save(interview);
 
@@ -117,5 +118,5 @@ export async function POST(request: NextRequest) {
   });
   await msgRepo.save(interviewerMsg);
 
-  return NextResponse.json({ interviewId: interview.id });
+  return NextResponse.json({ interviewId: interview.id, mode: mode || "text" });
 }

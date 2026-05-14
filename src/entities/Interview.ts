@@ -37,6 +37,9 @@ export class Interview {
   @Column({ type: "int", name: "max_rounds", default: 2 })
   maxRounds: number;
 
+  @Column({ type: "varchar", length: 10, default: "text" })
+  mode: "text" | "voice";
+
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
