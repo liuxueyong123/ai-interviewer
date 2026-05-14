@@ -59,7 +59,8 @@ export async function POST(request: NextRequest) {
       interview.difficulty,
       currentRound,
       interview.maxRounds,
-      prevRoundContext
+      prevRoundContext,
+      interview.mode as "text" | "voice" | undefined,
     ),
   ];
 

@@ -101,6 +101,7 @@ export function buildInterviewSystemMessage(
   round: number = 1,
   maxRounds: number = 1,
   prevRoundContext?: string,
+  mode?: "text" | "voice",
 ): SystemMessage {
   const difficultyHint =
     difficulty === "junior"
@@ -116,6 +117,7 @@ export function buildInterviewSystemMessage(
       ? `如果本轮面试结束，直接回复"本轮面试环节已结束，稍后将通知面试结果。"，不要回复其他内容。`
       : '如果面试结束，直接回复"我们的面试环节已结束，谢谢您的真诚分享和参与。"，不要回复其他内容。';
   const startInstruction = round === 1 ? "先简短自我介绍，然后提第一个问题，让用户介绍自己。" : `这是第 ${round} 轮面试。请基于前一轮的评估反馈，继续深入提问。先简短开场，然后提第一个问题。`;
+  const voiceInstruction = mode === "voice" ? "\n\n**重要：这是语音面试，候选人是通过语音输入听到你的提问。请只返回纯文本内容，不要使用任何 Markdown 格式（如加粗、列表、标题、代码块、链接等），也不要使用任何特殊符号。**" : "";
 
   const prevBlock = prevRoundContext
     ? `\n---
@@ -145,7 +147,7 @@ ${resumeText}
 ---
 ## 开场
 
-${startInstruction}`,
+${startInstruction}${voiceInstruction}`,
   );
 }
 
