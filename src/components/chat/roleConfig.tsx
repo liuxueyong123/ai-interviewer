@@ -8,7 +8,7 @@ export const AIAvatar = () => (
 
 export const UserAvatar = () => (
   <Avatar style={{ background: "#1e2640", color: "#94a3b8" }} size={36}>
-    You
+    面试者
   </Avatar>
 );
 
