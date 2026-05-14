@@ -4,18 +4,18 @@
 @theme {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --color-surface-0: #0c0f18;
-  --color-surface-1: #13172a;
-  --color-surface-2: #1a1f35;
-  --color-surface-3: #222840;
+  --color-surface-0: #0a0e1a;
+  --color-surface-1: #151b30;
+  --color-surface-2: #1e2640;
+  --color-surface-3: #283250;
   --color-text-primary: #f1f5f9;
   --color-text-secondary: #94a3b8;
   --color-text-muted: #64748b;
   --color-accent: #8b5cf6;
   --color-accent-hover: #7c3aed;
   --color-accent-muted: rgba(139, 92, 246, 0.15);
-  --color-border: #1e2540;
-  --color-border-light: #161c33;
+  --color-border: #252d48;
+  --color-border-light: #1a2038;
   --color-danger: #ef4444;
   --color-danger-muted: rgba(239, 68, 68, 0.10);
 }
@@ -58,4 +58,38 @@ button:disabled, a[aria-disabled="true"] { cursor: not-allowed; }
 
 .animate-pulse-dot {
   animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* antd Sender dark theme overrides */
+.ant-sender {
+  background: transparent !important;
+}
+.ant-sender-textarea {
+  background: #151b30 !important;
+  border: 1px solid #3a4570 !important;
+  border-radius: 12px !important;
+  color: #f1f5f9 !important;
+}
+.ant-sender-textarea::placeholder {
+  color: #64748b !important;
+}
+.ant-sender-textarea:focus,
+.ant-sender-textarea:focus-within {
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+}
+.ant-sender-actions-btn {
+  color: #94a3b8 !important;
+}
+.ant-sender-actions-btn:hover {
+  color: #8b5cf6 !important;
+}
+.ant-sender-actions-btn[disabled] {
+  color: #475569 !important;
+}
+
+/* antd Bubble dark theme overrides */
+.ant-bubble-content {
+  background: #1e2640 !important;
+  color: #f1f5f9 !important;
 }

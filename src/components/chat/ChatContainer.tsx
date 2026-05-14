@@ -244,7 +244,7 @@ export default function ChatContainer() {
   ) : null;
 
   return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto bg-surface-0">
+    <div className="flex flex-col h-screen max-w-2xl mx-auto bg-surface-1">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <div className="flex items-center gap-3">
           <h1 className="font-semibold text-sm text-text-primary">AI 面试进行中</h1>

@@ -31,17 +31,17 @@ export default function ProgressPanel({ data }: { data: InterviewPoint[] }) {
 
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#252d48" />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 11, fill: "#94a3b8" }}
+            tick={{ fontSize: 11, fill: "#64748b" }}
             tickLine={false}
-            axisLine={{ stroke: "#e2e8f0" }}
+            axisLine={{ stroke: "#252d48" }}
             interval={0}
           />
           <YAxis
             domain={[0, 100]}
-            tick={{ fontSize: 11, fill: "#94a3b8" }}
+            tick={{ fontSize: 11, fill: "#64748b" }}
             tickLine={false}
             axisLine={false}
             tickCount={5}
@@ -50,10 +50,10 @@ export default function ProgressPanel({ data }: { data: InterviewPoint[] }) {
           <Line
             type="monotone"
             dataKey="score"
-            stroke="#22c55e"
+            stroke="#8b5cf6"
             strokeWidth={2}
-            dot={{ r: 4, fill: "#22c55e", strokeWidth: 0 }}
-            activeDot={{ r: 6, strokeWidth: 0 }}
+            dot={{ r: 4, fill: "#8b5cf6", strokeWidth: 0 }}
+            activeDot={{ r: 6, strokeWidth: 0, fill: "#a78bfa" }}
           />
         </LineChart>
       </ResponsiveContainer>
