@@ -19,6 +19,7 @@ interface InterviewSummary {
   categories: Categories | null;
   currentRound: number;
   maxRounds: number;
+  mode: string;
   createdAt: string;
 }
 
@@ -129,7 +130,7 @@ export default async function DashboardPage() {
           {interviews.map((iv, i) => (
             <Link
               key={iv.id}
-              href={iv.status === "ongoing" ? `/interview/chat?id=${iv.id}` : `/results/${iv.id}`}
+              href={iv.status === "ongoing" ? (iv.mode === "voice" ? `/interview/voice?id=${iv.id}` : `/interview/chat?id=${iv.id}`) : `/results/${iv.id}`}
               className="flex items-center justify-between bg-surface-1 border border-border rounded-2xl p-5 hover:border-accent/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group animate-fade-in-up"
               style={{ animationDelay: `${i * 60}ms` }}
             >

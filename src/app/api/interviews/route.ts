@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         maxRounds: i.maxRounds,
         overallScore,
         categories,
+        mode: i.mode,
         createdAt: i.createdAt,
       };
     }),
