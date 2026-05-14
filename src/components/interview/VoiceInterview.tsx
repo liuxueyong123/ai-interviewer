@@ -37,7 +37,7 @@ export default function VoiceInterview() {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  const { speak, stop: stopTTS } = useTTS();
+  const { speak } = useTTS();
   const abortRef = useRef<AbortController | null>(null);
   const lastRecognizedRef = useRef("");
 
@@ -58,13 +58,14 @@ export default function VoiceInterview() {
 
   // Leave confirmation
   useEffect(() => {
+    if (appState === "finished") return;
     function handleBeforeUnload(e: BeforeUnloadEvent) {
       e.preventDefault();
       e.returnValue = "";
     }
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, []);
+  }, [appState]);
 
   // Load interview history
   useEffect(() => {
@@ -84,6 +85,11 @@ export default function VoiceInterview() {
 
         if (data.interview?.status === "done" || data.interview?.status === "evaluating") {
           setAppState("finished");
+          return;
+        }
+
+        if (data.interview?.mode === "text") {
+          router.replace(`/interview/chat?id=${interviewId}`);
           return;
         }
 

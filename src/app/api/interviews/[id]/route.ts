@@ -28,6 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       difficulty: interview.difficulty,
       currentRound: interview.currentRound,
       maxRounds: interview.maxRounds,
+      mode: interview.mode,
       createdAt: interview.createdAt,
     },
     messages: interview.messages.map((m) => ({
