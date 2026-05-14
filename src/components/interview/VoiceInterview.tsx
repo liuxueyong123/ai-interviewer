@@ -37,6 +37,15 @@ export default function VoiceInterview() {
   const { speak, state: ttsState } = useTTS();
   const abortRef = useRef<AbortController | null>(null);
   const lastRecognizedRef = useRef("");
+  const pendingSubtitleRef = useRef("");
+
+  // Defer subtitle text until audio actually starts playing
+  useEffect(() => {
+    if (ttsState === "playing" && pendingSubtitleRef.current) {
+      setSubtitle(pendingSubtitleRef.current);
+      pendingSubtitleRef.current = "";
+    }
+  }, [ttsState]);
 
   const handleVoiceResult = useCallback((text: string) => {
     lastRecognizedRef.current = text;
@@ -121,7 +130,7 @@ export default function VoiceInterview() {
         } catch { /* skip malformed events */ }
       }
 
-      setSubtitle(fullContent);
+      pendingSubtitleRef.current = fullContent;
       setAppState("ai_speaking");
       try {
         await speak(fullContent);
@@ -192,7 +201,7 @@ export default function VoiceInterview() {
 
         if (interviewerMessages.length > 0) {
           const lastMsg = interviewerMessages[interviewerMessages.length - 1];
-          setSubtitle(lastMsg.content);
+          pendingSubtitleRef.current = lastMsg.content;
           setAppState("ai_speaking");
           speak(lastMsg.content).then(() => {
             setAppState("waiting_for_user");
