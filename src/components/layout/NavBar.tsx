@@ -82,7 +82,7 @@ export default function NavBar() {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 w-48 bg-surface-1 backdrop-blur-xl border border-white/8 rounded-xl shadow-2xl overflow-hidden z-50">
+            <div className="absolute right-0 top-full mt-1 w-48 bg-[#161830] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
               <div className="px-4 py-3 border-b border-white/5">
                 <p className="text-sm font-medium text-text-primary truncate">{username || "未登录"}</p>
               </div>
