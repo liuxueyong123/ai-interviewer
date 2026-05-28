@@ -183,5 +183,5 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## 相关文档
 
-- [多轮面试功能设计](docs/multi-round-interview.md)
-- [时区修复说明](docs/timezone-fix.md)
+- [多轮面试功能设计](docs/multi-round-interview/spec.md)
+- [时区修复说明](docs/timezone-fix/README.md)
