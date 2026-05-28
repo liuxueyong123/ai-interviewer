@@ -8,7 +8,7 @@
 
 **Tech Stack:** Next.js 16, Tailwind CSS v4, TypeScript, React
 
-**Spec:** `docs/superpowers/specs/2026-05-14-dark-theme-redesign.md`
+**Spec:** `docs/dark-theme-redesign/spec.md`
 
 ---
 

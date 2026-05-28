@@ -41,7 +41,12 @@
       "Bash(/Users/lxy/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/stop-server.sh *)",
       "Skill(superpowers:subagent-driven-development)",
       "Bash(echo \"EXIT:$?\")",
-      "Bash(bash *)"
+      "Bash(bash *)",
+      "Skill(superpowers:executing-plans)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm lint *)",
+      "Skill(superpowers:finishing-a-development-branch)",
+      "Bash(pnpm eslint *)"
     ]
   }
 }
