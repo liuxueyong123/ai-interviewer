@@ -44,7 +44,9 @@ src/hooks/                    # ASR、TTS、结果轮询
 - API 错误格式：`{ error: string }` + 合适 HTTP 状态码。
 - 输入校验：新增/修改 API 时优先补 `src/lib/validations.ts` 的 Zod schema。
 - 数据库：生产环境 `synchronize: false`；新实体必须注册到 `entities[]`。
+- 密码策略：≥8 位，数字/小写/大写/符号至少含两种。
 - 日志：使用 `logger.info/warn/error`，不要新增 `console.log`。
+- 页面渲染：dashboard 和 results 为 `force-dynamic`，避免 build 时触发 DB 连接。
 - SSE：`/api/chat` 返回 `{ type: "chunk" | "done" }`。
 - PDF：仅支持 PDF，当前解析大小限制 5MB。
 - 面试状态：`ongoing`、`evaluating`、`passed`、`done`。

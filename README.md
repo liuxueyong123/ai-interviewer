@@ -105,6 +105,7 @@ src/
     ├── deepseek.ts           # Prompt、模型单例、评分与轮次逻辑
     ├── pdf.ts                # PDF 解析和 5MB 限制
     ├── resultsHelpers.ts     # 结果页步骤与状态文案
+    ├── utils.ts              # getUserId 等通用工具
     ├── validations.ts        # Zod schema
     └── logger.ts             # JSON 日志
 ```
