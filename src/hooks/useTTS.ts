@@ -54,13 +54,8 @@ const RETRY_DELAYS = [300, 800];
 // ── implementation ─────────────────────────────────────────
 
 export function useTTS(options: UseTTSOptions = {}): UseTTSReturn {
-  const {
-    maxRetries = 2,
-    prefetchLimit = 3,
-    onSegmentReady,
-    onSegmentStart,
-    onSegmentError,
-  } = options;
+  const maxRetries = options.maxRetries ?? 2;
+  const prefetchLimit = options.prefetchLimit ?? 3;
 
   const [state, setState] = useState<TTSQueueState>("idle");
   const [currentText, setCurrentText] = useState("");
@@ -431,6 +426,8 @@ export function useTTS(options: UseTTSOptions = {}): UseTTSReturn {
       const gen = generationRef.current;
       setTimeout(() => scheduleWork(gen), 0);
     },
+    // scheduleWork/syncQueueSizeState/syncMetricsState 只捕获 refs 和 setState，实质稳定
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 

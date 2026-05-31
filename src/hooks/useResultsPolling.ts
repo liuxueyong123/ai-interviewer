@@ -95,6 +95,7 @@ export function useResultsPolling(id: string) {
 
   useEffect(() => {
     startTimeRef.current = Date.now();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
     fetchData();
   }, [fetchData]);
 

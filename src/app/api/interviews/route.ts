@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
 
   const ds = await getDataSource();
 
-  let { position, resumeText, resumeId, questionCount = 12, difficulty = "mid", maxRounds = 2, mode } = body;
+  const { resumeText, resumeId } = body;
+  let { position, questionCount = 12, difficulty = "mid", maxRounds = 2, mode } = body;
   let finalResumeText = resumeText || "";
 
   if (body.prevInterviewId) {

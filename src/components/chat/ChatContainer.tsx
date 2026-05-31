@@ -57,6 +57,7 @@ export default function ChatContainer() {
   const [speakingKey, setSpeakingKey] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear speaking indicator when tts stops
     if (ttsState === "idle" || ttsState === "error") setSpeakingKey(null);
   }, [ttsState]);
 
@@ -115,6 +116,7 @@ export default function ChatContainer() {
         abortRef.current = null;
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- finishInterview is an event handler, not state-derived
     [interviewId, loading],
   );
 
