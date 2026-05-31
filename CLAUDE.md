@@ -9,6 +9,7 @@ AI 模拟面试平台：PDF 简历 → 岗位/题量/难度/轮次/模式配置 
 - 本项目使用 **Next.js 16**。写 Next 相关代码前，先读 `node_modules/next/dist/docs/` 中对应文档，尤其是 Proxy、Route Handlers、App Router 约定。
 - 遵守 `AGENTS.md`：不要凭旧版 Next.js 经验改 API 或文件结构。
 - 尽量保持改动小而准，避免顺手重构。
+- 请始终用中文回复我，生成的文档也需要式中文。
 
 ## 常用命令
 
