@@ -63,7 +63,6 @@ export default function VoiceInterview() {
   const lastRecognizedRef = useRef("");
   const fullContentRef = useRef("");
   const stopTTSRef = useRef(stopTTS);
-  const initialLoadDone = useRef(false);
 
   // keep ref in sync
   useEffect(() => {
@@ -271,13 +270,14 @@ export default function VoiceInterview() {
 
   // Load interview history
   useEffect(() => {
-    if (!interviewId || initialLoadDone.current) return;
-    initialLoadDone.current = true;
+    if (!interviewId) return;
 
+    let cancelled = false;
     const abort = new AbortController();
     fetch(`/api/interviews/${interviewId}`, { signal: abort.signal })
       .then((res) => res.json())
       .then((data) => {
+        if (cancelled) return;
         setPosition(data.interview?.position ?? "");
         setCurrentRound(data.interview?.currentRound ?? 1);
         setMaxRounds(data.interview?.maxRounds ?? 1);
@@ -320,12 +320,13 @@ export default function VoiceInterview() {
         setStartTime(new Date(parseInt(roundStart, 10)));
       })
       .catch((err) => {
-        if ((err as Error).name !== "AbortError") {
-          // silently ignore aborted requests
-        }
+        if ((err as Error).name === "AbortError" || cancelled) return;
       });
 
-    return () => abort.abort();
+    return () => {
+      cancelled = true;
+      abort.abort();
+    };
   }, [interviewId, enqueue, waitForIdle, router]);
 
   function handleEndClick() {
