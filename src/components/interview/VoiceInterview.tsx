@@ -6,6 +6,7 @@ import { EventSourceParserStream } from "eventsource-parser/stream";
 import { toast } from "@/components/ui/Toast";
 import { useTTS } from "@/hooks/useTTS";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { createStreamingTextSegmenter } from "@/lib/streamingTextSegmenter";
 import AIAvatar from "./AIAvatar";
 import CameraPreview from "./CameraPreview";
 import SubtitleBar from "./SubtitleBar";
@@ -26,6 +27,7 @@ export default function VoiceInterview() {
 
   const [appState, setAppState] = useState<AppState>("idle");
   const [subtitle, setSubtitle] = useState("");
+  const [subtitleLoading, setSubtitleLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [position, setPosition] = useState("");
   const [currentRound, setCurrentRound] = useState(1);
@@ -35,18 +37,45 @@ export default function VoiceInterview() {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  const { speak, state: ttsState } = useTTS();
+  const {
+    enqueue,
+    waitForIdle,
+    stop: stopTTS,
+    resetMetrics,
+    getMetricsSnapshot,
+    state: ttsState,
+    queueSize,
+  } = useTTS({
+    maxRetries: 2,
+    prefetchLimit: 3,
+    onSegmentReady: (text) => {
+      setSubtitleLoading(false);
+      setSubtitle((prev) => `${prev}${text}`);
+    },
+    onSegmentError: () => {
+      setSubtitleLoading(false);
+      setSubtitle(fullContentRef.current);
+      setAppState("waiting_for_user");
+      toast.warning("语音合成失败，请查看文字继续回答");
+    },
+  });
   const abortRef = useRef<AbortController | null>(null);
   const lastRecognizedRef = useRef("");
-  const pendingSubtitleRef = useRef("");
+  const fullContentRef = useRef("");
+  const stopTTSRef = useRef(stopTTS);
 
-  // Defer subtitle text until audio actually starts playing
+  // keep ref in sync
   useEffect(() => {
-    if (ttsState === "playing" && pendingSubtitleRef.current) {
-      setSubtitle(pendingSubtitleRef.current);
-      pendingSubtitleRef.current = "";
-    }
-  }, [ttsState]);
+    stopTTSRef.current = stopTTS;
+  }, [stopTTS]);
+
+  // cleanup on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      stopTTSRef.current();
+    };
+  }, []);
 
   const handleVoiceResult = useCallback((text: string) => {
     lastRecognizedRef.current = text;
@@ -75,6 +104,7 @@ export default function VoiceInterview() {
 
   const finishInterview = useCallback(async () => {
     if (!interviewId || finishing) return;
+    stopTTS();
     setFinishing(true);
     try {
       const res = await fetch(`/api/interviews/${interviewId}/finish`, { method: "POST" });
@@ -90,67 +120,130 @@ export default function VoiceInterview() {
       toast.error("网络错误，请重试");
       setFinishing(false);
     }
-  }, [interviewId, finishing, router]);
+  }, [interviewId, finishing, router, stopTTS]);
 
   // Send user message to chat and get AI response
-  const sendToChat = useCallback(async (userMsg: string) => {
-    if (!interviewId) return;
-    setAppState("processing");
+  const sendToChat = useCallback(
+    async (userMsg: string) => {
+      if (!interviewId) return;
+      setAppState("processing");
+      setSubtitle("");
+      setSubtitleLoading(false);
+      fullContentRef.current = "";
+      resetMetrics();
 
-    const abort = new AbortController();
-    abortRef.current = abort;
+      const abort = new AbortController();
+      abortRef.current = abort;
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interviewId: parseInt(interviewId, 10), message: userMsg }),
-        signal: abort.signal,
-      });
-      if (!res.ok) throw new Error(`请求失败 (${res.status})`);
-
-      const eventStream = res.body!
-        .pipeThrough(new TextDecoderStream())
-        .pipeThrough(new EventSourceParserStream());
-      const reader = eventStream.getReader();
+      const segmenter = createStreamingTextSegmenter();
+      const chatStartedAt = performance.now();
+      let firstChunkAt: number | null = null;
       let fullContent = "";
+      let hasQueuedSpeech = false;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        try {
-          const event = JSON.parse(value.data);
-          if (event.type === "chunk") {
-            fullContent += event.content;
-          } else if (event.type === "done") {
-            if (fullContent.includes("面试环节已结束")) {
-              finishInterview();
-              return;
-            }
-          }
-        } catch { /* skip malformed events */ }
-      }
-
-      pendingSubtitleRef.current = fullContent;
-      setAppState("ai_speaking");
       try {
-        await speak(fullContent);
-      } catch {
-        // TTS failed — subtitle still visible
-      }
-      setAppState("waiting_for_user");
-    } catch (err) {
-      if ((err as Error).name !== "AbortError") {
-        toast.error((err as Error).message || "网络错误");
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ interviewId: parseInt(interviewId, 10), message: userMsg }),
+          signal: abort.signal,
+        });
+        if (!res.ok) throw new Error(`请求失败 (${res.status})`);
+
+        const eventStream = res.body!.pipeThrough(new TextDecoderStream()).pipeThrough(new EventSourceParserStream());
+        const reader = eventStream.getReader();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          try {
+            const event = JSON.parse(value.data);
+            if (event.type === "chunk") {
+              const content = typeof event.content === "string" ? event.content : "";
+              if (!content) continue;
+
+              firstChunkAt = firstChunkAt ?? performance.now();
+              fullContent += content;
+              fullContentRef.current = fullContent;
+
+              const segments = segmenter.push(content);
+              for (const segment of segments) {
+                enqueue(segment);
+                hasQueuedSpeech = true;
+              }
+
+              if (hasQueuedSpeech) {
+                setSubtitleLoading(true);
+                setAppState("ai_speaking");
+              }
+            } else if (event.type === "done") {
+              fullContentRef.current = fullContent;
+              const tailSegments = segmenter.flush();
+              for (const segment of tailSegments) {
+                enqueue(segment);
+                hasQueuedSpeech = true;
+              }
+
+              if (hasQueuedSpeech) {
+                setSubtitleLoading(true);
+                setAppState("ai_speaking");
+              }
+            }
+          } catch {
+            /* skip malformed events */
+          }
+        }
+
+        // 如果分句器没有输出任何片段（极短回复等极端情况），兜底入队全文
+        if (!hasQueuedSpeech && fullContent.trim()) {
+          enqueue(fullContent);
+          setSubtitleLoading(true);
+          setAppState("ai_speaking");
+        }
+
+        await waitForIdle();
+        setSubtitleLoading(false);
+
+        const metrics = getMetricsSnapshot();
+        const ended = fullContent.includes("面试环节已结束");
+
+        console.info("voice_turn_latency", {
+          interviewId,
+          chars: fullContent.length,
+          segments: metrics.enqueuedCount,
+          retries: metrics.retriedCount,
+          failedSegments: metrics.failedCount,
+          firstTokenMs: firstChunkAt === null ? null : Math.round(firstChunkAt - chatStartedAt),
+          firstAudioReadyMs: metrics.firstAudioReadyAt === null ? null : Math.round(metrics.firstAudioReadyAt - chatStartedAt),
+          firstPlaybackMs: metrics.firstPlaybackStartedAt === null ? null : Math.round(metrics.firstPlaybackStartedAt - chatStartedAt),
+        });
+
+        if (ended) {
+          finishInterview();
+          return;
+        }
+
         setAppState("waiting_for_user");
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          toast.error((err as Error).message || "网络错误");
+          setAppState("waiting_for_user");
+        }
+      } finally {
+        abortRef.current = null;
       }
-    } finally {
-      abortRef.current = null;
-    }
-  }, [interviewId, speak, finishInterview]);
+    },
+    [interviewId, enqueue, waitForIdle, resetMetrics, getMetricsSnapshot, finishInterview],
+  );
 
   // Manual recording controls
   const handleStartRecording = useCallback(() => {
+    // 解锁 AudioContext（Safari/Firefox 要求首次 play 在用户手势内）
+    const unlock = new AudioContext();
+    unlock
+      .resume()
+      .then(() => unlock.close())
+      .catch(() => {});
     lastRecognizedRef.current = "";
     startListening();
     setAppState("user_speaking");
@@ -195,19 +288,19 @@ export default function VoiceInterview() {
           return;
         }
 
-        const roundMessages = (data.messages || []).filter(
-          (m: { round: number }) => m.round === (data.interview?.currentRound ?? 1)
-        );
+        const roundMessages = (data.messages || []).filter((m: { round: number }) => m.round === (data.interview?.currentRound ?? 1));
         const interviewerMessages = roundMessages.filter((m: { role: string }) => m.role === "interviewer");
 
         if (interviewerMessages.length > 0) {
           const lastMsg = interviewerMessages[interviewerMessages.length - 1];
-          pendingSubtitleRef.current = lastMsg.content;
+          fullContentRef.current = lastMsg.content;
           setLoaded(true);
+          setSubtitle("");
+          setSubtitleLoading(true);
           setAppState("ai_speaking");
-          speak(lastMsg.content).then(() => {
-            setAppState("waiting_for_user");
-          }).catch(() => {
+          enqueue(lastMsg.content);
+          waitForIdle().finally(() => {
+            setSubtitleLoading(false);
             setAppState("waiting_for_user");
           });
         } else {
@@ -223,7 +316,7 @@ export default function VoiceInterview() {
         setStartTime(new Date(parseInt(roundStart, 10)));
       })
       .catch(() => {});
-  }, [interviewId, speak, router]);
+  }, [interviewId, enqueue, waitForIdle, router]);
 
   function handleEndClick() {
     if (!window.confirm("确定要结束当前面试吗？")) return;
@@ -232,16 +325,28 @@ export default function VoiceInterview() {
 
   const avatarState = !loaded
     ? "thinking"
-    : ttsState === "playing" ? "speaking" :
-    appState === "ai_speaking" ? "thinking" :
-    appState === "user_speaking" ? "listening" :
-    appState === "processing" ? "thinking" : "idle";
+    : ttsState === "playing"
+      ? "speaking"
+      : ttsState === "loading" || queueSize > 0
+        ? "thinking"
+        : appState === "ai_speaking"
+          ? "thinking"
+          : appState === "user_speaking"
+            ? "listening"
+            : appState === "processing"
+              ? "thinking"
+              : "idle";
 
   const controlsState =
-    appState === "ai_speaking" || appState === "idle" ? "idle" :
-    appState === "waiting_for_user" ? "waiting" :
-    appState === "user_speaking" ? "recording" :
-    appState === "processing" ? "processing" : "idle";
+    appState === "ai_speaking" || appState === "idle"
+      ? "idle"
+      : appState === "waiting_for_user"
+        ? "waiting"
+        : appState === "user_speaking"
+          ? "recording"
+          : appState === "processing"
+            ? "processing"
+            : "idle";
 
   return (
     <div className="h-screen flex flex-col text-white" style={{ background: "linear-gradient(135deg, #0a0e1a 0%, #1a1040 40%, #0a0e1a 100%)" }}>
@@ -255,11 +360,7 @@ export default function VoiceInterview() {
             </span>
           )}
           <span className="text-xs text-text-muted tabular-nums font-mono">{formatElapsed(elapsedSeconds)}</span>
-          <button
-            onClick={handleEndClick}
-            disabled={finishing}
-            className="text-[10px] px-2.5 py-1 bg-red-500/10 text-red-400 rounded-md hover:bg-red-500/20 transition-colors disabled:opacity-30"
-          >
+          <button onClick={handleEndClick} disabled={finishing} className="text-[10px] px-2.5 py-1 bg-red-500/10 text-red-400 rounded-md hover:bg-red-500/20 transition-colors disabled:opacity-30">
             结束面试
           </button>
         </div>
@@ -268,14 +369,17 @@ export default function VoiceInterview() {
       {/* Split View */}
       <div className="flex-1 flex gap-3 p-3 min-h-0">
         <div className="flex-1 bg-surface-1 backdrop-blur-md rounded-2xl flex flex-col border border-white/5 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none" style={{
-            backgroundImage: `
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `
               linear-gradient(rgba(139,92,246,0.06) 1px, transparent 1px),
               linear-gradient(90deg, rgba(139,92,246,0.06) 1px, transparent 1px),
               radial-gradient(ellipse at center, rgba(139,92,246,0.08) 0%, transparent 60%)
             `,
-            backgroundSize: "30px 30px, 30px 30px, 100% 100%",
-          }} />
+              backgroundSize: "30px 30px, 30px 30px, 100% 100%",
+            }}
+          />
           <div className="px-3 py-2 text-xs text-accent font-medium shrink-0 relative">AI 面试官</div>
           <div className="flex-1 flex items-center justify-center relative">
             <AIAvatar state={avatarState} />
@@ -288,27 +392,21 @@ export default function VoiceInterview() {
         </div>
       </div>
 
-      {/* Subtitle — visible while AI is speaking or waiting for user, hidden when user starts recording */}
-      <SubtitleBar text={subtitle} visible={ttsState === "playing" || appState === "waiting_for_user"} />
+      {/* Subtitle — visible while AI is speaking/loading or waiting for user, hidden when user starts recording */}
+      <SubtitleBar
+        text={subtitleLoading && !subtitle ? "正在组织问题" : subtitle}
+        visible={ttsState === "loading" || ttsState === "playing" || appState === "waiting_for_user"}
+        loading={subtitleLoading && !subtitle}
+      />
 
       {/* Voice Controls */}
-      {appState !== "finished" && (
-        <VoiceControls
-          state={controlsState}
-          onStart={handleStartRecording}
-          onStop={handleStopRecording}
-          disabled={finishing}
-        />
-      )}
+      {appState !== "finished" && <VoiceControls state={controlsState} onStart={handleStartRecording} onStop={handleStopRecording} disabled={finishing} />}
 
       {/* Finished state */}
       {appState === "finished" && (
         <div className="text-center py-4 shrink-0 border-t border-white/5">
           <p className="text-green-400 text-sm font-medium mb-2">面试已完成</p>
-          <button
-            onClick={() => router.push(`/results/${interviewId}`)}
-            className="text-sm px-4 py-2 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-colors"
-          >
+          <button onClick={() => router.push(`/results/${interviewId}`)} className="text-sm px-4 py-2 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-colors">
             查看评分报告
           </button>
         </div>
