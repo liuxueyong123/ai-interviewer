@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^3.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
@@ -47,6 +48,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "happy-dom": "^20.9.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.6"
