@@ -27,7 +27,7 @@ function mockFetchSequence(...responses: (Response | Error)[]) {
 }
 
 /** Build a successful TTS Response with a mock audio data URI. */
-function ttsResponse(_text: string): Response {
+function ttsResponse(): Response {
   return new Response(
     JSON.stringify({ audio: "data:audio/wav;base64,bW9ja2F1ZGlv" }),
     { status: 200, headers: { "Content-Type": "application/json" } },
@@ -48,9 +48,9 @@ let audioInstances: MockAudio[] = [];
 class MockAudio {
   src: string = "";
   playbackRate: number = 1;
-  onplay: ((this: HTMLAudioElement, ev: Event) => any) | null = null;
-  onended: ((this: HTMLAudioElement, ev: Event) => any) | null = null;
-  onerror: ((this: HTMLAudioElement, ev: Event | string) => any) | null = null;
+  onplay: ((this: HTMLAudioElement, ev: Event) => unknown) | null = null;
+  onended: ((this: HTMLAudioElement, ev: Event) => unknown) | null = null;
+  onerror: ((this: HTMLAudioElement, ev: Event | string) => unknown) | null = null;
 
   constructor(src: string) {
     this.src = src;
@@ -110,7 +110,7 @@ afterEach(() => {
 describe("useTTS", () => {
   // ── 1. basic enqueue + play + idle ───────────────────────
   test("入队一个片段后请求TTS并播放音频，onended后state回到idle", async () => {
-    const fetchMock = mockFetchSequence(ttsResponse("你好"));
+    const fetchMock = mockFetchSequence(ttsResponse());
     vi.stubGlobal("fetch", fetchMock);
 
     const { result } = renderHook(() => useTTS());
@@ -199,7 +199,7 @@ describe("useTTS", () => {
 
     // Now resolve segment 2 FIRST (before segment 1)
     await act(async () => {
-      resolve2(ttsResponse("第二段"));
+      resolve2(ttsResponse());
     });
 
     // advance timers so flushReadySubtitles runs
@@ -212,7 +212,7 @@ describe("useTTS", () => {
 
     // Now resolve segment 1
     await act(async () => {
-      resolve1(ttsResponse("第一段"));
+      resolve1(ttsResponse());
     });
 
     await act(async () => {
@@ -244,7 +244,7 @@ describe("useTTS", () => {
     const fetchMock = mockFetchSequence(
       ttsErrorResponse(), // fail 1
       ttsErrorResponse(), // fail 2
-      ttsResponse("你好"), // success 3
+      ttsResponse(), // success 3
     );
     vi.stubGlobal("fetch", fetchMock);
 
@@ -328,7 +328,7 @@ describe("useTTS", () => {
 
     // Resolve segment 2 first (out of order)
     await act(async () => {
-      resolve2(ttsResponse("片段2"));
+      resolve2(ttsResponse());
     });
     await act(async () => {
       await vi.runAllTimersAsync();
@@ -339,7 +339,7 @@ describe("useTTS", () => {
 
     // Now resolve segment 1
     await act(async () => {
-      resolve1(ttsResponse("片段1"));
+      resolve1(ttsResponse());
     });
     await act(async () => {
       await vi.runAllTimersAsync();
@@ -353,7 +353,7 @@ describe("useTTS", () => {
 
   // ── 6. metrics ───────────────────────────────────────────
   test("resetMetrics清空指标，getMetricsSnapshot返回最新快照", async () => {
-    const fetchMock = mockFetchSequence(ttsResponse("测试"));
+    const fetchMock = mockFetchSequence(ttsResponse());
     vi.stubGlobal("fetch", fetchMock);
 
     const { result } = renderHook(() => useTTS());
@@ -414,7 +414,6 @@ describe("useTTS", () => {
   // ── 8. stop cancels pending requests ────────────────────
   test("stop在合成中途取消pending请求", async () => {
     // We need a fetch that never resolves so we can call stop mid-flight
-    const abortController = new AbortController();
     let capturedSignal!: AbortSignal;
     const fetchMock = vi.fn().mockImplementation(
       (_url: string, init?: RequestInit) =>
@@ -452,9 +451,9 @@ describe("useTTS", () => {
   // ── 9. fast sequential enqueue preserves order ───────────
   test("快速连续入队3个片段，验证播放顺序", async () => {
     const fetchMock = mockFetchSequence(
-      ttsResponse("片段A"),
-      ttsResponse("片段B"),
-      ttsResponse("片段C"),
+      ttsResponse(),
+      ttsResponse(),
+      ttsResponse(),
     );
     vi.stubGlobal("fetch", fetchMock);
     const playOrder: string[] = [];

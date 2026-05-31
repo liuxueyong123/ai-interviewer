@@ -21,6 +21,7 @@ export default function ResultsPage() {
   useEffect(() => {
     if (!data || initialRoundSet.current) return;
     if (data.evaluations.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- init default round once, gated by ref
       setSelectedRound(data.evaluations[data.evaluations.length - 1].round);
       initialRoundSet.current = true;
     }
