@@ -41,6 +41,8 @@ Next.js 16 route handlers should stay under the `app` directory in `route.ts` fi
 
 Create `src/app/api/auth/anonymous/route.ts` with `POST`.
 
+The handler follows the standard Next.js App Router signature `POST(request: NextRequest)`.
+
 The handler will:
 
 1. Initialize the TypeORM data source with `getDataSource()`.
@@ -121,6 +123,7 @@ This enables an anonymous account to become a normal account without the user kn
 - Generated anonymous passwords must never be returned to the browser or logged.
 - Mock email addresses should use a non-deliverable local/reserved domain, such as `anonymous.local`, to avoid accidental real email delivery.
 - API errors must not reveal whether a specific generated username or email already exists.
+- The retry loop uses `ER_DUP_ENTRY` / `errno: 1062` / `"Duplicate entry"` message matching to detect uniqueness conflicts. This is MySQL-specific; a database migration would require updating the detection logic.
 
 ## Testing Plan
 

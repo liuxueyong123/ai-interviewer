@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [anonymousLoading, setAnonymousLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -35,6 +36,25 @@ export default function LoginPage() {
     setLoading(false);
 
     if (!res.ok) { setError(data.error); return; }
+    router.push("/dashboard");
+  }
+
+  async function handleAnonymousLogin() {
+    setError("");
+    setAnonymousLoading(true);
+
+    const res = await fetch("/api/auth/anonymous", {
+      method: "POST",
+    });
+
+    const data = await res.json();
+    setAnonymousLoading(false);
+
+    if (!res.ok) {
+      setError(data.error);
+      return;
+    }
+
     router.push("/dashboard");
   }
 
@@ -85,9 +105,13 @@ export default function LoginPage() {
             {error && (
               <div className="bg-red-500/5 border border-red-500/20 text-red-400 text-sm rounded-lg px-4 py-3 font-medium">{error}</div>
             )}
-            <button type="submit" disabled={loading}
+            <button type="submit" disabled={loading || anonymousLoading}
               className="w-full py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent-hover active:scale-[0.98] disabled:opacity-50 transition-all duration-200 font-display cursor-pointer">
               {loading ? "登录中..." : "登录"}
+            </button>
+            <button type="button" onClick={handleAnonymousLogin} disabled={loading || anonymousLoading}
+              className="w-full py-3 bg-surface-0 border border-border text-text-primary font-semibold rounded-xl hover:border-accent hover:text-accent active:scale-[0.98] disabled:opacity-50 transition-all duration-200 font-display cursor-pointer">
+              {anonymousLoading ? "正在创建体验账号..." : "一键体验"}
             </button>
           </form>
           </div>

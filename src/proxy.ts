@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { logger, requestDuration } from "@/lib/logger";
 
-const publicPaths = ["/login", "/register", "/api/auth/login", "/api/auth/register", "/api/auth/logout"];
+export const publicPaths = ["/login", "/register", "/api/auth/login", "/api/auth/register", "/api/auth/logout", "/api/auth/anonymous"];
 
 export function proxy(request: NextRequest) {
   const start = Date.now();
