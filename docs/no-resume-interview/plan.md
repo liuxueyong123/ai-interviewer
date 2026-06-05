@@ -1,75 +1,75 @@
-# No-Resume Interview Mode Implementation Plan
+# 无简历面试模式实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **面向执行者：** 必需子技能：使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 按任务逐个实施。步骤使用 checkbox（`- [ ]`）语法进行跟踪。
 
-**Goal:** Let users start text or voice interviews without selecting a resume, while keeping resume-based behavior when a resume is selected.
+**目标：** 允许用户在不选择简历的情况下开始文字或语音面试，同时在已选简历时保持基于简历的行为。
 
-**Architecture:** Treat no-resume interviews as existing `Interview` records whose `resumeText` is an empty string. Keep the existing setup page and interview APIs, branch prompts and result rendering from `resumeText.trim()`, and store an empty `resumeSuggestions` value for no-resume evaluations.
+**架构：** 将无简历面试视为 `resumeText` 为空字符串的现有 `Interview` 记录。保持现有设置页和面试 API，从 `resumeText.trim()` 分支提示词和结果渲染，为无简历评估存储空的 `resumeSuggestions` 值。
 
-**Tech Stack:** Next.js 16.2.6 App Router Route Handlers, React 19 Client Components, TypeScript, TypeORM, LangChain message helpers, Vitest, Testing Library, happy-dom.
+**技术栈：** Next.js 16.2.6 App Router Route Handlers、React 19 Client Components、TypeScript、TypeORM、LangChain message helpers、Vitest、Testing Library、happy-dom。
 
 ---
 
-## Scope Check
+## 范围检查
 
-The approved spec covers one feature path: no-resume interview as the absence of resume content. It does not introduce a new database mode, new API, migration, background profile form, or replacement advice section. This is small enough for a single implementation plan.
+批准的 spec 覆盖一个功能路径：将无简历面试作为简历内容的缺失。不引入新的数据库模式、新 API、迁移、背景资料表单或替代建议板块。这足够小，适合单个实施计划。
 
-## File Structure
+## 文件结构
 
-- Create `src/components/interview/__tests__/SetupForm.noResume.test.tsx`
-  - Tests default resume selection, deselection, no-resume request payloads, and no-resume start with an empty resume list.
-- Modify `src/components/interview/SetupForm.tsx`
-  - Default-select the first resume when any resumes exist.
-  - Toggle the selected resume off when clicked again.
-  - Require only `position` to start.
-  - Omit `resumeId` from the request body when no resume is selected.
-  - Adjust empty-state copy to explain resume upload is optional.
-- Create `src/app/api/interviews/__tests__/route.test.ts`
-  - Tests interview creation without `resumeId`, with `resumeId`, and with invalid `resumeId`.
-- Modify `src/app/api/interviews/route.ts`
-  - Allow empty `finalResumeText`.
-  - Create no-resume opening messages when `finalResumeText.trim()` is empty.
-- Modify `src/lib/__tests__/deepseek.test.ts`
-  - Adds prompt and aggregation tests for empty `resumeText`.
-- Modify `src/lib/deepseek.ts`
-  - Branch system prompt and aggregation prompt by `resumeText.trim()`.
-- Create `src/app/api/interviews/[id]/finish/__tests__/route.test.ts`
-  - Tests that no-resume aggregation results persist `resumeSuggestions: ""`.
-- Modify `src/app/api/interviews/[id]/finish/route.ts`
-  - Persist `resumeSuggestions: ""` when the aggregation result omits that field.
-- Create `src/components/interview/__tests__/EvaluationText.test.tsx`
-  - Tests the resume suggestion block visibility.
-- Create `src/app/results/[id]/__tests__/page.test.tsx`
-  - Tests that the results page hides resume suggestions for empty `resumeText` and keeps them for resume-based interviews.
-- Modify `src/components/interview/EvaluationText.tsx`
-  - Add `showResumeSuggestions`.
-- Modify `src/components/interview/ScoreCard.tsx`
-  - Pass `showResumeSuggestions={true}` to preserve legacy wrapper behavior.
-- Modify `src/app/results/[id]/page.tsx`
-  - Derive `showResumeSuggestions` from `interview.resumeText.trim()` and pass it to `EvaluationText` in all result states.
+- 新建 `src/components/interview/__tests__/SetupForm.noResume.test.tsx`
+  - 测试默认简历选择、取消选择、无简历请求载荷、以及空简历列表时的无简历开始。
+- 修改 `src/components/interview/SetupForm.tsx`
+  - 有简历时默认选中第一份。
+  - 再次点击已选中简历时取消选择。
+  - 仅要求 `position` 即可开始。
+  - 无选中简历时从请求体中省略 `resumeId`。
+  - 调整空状态文案，说明上传简历为可选项。
+- 新建 `src/app/api/interviews/__tests__/route.test.ts`
+  - 测试不带 `resumeId`、带 `resumeId`、以及无效 `resumeId` 的面试创建。
+- 修改 `src/app/api/interviews/route.ts`
+  - 允许空的 `finalResumeText`。
+  - 当 `finalResumeText.trim()` 为空时创建无简历开场消息。
+- 修改 `src/lib/__tests__/deepseek.test.ts`
+  - 新增空 `resumeText` 的提示词和聚合测试。
+- 修改 `src/lib/deepseek.ts`
+  - 按 `resumeText.trim()` 分支系统提示词和聚合提示词。
+- 新建 `src/app/api/interviews/[id]/finish/__tests__/route.test.ts`
+  - 测试无简历聚合结果持久化 `resumeSuggestions: ""`。
+- 修改 `src/app/api/interviews/[id]/finish/route.ts`
+  - 当聚合结果缺失该字段时，持久化 `resumeSuggestions: ""`。
+- 新建 `src/components/interview/__tests__/EvaluationText.test.tsx`
+  - 测试简历建议块的可见性。
+- 新建 `src/app/results/[id]/__tests__/page.test.tsx`
+  - 测试结果页在 `resumeText` 为空时隐藏简历建议，在有简历时保留。
+- 修改 `src/components/interview/EvaluationText.tsx`
+  - 新增 `showResumeSuggestions`。
+- 修改 `src/components/interview/ScoreCard.tsx`
+  - 传入 `showResumeSuggestions={true}` 以保持旧包装器行为。
+- 修改 `src/app/results/[id]/page.tsx`
+  - 从 `interview.resumeText.trim()` 推导 `showResumeSuggestions`，并在所有结果状态中传入 `EvaluationText`。
 
-## Reference Checks
+## 参考检查
 
-Use the local Next.js docs before editing:
+编辑前使用本地 Next.js 文档：
 
 - `node_modules/next/dist/docs/01-app/01-getting-started/15-route-handlers.md`
-  - Route handlers live under `app` in `route.ts`, use Web `Request`/`Response` plus `NextRequest`/`NextResponse`, and non-GET handlers are not cached.
+  - Route handlers 在 `app` 目录下的 `route.ts` 中，使用 Web `Request`/`Response` 加 `NextRequest`/`NextResponse`，非 GET handler 不被缓存。
 - `node_modules/next/dist/docs/01-app/01-getting-started/05-server-and-client-components.md`
-  - `SetupForm` and `ResultsPage` are Client Components because they use state, effects, event handlers, hooks, and browser fetch.
+  - `SetupForm` 和 `ResultsPage` 是客户端组件，因为它们使用 state、effects、事件处理器、hooks 和浏览器 fetch。
 - `node_modules/next/dist/docs/01-app/01-getting-started/07-mutating-data.md`
-  - Client-side event handlers may call server mutations through route handlers; server-side routes must verify authentication and authorization.
+  - 客户端事件处理器可通过 route handlers 调用服务端变更；服务端路由必须校验认证和授权。
 
 ---
 
-### Task 1: Setup Form No-Resume Selection
+### 任务 1：设置表单无简历选择
 
-**Files:**
-- Create: `src/components/interview/__tests__/SetupForm.noResume.test.tsx`
-- Modify: `src/components/interview/SetupForm.tsx`
+**文件：**
+- 新建：`src/components/interview/__tests__/SetupForm.noResume.test.tsx`
+- 修改：`src/components/interview/SetupForm.tsx`
 
-- [ ] **Step 1: Write failing setup form tests**
+- [ ] **步骤 1：编写失败的设置表单测试**
 
-Create `src/components/interview/__tests__/SetupForm.noResume.test.tsx`:
+新建 `src/components/interview/__tests__/SetupForm.noResume.test.tsx`：
 
 ```tsx
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -136,13 +136,13 @@ function getInterviewPostBody(calls: FetchCall[]) {
   return JSON.parse(String(postCall?.init?.body));
 }
 
-describe("SetupForm no-resume mode", () => {
+describe("SetupForm 无简历模式", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     pushMock.mockReset();
   });
 
-  test("defaults to the first saved resume when multiple resumes exist", async () => {
+  test("多份简历时默认选中第一份保存的简历", async () => {
     const calls = mockFetchWithResumes([
       { id: 1, filename: "first.pdf" },
       { id: 2, filename: "second.pdf" },
@@ -167,7 +167,7 @@ describe("SetupForm no-resume mode", () => {
     });
   });
 
-  test("clicking the selected resume again clears the resume selection", async () => {
+  test("再次点击已选中的简历可清除简历选择", async () => {
     const calls = mockFetchWithResumes([{ id: 7, filename: "resume.pdf" }]);
 
     render(<SetupForm />);
@@ -183,7 +183,7 @@ describe("SetupForm no-resume mode", () => {
     expect(getInterviewPostBody(calls)).not.toHaveProperty("resumeId");
   });
 
-  test("allows starting an interview when there are no saved resumes", async () => {
+  test("无保存简历时允许开始面试", async () => {
     const calls = mockFetchWithResumes([]);
 
     render(<SetupForm />);
@@ -202,21 +202,21 @@ describe("SetupForm no-resume mode", () => {
 });
 ```
 
-- [ ] **Step 2: Run setup form tests to verify they fail**
+- [ ] **步骤 2：运行设置表单测试，验证失败**
 
-Run:
+运行：
 
 ```bash
 pnpm test src/components/interview/__tests__/SetupForm.noResume.test.tsx
 ```
 
-Expected: FAIL. The first test sends no default resume when multiple resumes exist, the second still sends `resumeId`, and the third start button is disabled without a resume.
+预期：失败。第一个测试在有多个简历时不发送默认简历，第二个测试仍发送 `resumeId`，第三个测试的开始按钮在没有简历时被禁用。
 
-- [ ] **Step 3: Implement setup form no-resume behavior**
+- [ ] **步骤 3：实现设置表单无简历行为**
 
-Modify `src/components/interview/SetupForm.tsx`.
+修改 `src/components/interview/SetupForm.tsx`。
 
-Change the resume load effect from selecting only when there is exactly one resume:
+将简历加载 effect 从仅在一份简历时选中，改为默认选中第一份：
 
 ```tsx
   useEffect(() => {
@@ -231,7 +231,7 @@ Change the resume load effect from selecting only when there is exactly one resu
   }, []);
 ```
 
-Change `handleStart()` so it does not require `selectedResumeId`, and so it omits `resumeId` when no resume is selected:
+修改 `handleStart()`，不要求 `selectedResumeId`，且无选中简历时省略 `resumeId`：
 
 ```tsx
   async function handleStart() {
@@ -265,7 +265,7 @@ Change `handleStart()` so it does not require `selectedResumeId`, and so it omit
   }
 ```
 
-Change the empty resume state copy:
+修改空简历状态文案：
 
 ```tsx
           <div className="text-center py-8 border border-white/8 rounded-xl">
@@ -276,13 +276,13 @@ Change the empty resume state copy:
           </div>
 ```
 
-Change the resume card click handler so clicking the selected card clears it:
+修改简历卡片点击处理器，点击已选中的卡片时清除选择：
 
 ```tsx
                 onClick={() => setSelectedResumeId((current) => (current === r.id ? null : r.id))}
 ```
 
-Add a small no-resume hint after the resume selector, below the saved resume list or empty state:
+在简历选择器下方、已保存简历列表或空状态之后添加无简历提示：
 
 ```tsx
         {!loadingResumes && !selectedResumeId && (
@@ -290,7 +290,7 @@ Add a small no-resume hint after the resume selector, below the saved resume lis
         )}
 ```
 
-Change the start button disabled condition:
+修改开始按钮的禁用条件：
 
 ```tsx
       <Button onClick={handleStart} loading={loading} disabled={!position}>
@@ -298,38 +298,38 @@ Change the start button disabled condition:
       </Button>
 ```
 
-- [ ] **Step 4: Run setup form tests to verify they pass**
+- [ ] **步骤 4：运行设置表单测试，验证通过**
 
-Run:
+运行：
 
 ```bash
 pnpm test src/components/interview/__tests__/SetupForm.noResume.test.tsx
 ```
 
-Expected: PASS.
+预期：通过。
 
-- [ ] **Step 5: Commit setup form changes**
+- [ ] **步骤 5：提交设置表单变更**
 
-Run:
+运行：
 
 ```bash
 git add src/components/interview/SetupForm.tsx src/components/interview/__tests__/SetupForm.noResume.test.tsx
 git commit -m "feat: allow setup without resume"
 ```
 
-Expected: commit succeeds.
+预期：提交成功。
 
 ---
 
-### Task 2: Interview Creation API Without Resume
+### 任务 2：面试创建 API 支持无简历
 
-**Files:**
-- Create: `src/app/api/interviews/__tests__/route.test.ts`
-- Modify: `src/app/api/interviews/route.ts`
+**文件：**
+- 新建：`src/app/api/interviews/__tests__/route.test.ts`
+- 修改：`src/app/api/interviews/route.ts`
 
-- [ ] **Step 1: Write failing interview creation API tests**
+- [ ] **步骤 1：编写失败的面试创建 API 测试**
 
-Create `src/app/api/interviews/__tests__/route.test.ts`:
+新建 `src/app/api/interviews/__tests__/route.test.ts`：
 
 ```ts
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -417,7 +417,7 @@ describe("POST /api/interviews", () => {
     mocks.messageRepo.save.mockImplementation(async (message: unknown) => message);
   });
 
-  test("creates a no-resume interview when resumeId is omitted", async () => {
+  test("省略 resumeId 时创建无简历面试", async () => {
     const { POST } = await import("../route");
 
     const response = await POST(request({
@@ -450,7 +450,7 @@ describe("POST /api/interviews", () => {
     }));
   });
 
-  test("keeps resume-based creation when resumeId is present", async () => {
+  test("有 resumeId 时保持基于简历的创建", async () => {
     mocks.resumeRepo.findOne.mockResolvedValue({ id: 5, content: "3年React经验" });
     const { POST } = await import("../route");
 
@@ -475,7 +475,7 @@ describe("POST /api/interviews", () => {
     }));
   });
 
-  test("rejects invalid or unauthorized resumeId", async () => {
+  test("拒绝无效或未授权的 resumeId", async () => {
     mocks.resumeRepo.findOne.mockResolvedValue(null);
     const { POST } = await import("../route");
 
@@ -493,21 +493,21 @@ describe("POST /api/interviews", () => {
 });
 ```
 
-- [ ] **Step 2: Run interview API tests to verify they fail**
+- [ ] **步骤 2：运行面试 API 测试，验证失败**
 
-Run:
+运行：
 
 ```bash
 pnpm test src/app/api/interviews/__tests__/route.test.ts
 ```
 
-Expected: FAIL. The no-resume test receives `400` with "简历内容不能为空".
+预期：失败。无简历测试收到 `400` 和“简历内容不能为空”。
 
-- [ ] **Step 3: Implement no-resume interview creation**
+- [ ] **步骤 3：实现无简历面试创建**
 
-Modify `src/app/api/interviews/route.ts`.
+修改 `src/app/api/interviews/route.ts`。
 
-Keep this initialization:
+保留此初始化：
 
 ```ts
   const { resumeText, resumeId } = body;
@@ -515,7 +515,7 @@ Keep this initialization:
   let finalResumeText = resumeText?.trim() ? resumeText : "";
 ```
 
-Keep the previous-interview branch, preserving empty resume text:
+保留前一面试分支，保持空简历文本：
 
 ```ts
   if (body.prevInterviewId) {
@@ -534,7 +534,7 @@ Keep the previous-interview branch, preserving empty resume text:
   }
 ```
 
-Keep the resume lookup only when `resumeId` exists:
+仅在 `resumeId` 存在时查找简历：
 
 ```ts
   if (resumeId) {
@@ -548,7 +548,7 @@ Keep the resume lookup only when `resumeId` exists:
   }
 ```
 
-Remove the old empty-resume guard:
+移除旧的空简历守卫：
 
 ```ts
   if (!finalResumeText) {
@@ -556,7 +556,7 @@ Remove the old empty-resume guard:
   }
 ```
 
-Replace the opening message content with a branch:
+用分支替换开场消息内容：
 
 ```ts
   const openingContent = finalResumeText.trim()
@@ -572,43 +572,43 @@ Replace the opening message content with a branch:
   });
 ```
 
-- [ ] **Step 4: Run interview API tests to verify they pass**
+- [ ] **步骤 4：运行面试 API 测试，验证通过**
 
-Run:
+运行：
 
 ```bash
 pnpm test src/app/api/interviews/__tests__/route.test.ts
 ```
 
-Expected: PASS.
+预期：通过。
 
-- [ ] **Step 5: Commit interview API changes**
+- [ ] **步骤 5：提交面试 API 变更**
 
-Run:
+运行：
 
 ```bash
 git add src/app/api/interviews/route.ts src/app/api/interviews/__tests__/route.test.ts
 git commit -m "feat: create interviews without resumes"
 ```
 
-Expected: commit succeeds.
+预期：提交成功。
 
 ---
 
-### Task 3: DeepSeek Prompt Branching
+### 任务 3：DeepSeek 提示词分支
 
-**Files:**
-- Modify: `src/lib/__tests__/deepseek.test.ts`
-- Modify: `src/lib/deepseek.ts`
+**文件：**
+- 修改：`src/lib/__tests__/deepseek.test.ts`
+- 修改：`src/lib/deepseek.ts`
 
-- [ ] **Step 1: Write failing DeepSeek prompt tests**
+- [ ] **步骤 1：编写失败的 DeepSeek 提示词测试**
 
-Modify `src/lib/__tests__/deepseek.test.ts`.
+修改 `src/lib/__tests__/deepseek.test.ts`。
 
-Add these tests inside `describe("buildAggregationMessage", () => { ... })`:
+在 `describe("buildAggregationMessage", () => { ... })` 内添加以下测试：
 
 ```ts
-  test("omits resume suggestions from no-resume aggregation output schema", () => {
+  test("无简历聚合输出 schema 中省略简历建议", () => {
     const msg = buildAggregationMessage(questionReviews, "");
 
     const content = msg.content as string;
@@ -618,7 +618,7 @@ Add these tests inside `describe("buildAggregationMessage", () => { ... })`:
     expect(content).toContain("practiceSuggestions");
   });
 
-  test("keeps resume suggestions for resume-based aggregation", () => {
+  test("有简历聚合保留简历建议", () => {
     const msg = buildAggregationMessage(questionReviews, resumeText);
 
     const content = msg.content as string;
@@ -627,10 +627,10 @@ Add these tests inside `describe("buildAggregationMessage", () => { ... })`:
   });
 ```
 
-Add these tests inside `describe("buildInterviewSystemMessage", () => { ... })`:
+在 `describe("buildInterviewSystemMessage", () => { ... })` 内添加以下测试：
 
 ```ts
-  test("uses no-resume prompt when resume text is empty", () => {
+  test("简历文本为空时使用无简历提示词", () => {
     const msg = buildInterviewSystemMessage(
       "前端工程师",
       "",
@@ -648,7 +648,7 @@ Add these tests inside `describe("buildInterviewSystemMessage", () => { ... })`:
     expect(content).not.toContain("根据你的简历");
   });
 
-  test("keeps resume section when resume text exists", () => {
+  test("简历文本存在时保留简历章节", () => {
     const msg = buildInterviewSystemMessage(
       "前端工程师",
       "3年React经验",
@@ -664,21 +664,21 @@ Add these tests inside `describe("buildInterviewSystemMessage", () => { ... })`:
   });
 ```
 
-- [ ] **Step 2: Run DeepSeek tests to verify they fail**
+- [ ] **步骤 2：运行 DeepSeek 测试，验证失败**
 
-Run:
+运行：
 
 ```bash
 pnpm test src/lib/__tests__/deepseek.test.ts
 ```
 
-Expected: FAIL because no-resume prompts still include `## 候选人简历` and `resumeSuggestions`.
+预期：失败，因为无简历提示词仍包含 `## 候选人简历` 和 `resumeSuggestions`。
 
-- [ ] **Step 3: Implement system prompt branching**
+- [ ] **步骤 3：实现系统提示词分支**
 
-Modify `buildInterviewSystemMessage()` in `src/lib/deepseek.ts`.
+修改 `src/lib/deepseek.ts` 中的 `buildInterviewSystemMessage()`。
 
-Add this near the existing `prevBlock` definition:
+在现有 `prevBlock` 定义附近添加：
 
 ```ts
   const hasResume = resumeText.trim().length > 0;
@@ -691,7 +691,7 @@ ${resumeText}`
 候选人没有提供简历。请通过候选人的自我介绍和后续回答建立背景，再围绕岗位基础、场景判断、项目经历、沟通表达和问题解决能力继续提问。不要说"根据你的简历"，也不要引用不存在的简历细节。`;
 ```
 
-Replace the hardcoded resume section in the returned `SystemMessage` string:
+替换返回的 `SystemMessage` 字符串中硬编码的简历章节：
 
 ```ts
 ${prevBlock}
@@ -704,11 +704,11 @@ ${resumeContextBlock}
 ${startInstruction}`,
 ```
 
-- [ ] **Step 4: Implement aggregation prompt branching**
+- [ ] **步骤 4：实现聚合提示词分支**
 
-Modify `buildAggregationMessage()` in `src/lib/deepseek.ts`.
+修改 `src/lib/deepseek.ts` 中的 `buildAggregationMessage()`。
 
-Add these constants after `annotatedConversation`:
+在 `annotatedConversation` 之后添加以下常量：
 
 ```ts
   const hasResume = resumeText.trim().length > 0;
@@ -758,7 +758,7 @@ ${resumeText}`
 候选人未提供简历。本次综合评估只基于面试对话记录和逐题评分，不输出简历优化建议。`;
 ```
 
-Replace the current hardcoded JSON schema and final resume section with:
+替换当前硬编码的 JSON schema 和末尾简历章节为：
 
 ```ts
     `请根据以下面试对话记录（含逐题评分），对候选人进行综合评估。输出纯 JSON 格式（不要 markdown 代码块）：
@@ -783,38 +783,38 @@ ${annotatedConversation}
 ${resumeBlock}`,
 ```
 
-- [ ] **Step 5: Run DeepSeek tests to verify they pass**
+- [ ] **步骤 5：运行 DeepSeek 测试，验证通过**
 
-Run:
+运行：
 
 ```bash
 pnpm test src/lib/__tests__/deepseek.test.ts
 ```
 
-Expected: PASS.
+预期：通过。
 
-- [ ] **Step 6: Commit DeepSeek prompt changes**
+- [ ] **步骤 6：提交 DeepSeek 提示词变更**
 
-Run:
+运行：
 
 ```bash
 git add src/lib/deepseek.ts src/lib/__tests__/deepseek.test.ts
 git commit -m "feat: adapt prompts for no-resume interviews"
 ```
 
-Expected: commit succeeds.
+预期：提交成功。
 
 ---
 
-### Task 4: Evaluation Persistence For No-Resume Aggregation
+### 任务 4：无简历聚合的评估持久化
 
-**Files:**
-- Create: `src/app/api/interviews/[id]/finish/__tests__/route.test.ts`
-- Modify: `src/app/api/interviews/[id]/finish/route.ts`
+**文件：**
+- 新建：`src/app/api/interviews/[id]/finish/__tests__/route.test.ts`
+- 修改：`src/app/api/interviews/[id]/finish/route.ts`
 
-- [ ] **Step 1: Write failing finish-route persistence test**
+- [ ] **步骤 1：编写失败的 finish-route 持久化测试**
 
-Create `src/app/api/interviews/[id]/finish/__tests__/route.test.ts`:
+新建 `src/app/api/interviews/[id]/finish/__tests__/route.test.ts`：
 
 ```ts
 import { waitFor } from "@testing-library/react";
@@ -928,7 +928,7 @@ describe("POST /api/interviews/[id]/finish", () => {
     mocks.getPassThreshold.mockReturnValue(60);
   });
 
-  test("stores empty resumeSuggestions when aggregation omits resumeSuggestions", async () => {
+  test("聚合结果省略 resumeSuggestions 时存储空字符串", async () => {
     const { POST } = await import("../route");
 
     const response = await POST(request(), { params: Promise.resolve({ id: "123" }) });
@@ -949,21 +949,21 @@ describe("POST /api/interviews/[id]/finish", () => {
 });
 ```
 
-- [ ] **Step 2: Run finish-route test to verify it fails**
+- [ ] **步骤 2：运行 finish-route 测试，验证失败**
 
-Run:
+运行：
 
 ```bash
 pnpm test 'src/app/api/interviews/[id]/finish/__tests__/route.test.ts'
 ```
 
-Expected: FAIL because `resumeSuggestions` is currently created as `undefined` when the aggregation response omits it.
+预期：失败，因为当聚合响应省略该字段时 `resumeSuggestions` 当前被创建为 `undefined`。
 
-- [ ] **Step 3: Implement empty resume suggestions fallback**
+- [ ] **步骤 3：实现空简历建议回退**
 
-Modify `src/app/api/interviews/[id]/finish/route.ts`.
+修改 `src/app/api/interviews/[id]/finish/route.ts`。
 
-Change the evaluation creation block from:
+将评估创建块从：
 
 ```ts
       const evaluation = ds.getRepository(Evaluation).create({
@@ -980,7 +980,7 @@ Change the evaluation creation block from:
       });
 ```
 
-to:
+改为：
 
 ```ts
       const evaluation = ds.getRepository(Evaluation).create({
@@ -997,41 +997,41 @@ to:
       });
 ```
 
-- [ ] **Step 4: Run focused DeepSeek and interview API tests**
+- [ ] **步骤 4：运行聚焦的 DeepSeek 和面试 API 测试**
 
-Run:
+运行：
 
 ```bash
 pnpm test src/lib/__tests__/deepseek.test.ts src/app/api/interviews/__tests__/route.test.ts 'src/app/api/interviews/[id]/finish/__tests__/route.test.ts'
 ```
 
-Expected: PASS.
+预期：通过。
 
-- [ ] **Step 5: Commit evaluation persistence change**
+- [ ] **步骤 5：提交评估持久化变更**
 
-Run:
+运行：
 
 ```bash
 git add 'src/app/api/interviews/[id]/finish/route.ts' 'src/app/api/interviews/[id]/finish/__tests__/route.test.ts'
 git commit -m "fix: persist empty resume suggestions for no-resume evaluations"
 ```
 
-Expected: commit succeeds.
+预期：提交成功。
 
 ---
 
-### Task 5: Results UI Hides Resume Suggestions
+### 任务 5：结果 UI 隐藏简历建议
 
-**Files:**
-- Create: `src/components/interview/__tests__/EvaluationText.test.tsx`
-- Create: `src/app/results/[id]/__tests__/page.test.tsx`
-- Modify: `src/components/interview/EvaluationText.tsx`
-- Modify: `src/components/interview/ScoreCard.tsx`
-- Modify: `src/app/results/[id]/page.tsx`
+**文件：**
+- 新建：`src/components/interview/__tests__/EvaluationText.test.tsx`
+- 新建：`src/app/results/[id]/__tests__/page.test.tsx`
+- 修改：`src/components/interview/EvaluationText.tsx`
+- 修改：`src/components/interview/ScoreCard.tsx`
+- 修改：`src/app/results/[id]/page.tsx`
 
-- [ ] **Step 1: Write failing EvaluationText tests**
+- [ ] **步骤 1：编写失败的 EvaluationText 测试**
 
-Create `src/components/interview/__tests__/EvaluationText.test.tsx`:
+新建 `src/components/interview/__tests__/EvaluationText.test.tsx`：
 
 ```tsx
 import { render, screen } from "@testing-library/react";
@@ -1039,7 +1039,7 @@ import { describe, expect, test } from "vitest";
 import { EvaluationText } from "../EvaluationText";
 
 describe("EvaluationText", () => {
-  test("shows resume suggestions when requested", () => {
+  test("需要时显示简历建议", () => {
     render(
       <EvaluationText
         strengths="表达清晰"
@@ -1053,7 +1053,7 @@ describe("EvaluationText", () => {
     expect(screen.getByText("突出 React 项目指标")).toBeTruthy();
   });
 
-  test("hides resume suggestions for no-resume interviews", () => {
+  test("无简历面试时隐藏简历建议", () => {
     render(
       <EvaluationText
         strengths="表达清晰"
@@ -1069,9 +1069,9 @@ describe("EvaluationText", () => {
 });
 ```
 
-- [ ] **Step 2: Write failing ResultsPage tests**
+- [ ] **步骤 2：编写失败的 ResultsPage 测试**
 
-Create `src/app/results/[id]/__tests__/page.test.tsx`:
+新建 `src/app/results/[id]/__tests__/page.test.tsx`：
 
 ```tsx
 import { render, screen } from "@testing-library/react";
@@ -1134,7 +1134,7 @@ function resultData(resumeText: string) {
   };
 }
 
-describe("ResultsPage no-resume rendering", () => {
+describe("ResultsPage 无简历渲染", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     pollingMock.useResultsPolling.mockReturnValue({
@@ -1146,7 +1146,7 @@ describe("ResultsPage no-resume rendering", () => {
     });
   });
 
-  test("hides resume suggestions when interview resumeText is empty", () => {
+  test("面试 resumeText 为空时隐藏简历建议", () => {
     render(<ResultsPage />);
 
     expect(screen.queryByText("简历优化建议")).toBeNull();
@@ -1155,7 +1155,7 @@ describe("ResultsPage no-resume rendering", () => {
     expect(screen.getByText("深度不足")).toBeTruthy();
   });
 
-  test("shows resume suggestions when interview has resumeText", () => {
+  test("面试有 resumeText 时显示简历建议", () => {
     pollingMock.useResultsPolling.mockReturnValue({
       data: resultData("3年React经验"),
       error: "",
@@ -1172,21 +1172,21 @@ describe("ResultsPage no-resume rendering", () => {
 });
 ```
 
-- [ ] **Step 3: Run results tests to verify they fail**
+- [ ] **步骤 3：运行结果测试，验证失败**
 
-Run:
+运行：
 
 ```bash
 pnpm test src/components/interview/__tests__/EvaluationText.test.tsx src/app/results/[id]/__tests__/page.test.tsx
 ```
 
-Expected: FAIL because `EvaluationText` does not accept `showResumeSuggestions` and always renders the resume suggestion block.
+预期：失败，因为 `EvaluationText` 不接受 `showResumeSuggestions` 且始终渲染简历建议块。
 
-- [ ] **Step 4: Implement EvaluationText visibility prop**
+- [ ] **步骤 4：实现 EvaluationText 可见性 prop**
 
-Modify `src/components/interview/EvaluationText.tsx`.
+修改 `src/components/interview/EvaluationText.tsx`。
 
-Change the function signature:
+修改函数签名：
 
 ```tsx
 export function EvaluationText({
@@ -1204,7 +1204,7 @@ export function EvaluationText({
 }) {
 ```
 
-Wrap the resume suggestion block:
+包裹简历建议块：
 
 ```tsx
       {showResumeSuggestions && (
@@ -1224,33 +1224,33 @@ Wrap the resume suggestion block:
       )}
 ```
 
-- [ ] **Step 5: Preserve ScoreCard wrapper behavior**
+- [ ] **步骤 5：保持 ScoreCard 包装器行为**
 
-Modify `src/components/interview/ScoreCard.tsx`.
+修改 `src/components/interview/ScoreCard.tsx`。
 
-Change the `EvaluationText` call:
+修改 `EvaluationText` 调用：
 
 ```tsx
       <EvaluationText strengths={strengths} weaknesses={weaknesses} resumeSuggestions={resumeSuggestions} showResumeSuggestions={true} />
 ```
 
-- [ ] **Step 6: Pass visibility from ResultsPage**
+- [ ] **步骤 6：从 ResultsPage 传入可见性**
 
-Modify `src/app/results/[id]/page.tsx`.
+修改 `src/app/results/[id]/page.tsx`。
 
-After:
+在：
 
 ```tsx
   const { interview, evaluations, messages } = data;
 ```
 
-add:
+之后添加：
 
 ```tsx
   const showResumeSuggestions = interview.resumeText.trim().length > 0;
 ```
 
-Change the partial-evaluation `EvaluationText` call:
+修改部分评估的 `EvaluationText` 调用：
 
 ```tsx
                 <EvaluationText
@@ -1262,7 +1262,7 @@ Change the partial-evaluation `EvaluationText` call:
                 />
 ```
 
-Change the final selected-evaluation `EvaluationText` call:
+修改最终选中评估的 `EvaluationText` 调用：
 
 ```tsx
             <EvaluationText
@@ -1274,86 +1274,86 @@ Change the final selected-evaluation `EvaluationText` call:
             />
 ```
 
-- [ ] **Step 7: Run results tests to verify they pass**
+- [ ] **步骤 7：运行结果测试，验证通过**
 
-Run:
+运行：
 
 ```bash
 pnpm test src/components/interview/__tests__/EvaluationText.test.tsx src/app/results/[id]/__tests__/page.test.tsx
 ```
 
-Expected: PASS.
+预期：通过。
 
-- [ ] **Step 8: Commit results UI changes**
+- [ ] **步骤 8：提交结果 UI 变更**
 
-Run:
+运行：
 
 ```bash
 git add src/components/interview/EvaluationText.tsx src/components/interview/ScoreCard.tsx src/components/interview/__tests__/EvaluationText.test.tsx 'src/app/results/[id]/page.tsx' 'src/app/results/[id]/__tests__/page.test.tsx'
 git commit -m "feat: hide resume suggestions for no-resume results"
 ```
 
-Expected: commit succeeds.
+预期：提交成功。
 
 ---
 
-### Task 6: Full Verification
+### 任务 6：全量验证
 
-**Files:**
-- No new files.
+**文件：**
+- 无新文件。
 
-- [ ] **Step 1: Run all tests**
+- [ ] **步骤 1：运行全部测试**
 
-Run:
+运行：
 
 ```bash
 pnpm test
 ```
 
-Expected: PASS.
+预期：通过。
 
-- [ ] **Step 2: Run lint**
+- [ ] **步骤 2：运行 lint**
 
-Run:
+运行：
 
 ```bash
 pnpm lint
 ```
 
-Expected: PASS.
+预期：通过。
 
-- [ ] **Step 3: Run production build**
+- [ ] **步骤 3：运行生产构建**
 
-Run:
+运行：
 
 ```bash
 pnpm build
 ```
 
-Expected: PASS.
+预期：通过。
 
-- [ ] **Step 4: Inspect final diff**
+- [ ] **步骤 4：检查最终 diff**
 
-Run:
+运行：
 
 ```bash
 git status --short
 git log --oneline -6
 ```
 
-Expected:
+预期：
 
-- `git status --short` is empty.
-- Recent commits include:
+- `git status --short` 无输出。
+- 最近提交包括：
   - `feat: allow setup without resume`
   - `feat: create interviews without resumes`
   - `feat: adapt prompts for no-resume interviews`
   - `fix: persist empty resume suggestions for no-resume evaluations`
   - `feat: hide resume suggestions for no-resume results`
 
-## Plan Self-Review
+## 计划自查
 
-- Spec coverage: setup no-resume entry, API creation, prompt branching, evaluation schema branching, empty resume suggestion persistence, and result UI hiding all have tasks.
-- Placeholder scan: no task contains incomplete-marker language or cross-task shorthand.
-- Type consistency: `resumeText` remains a string, `resumeId` is omitted rather than sent as `null`, `showResumeSuggestions` is a boolean, and `resumeSuggestions` remains a string for database compatibility.
-- Scope: no schema migration, no `contextMode`, no separate API, and no replacement advice section.
+- Spec 覆盖：设置页无简历入口、API 创建、提示词分支、评估 schema 分支、空简历建议持久化、结果 UI 隐藏——均有对应任务。
+- 占位符扫描：无任务包含未完成标记语言或跨任务简写。
+- 类型一致性：`resumeText` 保持字符串，`resumeId` 被省略而非发送 `null`，`showResumeSuggestions` 为布尔值，`resumeSuggestions` 保持字符串以兼容数据库。
+- 范围：无 schema 迁移、无 `contextMode`、无独立 API、无替代建议板块。

@@ -88,10 +88,6 @@ export async function POST(request: NextRequest) {
     finalResumeText = resume.content;
   }
 
-  if (!finalResumeText) {
-    return NextResponse.json({ error: "简历内容不能为空" }, { status: 400 });
-  }
-
   const count = await ds.getRepository(Interview).count({
     where: { user: { id: userId } },
   });
@@ -112,10 +108,14 @@ export async function POST(request: NextRequest) {
   await ds.getRepository(Interview).save(interview);
 
   const msgRepo = ds.getRepository(Message);
+  const openingContent = finalResumeText.trim()
+    ? `同学你好，很高兴见到你。我是今天${interview.position}岗位的面试官，要不咱们先聊聊你的基本情况？请简单介绍一下自己。`
+    : `同学你好，很高兴见到你。我是今天${interview.position}岗位的面试官。我们会围绕岗位能力、项目经历和综合素质进行交流。请先简单介绍一下自己，以及你和这个岗位相关的经历。`;
+
   const interviewerMsg = msgRepo.create({
     interview: { id: interview.id },
     role: "interviewer",
-    content: `同学你好，很高兴见到你。我是今天${interview.position}岗位的面试官，要不咱们先聊聊你的基本情况？请简单介绍一下自己。`,
+    content: openingContent,
     round: 1,
     questionNumber: 1,
   });

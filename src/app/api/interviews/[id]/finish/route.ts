@@ -136,7 +136,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         categories: parsed.categories,
         strengths: parsed.strengths,
         weaknesses: parsed.weaknesses,
-        resumeSuggestions: parsed.resumeSuggestions,
+        resumeSuggestions: typeof parsed.resumeSuggestions === "string" ? parsed.resumeSuggestions : "",
         questionReviews,
         practiceSuggestions: parsed.practiceSuggestions || null,
         roundSummary,

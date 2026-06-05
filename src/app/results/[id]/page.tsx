@@ -72,6 +72,7 @@ export default function ResultsPage() {
   if (!data) return null;
 
   const { interview, evaluations, messages } = data;
+  const showResumeSuggestions = interview.resumeText.trim().length > 0;
 
   const currentRoundHasEval = evaluations.some((e) => e.round === interview.currentRound);
 
@@ -133,7 +134,7 @@ export default function ResultsPage() {
           {partialEval ? (
             <div className="lg:grid lg:grid-cols-2 lg:gap-8">
               <div className="space-y-6 min-w-0">
-                <EvaluationText strengths={partialEval.strengths} weaknesses={partialEval.weaknesses} resumeSuggestions={partialEval.resumeSuggestions} roundSummary={partialEval.roundSummary} />
+                <EvaluationText strengths={partialEval.strengths} weaknesses={partialEval.weaknesses} resumeSuggestions={partialEval.resumeSuggestions} roundSummary={partialEval.roundSummary} showResumeSuggestions={showResumeSuggestions} />
                 <PracticePanel suggestions={partialEval.practiceSuggestions} />
               </div>
               <div className="min-w-0 mt-8 lg:mt-0">
@@ -215,7 +216,7 @@ export default function ResultsPage() {
 
         <div className="lg:grid lg:grid-cols-2 lg:gap-8">
           <div className="space-y-6 min-w-0">
-            <EvaluationText strengths={selectedEval.strengths} weaknesses={selectedEval.weaknesses} resumeSuggestions={selectedEval.resumeSuggestions} roundSummary={selectedEval.roundSummary} />
+            <EvaluationText strengths={selectedEval.strengths} weaknesses={selectedEval.weaknesses} resumeSuggestions={selectedEval.resumeSuggestions} roundSummary={selectedEval.roundSummary} showResumeSuggestions={showResumeSuggestions} />
             <PracticePanel suggestions={selectedEval.practiceSuggestions} />
           </div>
 

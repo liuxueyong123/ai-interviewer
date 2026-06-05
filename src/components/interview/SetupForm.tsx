@@ -126,7 +126,7 @@ export default function SetupForm() {
       .then((r) => r.json())
       .then((data) => {
         setSavedResumes(data);
-        if (data.length === 1) setSelectedResumeId(data[0].id);
+        if (data.length > 0) setSelectedResumeId(data[0].id);
       })
       .catch(() => {})
       .finally(() => setLoadingResumes(false));
@@ -151,15 +151,21 @@ export default function SetupForm() {
       setError("请选择目标岗位");
       return;
     }
-    if (!selectedResumeId) {
-      setError("请选择一份简历");
-      return;
-    }
     setLoading(true);
+    const payload: Record<string, unknown> = {
+      position,
+      questionCount,
+      maxRounds,
+      difficulty,
+      mode,
+    };
+    if (selectedResumeId) {
+      payload.resumeId = selectedResumeId;
+    }
     const res = await fetch("/api/interviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ position, resumeId: selectedResumeId, questionCount, maxRounds, difficulty, mode }),
+      body: JSON.stringify(payload),
     });
     const data = await res.json();
     setLoading(false);
@@ -230,9 +236,9 @@ export default function SetupForm() {
           <Spinner className="py-10" />
         ) : savedResumes.length === 0 ? (
           <div className="text-center py-8 border border-white/8 rounded-xl">
-            <p className="text-text-muted text-sm mb-3">暂无保存的简历</p>
+            <p className="text-text-muted text-sm mb-3">暂无保存的简历，可直接开始无简历面试</p>
             <Link href="/resumes" className="text-accent text-sm hover:underline font-medium">
-              前往简历管理页上传
+              上传简历以获得更个性化的问题
             </Link>
           </div>
         ) : (
@@ -241,7 +247,7 @@ export default function SetupForm() {
               <button
                 key={r.id}
                 type="button"
-                onClick={() => setSelectedResumeId(r.id)}
+                onClick={() => setSelectedResumeId((current) => (current === r.id ? null : r.id))}
                 className={`w-full text-left px-4 py-3 rounded-xl border transition-all duration-200 text-sm ${
                   selectedResumeId === r.id ? "border-accent bg-accent-muted text-accent font-medium" : "border-border bg-surface-1 text-text-secondary hover:border-text-muted"
                 }`}
@@ -253,6 +259,9 @@ export default function SetupForm() {
               </button>
             ))}
           </div>
+        )}
+        {!loadingResumes && !selectedResumeId && (
+          <p className="mt-2 text-xs text-text-muted">未选择简历，将按目标岗位进行通用模拟面试。</p>
         )}
       </div>
 
@@ -330,7 +339,7 @@ export default function SetupForm() {
 
       {error && <div className="bg-red-500/5 border border-red-500/20 text-red-400 text-sm rounded-lg px-4 py-3 font-medium">{error}</div>}
 
-      <Button onClick={handleStart} loading={loading} disabled={!selectedResumeId || !position}>
+      <Button onClick={handleStart} loading={loading} disabled={!position}>
         开始面试
       </Button>
       <Link

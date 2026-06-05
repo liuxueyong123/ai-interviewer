@@ -192,6 +192,66 @@ describe("buildInterviewSystemMessage", () => {
   });
 });
 
+describe("buildAggregationMessage no-resume", () => {
+  const questionReviews = [
+    { questionNumber: 1, question: "介绍自己", answer: "我叫张三，3年前端", score: 80, comment: "表达清晰" },
+    { questionNumber: 2, question: "闭包是什么", answer: "闭包是函数内部可访问外部变量", score: 70, comment: "基本正确" },
+  ];
+
+  test("无简历聚合输出 schema 中省略简历建议", () => {
+    const msg = buildAggregationMessage(questionReviews, "");
+
+    const content = msg.content as string;
+    expect(content).not.toContain("resumeSuggestions");
+    expect(content).not.toContain("## 候选人简历");
+    expect(content).toContain("候选人未提供简历");
+    expect(content).toContain("practiceSuggestions");
+  });
+
+  test("有简历聚合保留简历建议", () => {
+    const msg = buildAggregationMessage(questionReviews, "3年React经验，做过电商项目");
+
+    const content = msg.content as string;
+    expect(content).toContain("resumeSuggestions");
+    expect(content).toContain("## 候选人简历");
+  });
+});
+
+describe("buildInterviewSystemMessage no-resume", () => {
+  test("简历文本为空时使用无简历提示词", () => {
+    const msg = buildInterviewSystemMessage(
+      "前端工程师",
+      "",
+      12,
+      "mid",
+      1,
+      1
+    );
+
+    const content = msg.content as string;
+    expect(content).toContain("候选人没有提供简历");
+    expect(content).toContain("通过候选人的自我介绍和后续回答建立背景");
+    expect(content).toContain("岗位基础");
+    expect(content).not.toContain("## 候选人简历");
+    expect(content).not.toContain("## 候选人简历");
+  });
+
+  test("简历文本存在时保留简历章节", () => {
+    const msg = buildInterviewSystemMessage(
+      "前端工程师",
+      "3年React经验",
+      12,
+      "mid",
+      1,
+      1
+    );
+
+    const content = msg.content as string;
+    expect(content).toContain("## 候选人简历");
+    expect(content).toContain("3年React经验");
+  });
+});
+
 describe("buildRoundSummaryMessage", () => {
   test("uses markdown headers for sections", () => {
     const msg = buildRoundSummaryMessage(

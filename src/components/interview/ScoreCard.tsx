@@ -32,7 +32,7 @@ export default function ScoreCard({ heading, date, overallScore, categories, str
       </div>
 
       <CategoryBars categories={categories} />
-      <EvaluationText strengths={strengths} weaknesses={weaknesses} resumeSuggestions={resumeSuggestions} />
+      <EvaluationText strengths={strengths} weaknesses={weaknesses} resumeSuggestions={resumeSuggestions} showResumeSuggestions={true} />
     </div>
   );
 }

@@ -127,6 +127,15 @@ ${prevRoundContext}
 `
     : "";
 
+  const hasResume = resumeText.trim().length > 0;
+  const resumeContextBlock = hasResume
+    ? `## 候选人简历
+
+${resumeText}`
+    : `## 面试背景
+
+候选人没有提供简历。请通过候选人的自我介绍和后续回答建立背景，再围绕岗位基础、场景判断、项目经历、沟通表达和问题解决能力继续提问。不要说"根据你的简历"，也不要引用不存在的简历细节。`;
+
   return new SystemMessage(
     `你是 ${position} 的技术面试官。${roundLabel}${focus}。
 
@@ -140,9 +149,7 @@ ${prevRoundContext}
 5. ${difficultyHint}${voiceRule}
 ${prevBlock}
 ---
-## 候选人简历
-
-${resumeText}
+${resumeContextBlock}
 
 ---
 ## 开场
@@ -213,10 +220,9 @@ export function buildAggregationMessage(questionReviews: Array<{ questionNumber:
     })
     .join("\n\n---\n\n");
 
-  return new HumanMessage(
-    `请根据以下面试对话记录（含逐题评分），对候选人进行综合评估。输出纯 JSON 格式（不要 markdown 代码块）：
-
-{
+  const hasResume = resumeText.trim().length > 0;
+  const outputSchema = hasResume
+    ? `{
   "overallScore": <0-100>,
   "categories": {
     "tech": <0-100>,
@@ -233,7 +239,37 @@ export function buildAggregationMessage(questionReviews: Array<{ questionNumber:
       "suggestion": "<可执行的练习方案，100字以内>"
     }
   ]
-}
+}`
+    : `{
+  "overallScore": <0-100>,
+  "categories": {
+    "tech": <0-100>,
+    "project": <0-100>,
+    "softSkills": <0-100>
+  },
+  "strengths": "<优点>",
+  "weaknesses": "<待改进>",
+  "practiceSuggestions": [
+    {
+      "area": "<薄弱领域>",
+      "description": "<具体问题表现，50字以内>",
+      "suggestion": "<可执行的练习方案，100字以内>"
+    }
+  ]
+}`;
+
+  const resumeBlock = hasResume
+    ? `## 候选人简历
+
+${resumeText}`
+    : `## 面试背景
+
+候选人未提供简历。本次综合评估只基于面试对话记录和逐题评分，不输出简历优化建议。`;
+
+  return new HumanMessage(
+    `请根据以下面试对话记录（含逐题评分），对候选人进行综合评估。输出纯 JSON 格式（不要 markdown 代码块）：
+
+${outputSchema}
 
 ## 注意事项
 
@@ -250,9 +286,7 @@ ${annotatedConversation}
 
 ---
 
-## 候选人简历
-
-${resumeText}`,
+${resumeBlock}`,
   );
 }
 
